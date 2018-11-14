@@ -8,7 +8,7 @@ namespace Framewerk.ViewComponents.ButtonComponent
     [Serializable]
     public class ItemSelectedEvent : UnityEvent<int> { }
 
-    public abstract class BaseSelectButtonMediator<TView, TValue> : Mediator<TView> where TView : SelectButtonView
+    public abstract class BaseSelectButtonMediator<TView, TValue> : Mediator<TView> where TView : ButtonView
     {
         public ItemSelectedEvent onSelect;
         private int _index;

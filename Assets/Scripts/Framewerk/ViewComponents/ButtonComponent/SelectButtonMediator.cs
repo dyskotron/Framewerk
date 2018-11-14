@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace Framewerk.ViewComponents.ButtonComponent
 {
-     public class SelectButtonMediator : BaseSelectButtonMediator<SelectButtonView, string>
+     public class SelectButtonMediator : BaseSelectButtonMediator<ButtonView, string>
     {
         protected override void DisplayIndex()
         {

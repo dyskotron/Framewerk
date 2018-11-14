@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Framewerk.ViewComponents.ButtonComponent
 {
-    public class SelectIconButtonView : SelectButtonView
+    public class IconButtonView : ButtonView
     {
         public Image Icon;
         public List<Sprite> Items;

@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 namespace Framewerk.ViewComponents.ButtonComponent
 {
-    public class SelectIconButtonMediator : BaseSelectButtonMediator<SelectIconButtonView, Sprite>
+    public class SelectIconButtonMediator : BaseSelectButtonMediator<IconButtonView, Sprite>
     {
         protected override void Init()
         {
