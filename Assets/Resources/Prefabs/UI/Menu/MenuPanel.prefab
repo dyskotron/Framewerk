@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 114056943134626892}
   - component: {fileID: 114690414853363972}
   m_Layer: 0
-  m_Name: Menu
+  m_Name: MenuPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ContentsParent: {fileID: 224848538281346560}
-  ItemPrefab: {fileID: 1375157339472130, guid: ce280f21de0824df2b78126cc5146834, type: 2}
+  ItemPrefab: {fileID: 1375157339472130, guid: 3e4abcba13baf4be5b1769eb7e66fa13, type: 2}
   EmptyContent: {fileID: 0}
   ListScroller: {fileID: 0}
   DragElement: {fileID: 0}

@@ -124,7 +124,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SelectButton: {fileID: 114382666780780526}
   Label: {fileID: 114373670332842872}
-  Image: {fileID: 0}
+  Image: {fileID: 114083751792640498}
+  Background: {fileID: 114906229138678578}
+  DefaultColor: {r: 0, g: 0, b: 0, a: 0}
+  SelectedColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!114 &114373670332842872
 MonoBehaviour:
   m_ObjectHideFlags: 1

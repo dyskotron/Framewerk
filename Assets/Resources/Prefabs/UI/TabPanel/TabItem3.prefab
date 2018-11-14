@@ -43,7 +43,7 @@ GameObject:
   - component: {fileID: 223352248409519974}
   - component: {fileID: 114264900502141198}
   m_Layer: 5
-  m_Name: TabItem1 3
+  m_Name: TabItem3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9632353, g: 0.13456966, b: 0.13456966, a: 1}
+  m_Color: {r: 0.38581347, g: 0.5272071, b: 0.9622642, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -155,7 +155,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f57413070e04c9f90bfbbd5f7e0d66b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BackgroundImage: {fileID: 114229295357888508}
   Message: {fileID: 114794454619138520}
 --- !u!222 &222712102649170376
 CanvasRenderer:
