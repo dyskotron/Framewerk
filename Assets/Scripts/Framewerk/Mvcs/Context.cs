@@ -10,13 +10,14 @@ namespace Framewerk.Mvcs
         protected IInjector Injector;
         protected ICommandMap CommandMap;
         protected IEventDispatcher EventDispatcher;
-        protected GameObject ScriptsGO;
+        protected BaseViewSettings ViewSettings;
 
         protected Context(BaseViewSettings viewSettings)
         {
             Injector = new Injector();
             EventDispatcher = new EventDispatcher();
             CommandMap = new CommandMap(Injector, EventDispatcher);
+            ViewSettings = viewSettings;
 
             Injector.MapValue(Injector);
             Injector.MapValue(EventDispatcher);
