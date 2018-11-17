@@ -38,39 +38,32 @@ namespace Framewerk.Core
 
         public void InjectInto(object subject)
         {
-            var fields = subject.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
-            foreach (var field in fields)
+            IReflected reflected = new Reflected(subject);
+            
+            foreach (var field in reflected.InjectFields)
             {
-                if (field.GetCustomAttributes(typeof(InjectAttribute), false).Length > 0)
+                if (_injections.ContainsKey(field.FieldType))
                 {
-                    if (_injections.ContainsKey(field.FieldType))
-                    {
-                        var value = _injections[field.FieldType].Value;
-                        //Debug.LogWarningFormat( "<color=\"aqua\">==>> WE HAVE INJECTION: FIELD {0}.{1} = {2}:  </color>", subject, field.Name, value);
-                        field.SetValue(subject, value);
-                    }
-                    else
-                    {
-                        Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",field.FieldType, subject.GetType(), GetInjectionsString());
-                    }
+                    var value = _injections[field.FieldType].Value;
+                    field.SetValue(subject, value);
                 }
-            }
-
-            var properties = subject.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var property in properties)
-            {
-                if (property.GetCustomAttributes(typeof(InjectAttribute), false).Length > 0)
+                else
                 {
-                    if (_injections.ContainsKey(property.PropertyType))
-                    {
-                        var value = _injections[property.PropertyType].Value;
-                        //Debug.LogWarningFormat("<color=\"aqua\">==>> WE HAVE INJECTION: FIELD {0}.{1} = {2}:  </color>", subject, property.Name, value);
-                        property.SetValue(subject, value, null);// (subject, value);
-                    }
-                    else
-                    {
-                        Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",property.PropertyType, subject.GetType(), GetInjectionsString());
-                    }
+                    Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",field.FieldType, subject.GetType(), GetInjectionsString());
+                }    
+            }
+            
+            
+            foreach (var property in reflected.InjectProperties)
+            {   
+                if (_injections.ContainsKey(property.PropertyType))
+                {
+                    var value = _injections[property.PropertyType].Value;
+                    property.SetValue(subject, value, null);
+                }
+                else
+                {
+                    Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",property.PropertyType, subject.GetType(), GetInjectionsString());
                 }
             }
         }
