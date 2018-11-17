@@ -28,12 +28,12 @@ namespace Framewerk.Core
 
     public class Injector : IInjector
     {
-        private Dictionary<Type, object> _injections;
+        private Dictionary<Type, IInjection> _injections;
         private bool _inited;
 
         public Injector()
         {
-            _injections = new Dictionary<Type, object>();
+            _injections = new Dictionary<Type, IInjection>();
         }
 
         public void InjectInto(object subject)
@@ -45,7 +45,7 @@ namespace Framewerk.Core
                 {
                     if (_injections.ContainsKey(field.FieldType))
                     {
-                        var value = _injections[field.FieldType];
+                        var value = _injections[field.FieldType].Value;
                         //Debug.LogWarningFormat( "<color=\"aqua\">==>> WE HAVE INJECTION: FIELD {0}.{1} = {2}:  </color>", subject, field.Name, value);
                         field.SetValue(subject, value);
                     }
@@ -63,7 +63,7 @@ namespace Framewerk.Core
                 {
                     if (_injections.ContainsKey(property.PropertyType))
                     {
-                        var value = _injections[property.PropertyType];
+                        var value = _injections[property.PropertyType].Value;
                         //Debug.LogWarningFormat("<color=\"aqua\">==>> WE HAVE INJECTION: FIELD {0}.{1} = {2}:  </color>", subject, property.Name, value);
                         property.SetValue(subject, value, null);// (subject, value);
                     }
@@ -80,12 +80,13 @@ namespace Framewerk.Core
             _inited = true;
             foreach (var injection in _injections)
             {
-                InjectInto(injection.Value);
+                InjectInto(injection.Value.Value);
             }
         }
 
         public void MapSingleton<T>() where T : new()
         {
+            //TODO: implement singleton after constructing is done
             MapValue(new T());
         }
 
@@ -99,7 +100,7 @@ namespace Framewerk.Core
             if(_injections.ContainsKey(typeof(T)))
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapValue() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, typeof(T));
 
-            _injections[typeof(T)] = value;
+            _injections[typeof(T)] = new Injection(value, InjectionType.Value);
             if(_inited)
                 InjectInto(value);
         }
@@ -109,7 +110,7 @@ namespace Framewerk.Core
             if(_injections.ContainsKey(type))
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapValue() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, value.GetType());
 
-            _injections[type] = value;
+            _injections[type] = new Injection(value, InjectionType.Value);
             if(_inited)
                 InjectInto(value);
         }
