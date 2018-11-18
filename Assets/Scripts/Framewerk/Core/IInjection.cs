@@ -22,7 +22,6 @@
         public Injection(object source, InjectionType type)
         {
             Source = source;
-            Value = source;
         }
     }
 }

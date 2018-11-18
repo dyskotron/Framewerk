@@ -35,7 +35,7 @@ namespace Framewerk.Core
                 if (field.GetCustomAttributes(typeof(InjectAttribute), false).Length > 0)
                 {
                     fieldInfos[field.Name] = field;
-                    Debug.LogWarningFormat("<color=\"aqua\">WANNA INJECT ==> {0}  -  ({1})</color>", field.Name, field.FieldType );
+                    Debug.LogWarningFormat("<color=\"aqua\">{0} WANNA INJECT ==> {1}  -  ({2})</color>", type ,field.Name, field.FieldType );
                 }
             }
 
@@ -61,27 +61,5 @@ namespace Framewerk.Core
             InjectProperties = propertyInfos.Values.ToArray();
 
         }
-        
-/*
-            var properties = subject.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach
-
-        
-        (var property in properties)
-            {
-                if (property.GetCustomAttributes(typeof(InjectAttribute), false).Length > 0)
-                {
-                    if (_injections.ContainsKey(property.PropertyType))
-                    {
-                        var value = _injections[property.PropertyType].Value;
-                        //Debug.LogWarningFormat("<color=\"aqua\">==>> WE HAVE INJECTION: FIELD {0}.{1} = {2}:  </color>", subject, property.Name, value);
-                        property.SetValue(subject, value, null);// (subject, value);
-                    }
-                    else
-                    {
-                        Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",property.PropertyType, subject.GetType(), GetInjectionsString());
-                    }
-                }
-            }*/
     }
 }

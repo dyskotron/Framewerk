@@ -34,7 +34,6 @@ namespace Framewerk.Mvcs
 
         protected virtual void Startup()
         {
-            Injector.Init();
             EventDispatcher.DispatchEvent(new FramewerkStartEvent());
         }
 
