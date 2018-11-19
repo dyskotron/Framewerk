@@ -1,26 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Framewerk.Core
 {
     public interface IReflected
     {
+        ConstructorInfo Constructor { get;}    
         FieldInfo[] InjectFields { get;}    
         PropertyInfo[] InjectProperties { get;}    
     }
     
     public class Reflected : IReflected
     {
+        public ConstructorInfo Constructor { get; private set; }
         public FieldInfo[] InjectFields { get; private set; }
         public PropertyInfo[] InjectProperties { get; private set; }
 
-        public Reflected(object subject)
+        public Reflected(Type type)
         {
-            var type = subject.GetType();
-            
+            //Fields
             //==================
             
             var fields = type.GetFields(BindingFlags.Instance | 
@@ -41,9 +42,10 @@ namespace Framewerk.Core
 
             InjectFields = fieldInfos.Values.ToArray();
             
+            //Properties
             //==================
             
-            var properties = subject.GetType().GetProperties(BindingFlags.Instance | 
+            var properties = type.GetProperties(BindingFlags.Instance | 
                                                              BindingFlags.Public | 
                                                              BindingFlags.NonPublic);
             
@@ -59,7 +61,40 @@ namespace Framewerk.Core
             }
 
             InjectProperties = propertyInfos.Values.ToArray();
+            
+            //Constructors
+            //==================
+            
+            var constructorInfos = type.GetConstructors(BindingFlags.FlattenHierarchy | 
+                                                        BindingFlags.Public | 
+                                                        BindingFlags.Instance |
+                                                        BindingFlags.InvokeMethod);
+            
+            ConstructorInfo constructor;
+            if(constructorInfos.Length == 1)
+            {
+                Constructor = constructorInfos[0];
+            }
 
+            var minParameters = int.MaxValue;
+
+            foreach (var constructorInfo in constructorInfos)
+            {
+                if (constructorInfo.GetCustomAttributes(typeof(InjectConstructorAttribute), false).Length > 0)
+                {
+                    constructor = constructorInfo;
+                    break;
+                }
+                var parameters = constructorInfo.GetParameters();
+                if (parameters.Length < minParameters)
+                {
+                    minParameters = parameters.Length;
+                    constructor = constructorInfo;
+                }
+            }
+            
+            //Methods PostInject + SettingParams
+            //==================
         }
     }
 }
