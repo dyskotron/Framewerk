@@ -7,55 +7,63 @@ namespace Framewerk.Core
 {
     public class InjectAttribute : Attribute
     {
+        public object Name { get; private set; }
 
+        public InjectAttribute(object name = null)
+        {
+            Name = name;
+        }
     }
+    
+    
 
+    [AttributeUsage(AttributeTargets.Constructor, 
+                    AllowMultiple = false,
+                    Inherited = true)]
     public class InjectConstructorAttribute : Attribute
     {
 
     }
 
-    //todo: introduce mechanism for injecting/reinjecting/deinjecting when mapping changes - instead of current Init() mechanism
     public interface IInjector
     {
         void InjectInto(object target);
-        
-        void MapSingleton<T>();
-        void MapSingletonOf<TRequested, TValue>() where TValue : TRequested;
-        
-        void MapClass<TInterface, TClass>() where TClass : TInterface;
-        void MapClass<T>();
-        
-        void MapValue<T>(T value);
-        void MapValue(object value, Type type);
-        
+        void MapSingleton<T>(object name = null);
+        void MapSingletonOf<TRequested, TValue>(object name = null) where TValue : TRequested;
+        void MapClass<TRequested, TClass>(object name = null) where TClass : TRequested;
+        void MapClass<T>(object name = null);
+        void MapValue<T>(T value, object name = null);
+        void MapValue(Type type, object value,  object name = null);
         void Unmap<T>();
         void Unmap(object obj);
-        
         void Destroy();
     }
 
     public class Injector : IInjector
     {
         private Dictionary<Type, IInjection> _injections;
+        private Dictionary<object, Dictionary<Type, IInjection>> _namedInjections;
 
         public Injector()
         {
             _injections = new Dictionary<Type, IInjection>();
+            _namedInjections = new Dictionary<object, Dictionary<Type, IInjection>>();
         }
 
         public void InjectInto(object target)
         {
             IReflected reflected = new Reflected(target.GetType());
             
-            foreach (var field in reflected.InjectFields)
+            for(var i = 0; i < reflected.InjectFields.Length;i++)
             {
-                field.SetValue(target, GetInjectionValue(target, field.FieldType));
+                var field = reflected.InjectFields[i];
+                var name = reflected.FieldNames[i];
+                field.SetValue(target, GetInjectionValue(target, field.FieldType, name));
             }
             
             foreach (var property in reflected.InjectProperties)
             {   
-                property.SetValue(target, GetInjectionValue(target, property.PropertyType), null);
+                property.SetValue(target, GetInjectionValue(target, property.PropertyType, null), null);
             }
             
             //TODO: methods
@@ -67,17 +75,17 @@ namespace Framewerk.Core
         //TODO: CHECK CYCLIC DEPENDENCY
         
         #region factory
-        private object GetInjectionValue(object target, Type type)
+        private object GetInjectionValue(object target, Type type, object name = null)
         {
-            if (!_injections.ContainsKey(type))
+            var injection = GetInjection(type, name);
+            
+            if (injection == null)
             {
                 Debug.LogErrorFormat("<color=\"red\">Missing Injection rule for type {0} defined in {1} AvailableInjections: {2} </color>",type, target.GetType(), GetInjectionsString());
                 return null;    
             }
 
-            var injection = _injections[type];
-
-            switch (injection.Type)
+            switch (injection.InjectionType)
             {
                 case InjectionType.Unique:
                     
@@ -85,7 +93,7 @@ namespace Framewerk.Core
                     object classInstance = CreateInstance(injection.Source as Type);
                     InjectInto(classInstance);
                     injection.Value = classInstance;
-                    Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING CLASS INJECTION: {1}</color>", "INJECTOR", type);
+                    //Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING CLASS INJECTION: {1}</color>", "INJECTOR", type);
 
                     return classInstance;
                     
@@ -98,11 +106,10 @@ namespace Framewerk.Core
                         object sinletonInstance = CreateInstance(injection.Source as Type);
                         InjectInto(sinletonInstance);
                         injection.Value = sinletonInstance;
-                        Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING SINGLETON INJECTION: {1}</color>", "INJECTOR", type);
+                        //Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING SINGLETON INJECTION: {1}</color>", "INJECTOR", type);
                     }
                     
-                    return _injections[type].Value;
-                    
+                    return injection.Value;
                     
                     break;
                 case InjectionType.Value:
@@ -112,9 +119,10 @@ namespace Framewerk.Core
                         var value = injection.Source;
                         InjectInto(value);
                         injection.Value = value;
-                        Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING VALUE INJECTION: {1}</color>", "INJECTOR", type);
+                        //Debug.LogWarningFormat("<color=\"aqua\">{0} INITIALISING VALUE INJECTION: {1}</color>", "INJECTOR", type);
                     }
-                    return _injections[type].Value;
+                    
+                    return injection.Value;
                     
                     break;
                 default:
@@ -123,6 +131,37 @@ namespace Framewerk.Core
             
             return null;
         }
+
+        private IInjection GetInjection(Type type, object name = null)
+        {
+            if (name == null && _injections.ContainsKey(type))
+                return _injections[type];
+
+            if (name != null && _namedInjections.ContainsKey(name) && _namedInjections[name].ContainsKey(type))
+                return _namedInjections[name][type];
+            
+            return null;
+        }
+        
+        private void SetInjection(Type type, IInjection injection, object name = null)
+        {
+            //Debug.LogWarningFormat("<color=\"aqua\">====================> SET INJECTION <==================== \n " + 
+            //                       "type: {0} injection: {1}name: {2}</color>", type, injection, name);
+            
+            
+            if (name == null)
+            {
+                _injections[type] = injection;
+            }
+            else
+            {
+                if(!_namedInjections.ContainsKey(name))
+                    _namedInjections[name] = new Dictionary<Type, IInjection>();
+                _namedInjections[name][type] = injection;
+            }
+        }
+        
+        //todo set injection
 
         private object CreateInstance(Type type)
         {
@@ -133,7 +172,7 @@ namespace Framewerk.Core
             if (paramsReflected.Length == 0)
             {
                 instance = Activator.CreateInstance(type);   
-                Debug.LogWarningFormat("<color=\"red\">[{0}] CREATED INSTANCE OF: {1}</color>", "INJECTOR", type);
+                //Debug.LogWarningFormat("<color=\"red\">[{0}] CREATED INSTANCE OF: {1}</color>", "INJECTOR", type);
             }
             else
             {
@@ -144,7 +183,7 @@ namespace Framewerk.Core
                 }
 
                 instance = Activator.CreateInstance(type, injectParams);
-                Debug.LogWarningFormat("<color=\"red\">[{0}] CREATED INSTANCE WITH PARAMS: {1}</color>", "INJECTOR", type);
+                //Debug.LogWarningFormat("<color=\"red\">[{0}] CREATED INSTANCE WITH PARAMS: {1}</color>", "INJECTOR", type);
             }   
             
             return instance;
@@ -152,49 +191,49 @@ namespace Framewerk.Core
         
         #endregion
         
-        public void MapSingleton<T>() 
+        public void MapSingleton<T>(object name = null) 
         {
-            if(_injections.ContainsKey(typeof(T)))
+            if(GetInjection(typeof(T), name) != null)
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapSingleton() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, typeof(T));
 
-            _injections[typeof(T)] = new Injection(typeof(T), InjectionType.Singleton);
+            SetInjection(typeof(T), new Injection(typeof(T), InjectionType.Singleton), name);
         }
 
-        public void MapSingletonOf<TRequested, TValue>() where TValue : TRequested
+        public void MapSingletonOf<TRequested, TValue>(object name = null) where TValue : TRequested
         {
-            if(_injections.ContainsKey(typeof(TRequested)))
+            if(GetInjection(typeof(TRequested), name) != null)
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapSingletonOf() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, typeof(TRequested));
 
-            _injections[typeof(TRequested)] = new Injection(typeof(TValue), InjectionType.Singleton);
+            SetInjection(typeof(TRequested), new Injection(typeof(TValue), InjectionType.Singleton), name);
         }
 
-        public void MapClass<TRequested, TClass>() where TClass : TRequested
+        public void MapClass<TRequested, TClass>(object name = null) where TClass : TRequested
         {
-            if(_injections.ContainsKey(typeof(TRequested)))
+            if(GetInjection(typeof(TRequested), name) != null)
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapClass() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, typeof(TRequested));
 
-            _injections[typeof(TRequested)] = new Injection(typeof(TRequested), InjectionType.Unique);
+            SetInjection(typeof(TRequested), new Injection(typeof(TClass), InjectionType.Unique), name);
         }
 
-        public void MapClass<T>()
+        public void MapClass<T>(object name = null)
         {
-            MapClass<T, T>();
+            MapClass<T, T>(name);
         }
 
-        public void MapValue<T>(T value)
+        public void MapValue<T>(T value, object name = null)
         {
-            if(_injections.ContainsKey(typeof(T)))
+            if(GetInjection(typeof(T), name) != null)
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapValue() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, typeof(T));
 
-            _injections[typeof(T)] = new Injection(value, InjectionType.Value);
+            SetInjection(typeof(T), new Injection(value, InjectionType.Value), name);
         }
 
-        public void MapValue(object value, Type type)
+        public void MapValue(Type type, object value,  object name = null)
         {
-            if(_injections.ContainsKey(type))
+            if(GetInjection(type, name) != null)
                 Debug.LogWarningFormat("<color=\"aqua\">{0}.MapValue() : Mapping for {1} already defined, you should unmap first if you want to change the mapping</color>", this, value.GetType());
 
-            _injections[type] = new Injection(value, InjectionType.Value);
+            SetInjection(type, new Injection(value, InjectionType.Value), name);
         }
 
         public void Unmap<T>()

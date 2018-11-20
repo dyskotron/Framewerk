@@ -58,7 +58,7 @@ namespace Framewerk.Core
                 return;
             }
 
-            _injector.MapValue(e, e.GetType());
+            _injector.MapValue(e.GetType(), e, null);
             _injector.InjectInto(command);
             _injector.Unmap(e);
 
