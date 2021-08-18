@@ -43,3 +43,5 @@ Framewerk is simpler with less features and the plan is to keep it that way, but
 - Better support of multiple contexts
 
 After these will be done, proper documentation, and couple of tutorials covering most of core functionality will be done before adding more stuff to the framework.
+
+[![GitHub Super-Linter](https://github.com/dyskotron/Framewerk/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
