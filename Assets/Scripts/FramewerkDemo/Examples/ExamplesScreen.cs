@@ -24,6 +24,8 @@ namespace FramewerkDemo.Examples
         {
             _topMenu = _uiManager.CreateUIMediator<TopMenuMediator>();
             _topMenu.SetExampleId(exampleId);
+            int nECo = 5;
+            string bblaBLa = "blabla";
             
             switch (exampleId)
             {
