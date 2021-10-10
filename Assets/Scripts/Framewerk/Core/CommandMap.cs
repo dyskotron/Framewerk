@@ -15,7 +15,7 @@ namespace Framewerk.Core
     //TODO: detain/release mechanism from robotlegs
     public class CommandMap : ICommandMap
     {
-        private readonly Dictionary<Type, Type> _eventToCommandMap;
+        private readonly Dictionary<Type, Type> _GHeventToCommandMap;
 
         private readonly IInjector _injector;
         private readonly IEventDispatcher _observer;
