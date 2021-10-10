@@ -50,6 +50,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\FramewerkDemo\ClassName.cs" />
      <Compile Include="Assets\Scripts\Framewerk\Core\CommandMap.cs" />
      <Compile Include="Assets\Scripts\Framewerk\Core\EventDispatcher.cs" />
      <Compile Include="Assets\Scripts\Framewerk\Core\Injector.cs" />
