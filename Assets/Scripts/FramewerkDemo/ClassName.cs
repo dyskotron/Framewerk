@@ -9,7 +9,7 @@ public class ClassName : Monobehaviour
 
     [SerializeField] float _speed = 0.5f;
 
-    [Inject] readonly OtherClass otherReference = default;
+    [Inject] readonly OtherClass __otherReference = default;
 
     public enum NestedEnum
     {
