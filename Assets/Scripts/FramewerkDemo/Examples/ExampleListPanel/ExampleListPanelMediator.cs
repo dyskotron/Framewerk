@@ -1,5 +1,5 @@
 using System;
-using Boo.Lang;
+using System.Collections.Generic;
 using Framewerk.ViewComponents.ListComponent;
 using Random = UnityEngine.Random;
 
@@ -10,7 +10,7 @@ namespace FramewerkDemo.Examples.ExampleListPanel
         protected override void Init()
         {
             base.Init();
-            
+
             //create Dummy data
             var names = new List<String>();
             names.Add("Daisy");
@@ -25,12 +25,12 @@ namespace FramewerkDemo.Examples.ExampleListPanel
             names.Add("Milo");
             names.Add("Chloe");
 
-            var _data = new System.Collections.Generic.List<ExampleListDataProvider>();
+            var _data = new List<ExampleListDataProvider>();
             for (var i = 0; i < 20; i++)
             {
                 _data.Add(new ExampleListDataProvider(names[Random.Range(0, names.Count - 1)], Random.value > 0.5f));
             }
-            
+
             SetData(_data);
         }
     }
