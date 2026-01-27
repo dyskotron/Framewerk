@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
-namespace Framewerk.Managers
-{
+namespace Framewerk.Managers{
 
     public static class CoroutineExtensions
     {
@@ -18,6 +18,7 @@ namespace Framewerk.Managers
     {
         Coroutine RunCoroutine(IEnumerator routine, MonoBehaviour mb = null);
         Coroutine DelayedCall(float secs, Action callBack, MonoBehaviour mb = null);
+        Coroutine DelayedCallRealtime(float secs, Action callBack, MonoBehaviour mb = null);
         void KillCoroutine(Coroutine co);
         void KillAllCoroutines();
     }
@@ -51,7 +52,6 @@ namespace Framewerk.Managers
                 //The StopCoroutine call can sometimes produce "Coroutine continue failure" error
                 //which is harmless according to the Unity devs from this thread.
                 //http://forum.unity3d.com/threads/new-added-stopcoroutine-coroutine-coroutine-override-function-causes-errors.287481/
-                //Fix for this behaviour was made at some point but lost at some point
                 //This will probably be finally fixed in next versions
 
                 if (coroutine.IsAlive)
@@ -99,10 +99,27 @@ namespace Framewerk.Managers
         {
             return RunCoroutine(WaitingFor(secs, callBack), mb);
         }
-
         private static IEnumerator WaitingFor(float secs, Action callBack)
         {
             yield return new WaitForSeconds(secs);
+            try
+            {
+                callBack();
+            }
+            catch (Exception ex)
+            {
+                //Logger.WriteError(ex, "DelayedActions.WaitingFor", String.Format("During {0} the error {1} happened.", id, ex.GetType().Name),LogOutputFlags.IncudeStackTrace);
+                Debug.LogErrorFormat("DelayedActions.WaitingFor: {0}, {1}\n{2}", ex.GetType().Name, ex.Message, ex.StackTrace);
+            }
+        }
+
+        public Coroutine DelayedCallRealtime(float secs, Action callBack, MonoBehaviour mb = null)
+        {
+            return RunCoroutine(WaitingForRealtime(secs, callBack), mb);
+        }
+        private static IEnumerator WaitingForRealtime(float secs, Action callBack)
+        {
+            yield return new WaitForSecondsRealtime(secs);
             try
             {
                 callBack();
@@ -147,7 +164,7 @@ namespace Framewerk.Managers
         protected override void SingletonMonoInit()
         {
             base.SingletonMonoInit();
-            gameObject.name = "Framewerk.CoroutineManager";
+            gameObject.name = "CoroutineManager";
         }
     }
     
