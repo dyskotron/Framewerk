@@ -326,11 +326,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 950631363}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 598206bf9988a43da99e4865390970b5, type: 3}
+  m_Script: {fileID: 11500000, guid: 55ae3815cca84497b95189b59d9a161e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UIParent: {fileID: 377375292}
-  PopupParent: {fileID: 1546573150}
+  Camera3d: {fileID: 534669904}
+  UICamera: {fileID: 534669904}
+  Container3d: {fileID: 534669905}
+  UiBottom: {fileID: 377375292}
+  UiDefault: {fileID: 377375292}
+  Popups: {fileID: 1546573150}
+  UiOverlay: {fileID: 1546573150}
 --- !u!114 &950631366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -342,6 +347,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58ba069277ca4611873d0980aafcfe61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  viewConfig: {fileID: 950631365}
 --- !u!1 &1546573146
 GameObject:
   m_ObjectHideFlags: 0
