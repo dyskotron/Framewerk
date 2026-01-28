@@ -1,15 +1,9 @@
-using Framewerk.Events;
 using FramewerkDemo.MainMenu.Model;
+using strange.extensions.signal.impl;
 
-namespace FramewerkDemo.MainMenu
+namespace FramewerkDemo.MainMenu.Controller
 {
-    public class MenuItemSelectedEvent : AbstractEvent
+    public class MenuItemSelectedSignal : Signal<ExampleId>
     {
-        public ExampleId ExampleId { get; private set; }
-
-        public MenuItemSelectedEvent(ExampleId exampleId)
-        {
-            ExampleId = exampleId;
-        }
     }
 }

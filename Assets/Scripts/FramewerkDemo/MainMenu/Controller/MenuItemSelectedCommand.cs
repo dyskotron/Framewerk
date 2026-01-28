@@ -1,20 +1,18 @@
-using Framewerk.Core;
-using Framewerk.Managers.StateMachine;
-using Framewerk.Mvcs;
+using Framewerk.AppStateMachine;
 using FramewerkDemo.Examples;
-using UnityEngine;
+using FramewerkDemo.MainMenu.Model;
+using strange.extensions.command.impl;
 
 namespace FramewerkDemo.MainMenu
 {
     public class MenuItemSelectedCommand : Command
     {
-        [Inject] private MenuItemSelectedEvent _e;
-        [Inject] private IFsm _fsm;
-        
+        [Inject] public ExampleId ExampleId { get; set; }
+        [Inject] public IAppFsm Fsm { get; set; }
+
         public override void Execute()
         {
-            //Switch to Framework example view
-            _fsm.SwitchState(new ExamplesState(_e.ExampleId));
+            Fsm.SwitchState(new ExamplesState(ExampleId));
         }
     }
 }

@@ -1,9 +1,8 @@
-using Framewerk.Events;
+using strange.extensions.signal.impl;
 
 namespace FramewerkDemo.MainMenu.Controller
 {
-    public class ShowMenuEvent : AbstractEvent
+    public class ShowMenuSignal : Signal
     {
-        
     }
 }

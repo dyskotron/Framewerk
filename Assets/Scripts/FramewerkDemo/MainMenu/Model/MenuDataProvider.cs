@@ -1,4 +1,4 @@
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 
 namespace FramewerkDemo.MainMenu.Model
 {
@@ -6,7 +6,7 @@ namespace FramewerkDemo.MainMenu.Model
     {
         public ExampleId ItemIdId { get; private set; }
         public string Label { get; private set; }
-        
+
         public MenuDataProvider(ExampleId itemIdId, string label)
         {
             ItemIdId = itemIdId;

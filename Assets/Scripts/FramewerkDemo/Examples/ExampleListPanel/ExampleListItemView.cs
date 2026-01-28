@@ -1,4 +1,4 @@
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 using UnityEngine;
 using UnityEngine.UI;
 

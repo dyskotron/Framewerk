@@ -1,4 +1,4 @@
-using Framewerk.Mvcs;
+using strange.extensions.mediation.impl;
 using UnityEngine.UI;
 
 namespace FramewerkDemo.Examples

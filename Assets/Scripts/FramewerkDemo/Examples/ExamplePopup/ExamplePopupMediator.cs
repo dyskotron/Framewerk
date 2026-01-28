@@ -1,22 +1,24 @@
-using Framewerk.Managers.Popup;
+using Framewerk.Popups;
 using FramewerkDemo.MainMenu.Controller;
 
 namespace FramewerkDemo.Examples.ExamplePopup
 {
     public class ExamplePopupMediator : PopupMediator<ExamplePopupView>
     {
-        protected override void Init()
+        [Inject] public ShowMenuSignal ShowMenuSignal { get; set; }
+
+        public override void OnRegister()
         {
-            base.Init();
+            base.OnRegister();
 
             View.SetMessage("Hello, i am really simple popup.\n" +
                             "Click the button and you'll get back to menu");
-            AttachButtonListener(View.ConfirmButton, ButtonHandler);
+            AddButtonListener(View.ConfirmButton, ButtonHandler);
         }
 
         private void ButtonHandler()
         {
-            DispatchEvent(new ShowMenuEvent());        
+            ShowMenuSignal.Dispatch();
         }
     }
 }

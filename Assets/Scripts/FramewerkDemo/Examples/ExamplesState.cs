@@ -1,14 +1,10 @@
-using Framewerk.Core;
-using Framewerk.Managers.StateMachine;
-using FramewerkDemo.MainMenu;
+using Framewerk.AppStateMachine;
 using FramewerkDemo.MainMenu.Model;
 
 namespace FramewerkDemo.Examples
 {
     public class ExamplesState : AppState<ExamplesScreen>
     {
-        [Inject] private IEventDispatcher _eventDispatcher;
-        
         private ExampleId _exampleId;
 
         public ExamplesState(ExampleId exampleId)
@@ -16,11 +12,10 @@ namespace FramewerkDemo.Examples
             _exampleId = exampleId;
         }
 
-        protected override void TransitionInFinished()
+        protected override void Enter()
         {
             Screen.InitExample(_exampleId);
-            
-            base.TransitionInFinished();
+            base.Enter();
         }
     }
 }

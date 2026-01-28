@@ -1,16 +1,15 @@
-using Framewerk.Core;
-using Framewerk.Managers.StateMachine;
-using Framewerk.Mvcs;
+using Framewerk.AppStateMachine;
+using strange.extensions.command.impl;
 
 namespace FramewerkDemo.MainMenu
 {
     public class ShowMenuCommand : Command
     {
-        [Inject] private IFsm _fsm;
-        
+        [Inject] public IAppFsm Fsm { get; set; }
+
         public override void Execute()
         {
-            _fsm.SwitchState(new MenuState());    
+            Fsm.SwitchState(new MenuState());
         }
     }
 }

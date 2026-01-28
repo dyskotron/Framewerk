@@ -1,29 +1,24 @@
-using Framewerk.Core;
-using Framewerk.Mvcs;
+using Framewerk.UI;
 using FramewerkDemo.MainMenu.Controller;
 using FramewerkDemo.MainMenu.Model;
 
 namespace FramewerkDemo.Examples
 {
-    public class TopMenuMediator : Mediator<TopMenuView>
+    public class TopMenuMediator : ExtendedMediator<TopMenuView>
     {
-        [Inject] private IMenuModel _menuModel;
-        
-        protected override void Init()
+        [Inject] public IMenuModel MenuModel { get; set; }
+        [Inject] public ShowMenuSignal ShowMenuSignal { get; set; }
+
+        public override void OnRegister()
         {
-            base.Init();
-            
-            AttachButtonListener(View.CloseButton, CloseButtonClickedHandler);
+            base.OnRegister();
+
+            AddButtonListener(View.CloseButton, CloseButtonClickedHandler);
         }
 
         private void CloseButtonClickedHandler()
         {
-            DispatchEvent(new ShowMenuEvent());
-        }
-
-        public void SetExampleId(ExampleId exampleId)
-        {
-            View.TitleText.text = _menuModel.GetMenuItemById(exampleId).Label;
+            ShowMenuSignal.Dispatch();
         }
     }
 }

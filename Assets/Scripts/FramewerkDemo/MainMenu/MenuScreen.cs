@@ -1,41 +1,28 @@
-using Framewerk.Core;
+using Framewerk.AppStateMachine;
 using Framewerk.Managers;
-using Framewerk.Managers.StateMachine;
-using Framewerk.ViewComponents.ListComponent;
+using FramewerkDemo.MainMenu.Controller;
 using FramewerkDemo.MainMenu.Model;
 
 namespace FramewerkDemo.MainMenu
 {
     public class MenuScreen : AppStateScreen
     {
-        private const string MENU_UI_ROOT = "Menu/";
-        
-        [Inject] private IMenuModel _menuModel;
-        [Inject] private IUIManager _uiManager;
-        [Inject] private IEventDispatcher _eventDispatcher;
+        [Inject] public IMenuModel MenuModel { get; set; }
+        [Inject] public IUiManager UiManager { get; set; }
+        [Inject] public MenuItemSelectedSignal MenuItemSelectedSignal { get; set; }
 
-        private MenuPanelMediator _menuPanelList;
-        
-        
-        public override void In()
+        private MenuView _menuView;
+
+        protected override void Enter()
         {
-            base.In();
+            base.Enter();
 
-            _menuPanelList = _uiManager.CreateUIMediator<MenuPanelMediator>(MENU_UI_ROOT);
-            _menuPanelList.SetData(_menuModel.GetMenuData());
-            _menuPanelList.EventBus.AddListener<ListItemClickedEvent>(MenuItemClickedHandler);
+            _menuView = InstantiateView<MenuView>("Menu/");
         }
 
-        public override void Out()
+        protected override void Exit()
         {
-            _menuPanelList.Destroy();
-            base.Out();
-        }
-
-        private void MenuItemClickedHandler(ListItemClickedEvent e)
-        {
-            var item = _menuPanelList.GetDataproviderAt(e.ItemIndex);
-            _eventDispatcher.DispatchEvent(new MenuItemSelectedEvent(item.ItemIdId));
+            base.Exit();
         }
     }
 }

@@ -1,47 +1,72 @@
-﻿using Framewerk.Events;
+using Framewerk;
+using Framewerk.AppStateMachine;
 using Framewerk.Managers;
-using Framewerk.Managers.Popup;
-using Framewerk.Managers.StateMachine;
-using Framewerk.Mvcs;
-using Framewerk.ViewUtils;
+using Framewerk.Popups;
+using Framewerk.StrangeCore;
+using FramewerkDemo.Examples;
+using FramewerkDemo.Examples.ExampleListPanel;
+using FramewerkDemo.Examples.ExamplePopup;
 using FramewerkDemo.MainMenu;
 using FramewerkDemo.MainMenu.Controller;
 using FramewerkDemo.MainMenu.Model;
+using Plugins.Framewerk;
+using strange.extensions.context.impl;
+using strange.extensions.injector.api;
 
 namespace FramewerkDemo
 {
-    public class FramewerkDemoContext : Context
+    public class FramewerkDemoContext : FramewerkMVCSContext
     {
-        public FramewerkDemoContext(BaseViewSettings viewSettings) : base(viewSettings)
-        {
+        private readonly ViewConfig _viewConfig;
 
+        public FramewerkDemoContext(ContextView view, ViewConfig viewConfig) : base(view, true)
+        {
+            _viewConfig = viewConfig;
         }
 
-        protected override void Startup()
+        protected override void mapBindings()
         {
-            //FSM
-            Injector.MapSingletonOf<IFsm,Fsm>();
+            base.mapBindings();
 
-            //MODEL
-            Injector.MapSingletonOf<IMenuModel, MenuModel>();
-            Injector.MapSingletonOf<IPlayerPrefsManager, PlayerPrefsManager>();
+            injectionBinder.Bind<IInjector>().To(injectionBinder.injector);
 
-            //VIEW
-            Injector.MapSingletonOf<IAssetManager, AssetManager>();
-            Injector.MapSingletonOf<IUIManager, UIManager>();
-            Injector.MapSingletonOf<IPopUpManager, PopUpManager>();
+            // Framewerk core
+            injectionBinder.Bind<ViewConfig>().ToValue(_viewConfig);
+            injectionBinder.Bind<ICoroutineManager>().ToValue(CoroutineManager.Instance);
+            injectionBinder.Bind<IUpdater>().ToValue(Updater.Instance);
+            injectionBinder.Bind<IAppMonitor>().ToValue(AppMonitor.Instance);
+            injectionBinder.Bind<IAssetManager>().To<AssetManager>().ToSingleton();
+            injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
 
-            //COMMANDS
-            CommandMap.MapCommand<FramewerkStartEvent, FramewerkStartCommand>();
-            CommandMap.MapCommand<MenuItemSelectedEvent, MenuItemSelectedCommand>();
-            CommandMap.MapCommand<ShowMenuEvent, ShowMenuCommand>();
+            // FSM
+            injectionBinder.Bind<IAppFsm>().To<AppFsm>().ToSingleton();
+            injectionBinder.Bind<AppStateEnterSignal>().ToSingleton();
+            injectionBinder.Bind<AppStateExitSignal>().ToSingleton();
 
-            base.Startup();
-        }
+            // Popups
+            injectionBinder.Bind<IPopupManager>().To<PopupManager>().ToSingleton();
+            injectionBinder.Bind<PopupOpenedSignal>().ToSingleton();
+            injectionBinder.Bind<PopupClosedSignal>().ToSingleton();
 
-        protected override void Exit()
-        {
+            // MODEL
+            injectionBinder.Bind<IMenuModel>().To<MenuModel>().ToSingleton();
 
+            // VIEW
+            mediationBinder.Bind<MenuItemView>().To<MenuItemMediator>();
+            mediationBinder.Bind<MenuView>().To<MenuPanelMediator>();
+            mediationBinder.Bind<TopMenuView>().To<TopMenuMediator>();
+            mediationBinder.Bind<ExamplePopupView>().To<ExamplePopupMediator>();
+            mediationBinder.Bind<ExampleListItemView>().To<ExampleLisItemMediator>();
+            mediationBinder.Bind<ExampleListPanelView>().To<ExampleListPanelMediator>();
+
+            // SIGNALS
+            injectionBinder.Bind<MenuItemSelectedSignal>().ToSingleton();
+            injectionBinder.Bind<ShowMenuSignal>().ToSingleton();
+
+            // COMMANDS
+            commandBinder.Bind<ContextStartSignal>().To<FramewerkStartCommand>();
+            commandBinder.Bind<MenuItemSelectedSignal>().To<MenuItemSelectedCommand>();
+            commandBinder.Bind<ShowMenuSignal>().To<ShowMenuCommand>();
         }
     }
 }

@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 using Random = UnityEngine.Random;
 
 namespace FramewerkDemo.Examples.ExampleListPanel
 {
-    public class ExampleListPanelMediator : ListContainerMediator<ListContainerView, ExampleLisItemMediator, ExampleListDataProvider>
+    public class ExampleListPanelMediator : ListMediator<ExampleListPanelView, ExampleListDataProvider>
     {
-        protected override void Init()
+        public override void OnRegister()
         {
-            base.Init();
+            base.OnRegister();
 
-            //create Dummy data
+            // Create dummy data
             var names = new List<String>();
             names.Add("Daisy");
             names.Add("Kitty");
@@ -25,13 +25,13 @@ namespace FramewerkDemo.Examples.ExampleListPanel
             names.Add("Milo");
             names.Add("Chloe");
 
-            var _data = new List<ExampleListDataProvider>();
+            var data = new List<ExampleListDataProvider>();
             for (var i = 0; i < 20; i++)
             {
-                _data.Add(new ExampleListDataProvider(names[Random.Range(0, names.Count - 1)], Random.value > 0.5f));
+                data.Add(new ExampleListDataProvider(names[Random.Range(0, names.Count - 1)], Random.value > 0.5f));
             }
 
-            SetData(_data);
+            SetData(data);
         }
     }
 }

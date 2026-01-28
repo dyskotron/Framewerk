@@ -1,8 +1,8 @@
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 
 namespace FramewerkDemo.MainMenu
 {
-    public class MenuView : ListContainerView
+    public class MenuView : ListView
     {
     }
 }

@@ -1,4 +1,4 @@
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 using FramewerkDemo.MainMenu.Model;
 
 namespace FramewerkDemo.MainMenu

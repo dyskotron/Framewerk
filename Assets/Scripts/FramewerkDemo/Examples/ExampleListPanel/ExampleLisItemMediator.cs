@@ -1,4 +1,4 @@
-using Framewerk.ViewComponents.ListComponent;
+using Framewerk.UI.List;
 using UnityEngine;
 
 namespace FramewerkDemo.Examples.ExampleListPanel
@@ -9,9 +9,8 @@ namespace FramewerkDemo.Examples.ExampleListPanel
         {
             View.Label.text = dataProvider.Name;
             View.Image.enabled = dataProvider.HasKitten;
-
             View.Image.color = Color.white;
-            
+
             base.SetData(dataProvider, index);
         }
 

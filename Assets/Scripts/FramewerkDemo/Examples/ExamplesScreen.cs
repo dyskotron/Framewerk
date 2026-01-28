@@ -1,58 +1,33 @@
 using System;
-using Framewerk.Core;
+using Framewerk.AppStateMachine;
 using Framewerk.Managers;
-using Framewerk.Managers.Popup;
-using Framewerk.Managers.StateMachine;
-using Framewerk.Mvcs;
+using Framewerk.Popups;
 using FramewerkDemo.Examples.ExampleListPanel;
 using FramewerkDemo.Examples.ExamplePopup;
-using FramewerkDemo.Examples.ExampleVirtualListPanel;
 using FramewerkDemo.MainMenu.Model;
-using ExampleTabPanelMediator = FramewerkDemo.Examples.ExampleTabPanel.ExampleTabPanelMediator;
 
 namespace FramewerkDemo.Examples
 {
     public class ExamplesScreen : AppStateScreen
     {
-        [Inject] private IUIManager _uiManager;
-        [Inject] private IPopUpManager _popUpManager;
-        
-        private TopMenuMediator _topMenu;
-        private IMediator _example;
+        [Inject] public IUiManager UiManager { get; set; }
+        [Inject] public IPopupManager PopupManager { get; set; }
 
         public void InitExample(ExampleId exampleId)
         {
-            _topMenu = _uiManager.CreateUIMediator<TopMenuMediator>();
-            _topMenu.SetExampleId(exampleId);
-            
+            InstantiateView<TopMenuView>("Examples/");
+
             switch (exampleId)
             {
                 case ExampleId.Popup:
-                    _example = _popUpManager.ShowPopUp<ExamplePopupMediator>();
-                    break;
-                case ExampleId.Tabs:
-                    _example = _uiManager.CreateUIMediator<ExampleTabPanelMediator>("TabPanel/");
+                    PopupManager.InstantiatePopup<ExamplePopupView>();
                     break;
                 case ExampleId.List:
-                    _example = _uiManager.CreateUIMediator<ExampleListPanelMediator>("ListPanel/");
-                    break;
-                case ExampleId.VirtualList:
-                    _example = _uiManager.CreateUIMediator<ExampleVirtualListPanelMediator>("VirtualListPanel/");
+                    UiManager.InstantiateView<ExampleListPanelView>("ListPanel/");
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("exampleId", exampleId, null);
+                    throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);
             }
-        }
-
-        public override void Destroy()
-        {
-            if(_topMenu != null)
-                _topMenu.Destroy();
-            
-            if(_example != null)
-                _example.Destroy();
-            
-            base.Destroy();
         }
     }
 }

@@ -1,16 +1,23 @@
-using Framewerk.ViewUtils;
-using UnityEngine;
+using Plugins.Framewerk;
+using strange.extensions.context.impl;
 
 namespace FramewerkDemo
 {
-    public class FramewerkDemoBootstrap : MonoBehaviour
+    public class FramewerkDemoBootstrap : ContextView
     {
+        public ViewConfig viewConfig;
+
         private FramewerkDemoContext _context;
-            
+
         private void Start()
         {
-            var viewSettings = gameObject.GetComponent<BaseViewSettings>();
-            _context = new FramewerkDemoContext(viewSettings);
+            _context = new FramewerkDemoContext(this, viewConfig);
+            _context.Start();
+        }
+
+        private void OnApplicationQuit()
+        {
+            _context.OnRemove();
         }
     }
 }
