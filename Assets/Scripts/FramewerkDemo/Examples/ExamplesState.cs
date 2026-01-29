@@ -14,7 +14,7 @@ namespace FramewerkDemo.Examples
 
         protected override void Enter()
         {
-            Screen.InitExample(_exampleId);
+            _ = Screen.InitExampleAsync(_exampleId);
             base.Enter();
         }
     }

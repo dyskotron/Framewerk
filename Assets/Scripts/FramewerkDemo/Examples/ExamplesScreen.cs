@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Framewerk.AppStateMachine;
 using Framewerk.Popups;
 using FramewerkDemo.Examples.ExampleListPanel;
@@ -11,17 +12,17 @@ namespace FramewerkDemo.Examples
     {
         [Inject] public IPopupManager PopupManager { get; set; }
 
-        public void InitExample(ExampleId exampleId)
+        public async Task InitExampleAsync(ExampleId exampleId)
         {
-            InstantiateView<TopMenuView>("Examples/");
+            await InstantiateViewAsync<TopMenuView>("Examples/");
 
             switch (exampleId)
             {
                 case ExampleId.Popup:
-                    PopupManager.InstantiatePopup<ExamplePopupView>();
+                    await PopupManager.InstantiatePopupAsync<ExamplePopupView>();
                     break;
                 case ExampleId.List:
-                    UiManager.InstantiateView<ExampleListPanelView>("ListPanel/");
+                    await UiManager.InstantiateViewAsync<ExampleListPanelView>("ListPanel/");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);

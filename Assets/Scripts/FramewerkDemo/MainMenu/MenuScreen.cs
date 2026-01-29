@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Framewerk.AppStateMachine;
 using FramewerkDemo.MainMenu.Controller;
 using FramewerkDemo.MainMenu.Model;
@@ -11,16 +12,9 @@ namespace FramewerkDemo.MainMenu
 
         private MenuView _menuView;
 
-        protected override void Enter()
+        protected override async Task EnterAsync()
         {
-            base.Enter();
-
-            _menuView = InstantiateView<MenuView>("Menu/");
-        }
-
-        protected override void Exit()
-        {
-            base.Exit();
+            _menuView = await InstantiateViewAsync<MenuView>("Menu/");
         }
     }
 }

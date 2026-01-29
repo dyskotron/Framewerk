@@ -1,207 +1,128 @@
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.U2D;
 
 namespace Framewerk.Managers
 {
-    /// <summary>
-    /// Basic asset management, takes care of loading, caching and instantiating assets.
-    /// If you are trying to instantiate UI assets you should always use UIManager which also takes care of parenting
-    /// and works within folder dedicated to UI assets.
-    /// </summary>
     public interface IAssetManager
     {
-        /// <summary>
-        /// Loads Object from resources and save it to cache
-        ///
-        /// </summary>
-        /// <param name="path">Absolute path to asset</param>
-        /// <returns></returns>
-        void PreloadAsset(string path);
-
-        /// <summary>
-        /// Checks if given asset is in cache.
-        /// </summary>
-        /// <param name="path">Absolute path to asset</param>
-        /// <returns></returns>
-        bool IsAssetPreloaded(string path);
-
-        /// <summary>
-        /// Get Asset by path,
-        /// Takes object from cache if available.
-        ///
-        /// </summary>
-        /// <param name="path">Absolute path to asset</param>
-        /// /// <param name="parent">Parent where the prefab should be instantiated</param>
-        /// <param name="saveToCache">If Asset should be saved to cache</param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns>Wanted asset of type T</returns>
-        T GetAsset<T>(string path, Transform parent = null, bool saveToCache = false) where T : Object;
-
-        /// <summary>
-        /// Instantiate GameObject, finds and returns Monobehaviour by Type.
-        /// </summary>
-        /// <param name="path">Optional path that can be added between UI root and prefab name
-        /// UI_ROOT/[ADDED CUSTOM PATH/]prefabname</param>
-        /// <param name="parent">Parent where the GameObject should be instantiated</param>
-        /// /// <param name="saveToCache">If Asset should be saved to cache</param>
-        /// <returns></returns>
-        T GetGameObject<T>(string path = "", Transform parent = null, bool saveToCache = false) where T : MonoBehaviour;
-
-        /// <summary>
-        /// Get Sprite by path,
-        /// Takes object from cache if available.
-        ///
-        /// </summary>
-        /// <param name="path">Absolute path to asset</param>
-        /// <param name="saveToCache">If Asset should be saved to cache</param>
-        /// <returns>Sprite</returns>
-        Sprite GetSprite(string path, bool saveToCache = false);
-
-        /// <summary>
-        /// Get Sprite from Spite Atlas,
-        /// Takes object from cache if available.
-        ///
-        /// </summary>
-        /// <param name="path">Sprite path relative to sprites root</param>
-        /// <param name="saveToCache">If Asset should be saved to cache</param>
-        /// <returns>Sprite</returns>
-        Sprite GetSpriteFromAtlas(string path, string sprite, bool saveToCache = false);
-
-        /// <summary>
-        /// Get Texture2D by path,
-        /// Takes object from cache if available.
-        ///
-        /// </summary>
-        /// <param name="path">Absolute path to asset</param>
-        /// <param name="saveToCache">If Asset should be saved to cache</param>
-        /// <returns>Texture2D</returns>
-        Texture2D GetTexture(string path, bool saveToCache = false);
-
-		/// <summary>
-		/// Get Material by path,
-		/// Takes object from cache if available.
-		///
-		/// </summary>
-		/// <param name="path">Absolute path to asset</param>
-		/// <param name="saveToCache">If Asset should be saved to cache</param>
-		/// <returns>Sprite</returns>
-		Material GetMaterial(string path, bool saveToCache = false);
-
+        Task PreloadAssetAsync(string address, CancellationToken ct = default);
+        bool IsAssetPreloaded(string address);
+        Task<T> GetAssetAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : Object;
+        Task<T> GetGameObjectAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : MonoBehaviour;
+        Task<T> LoadAssetAsync<T>(string address, CancellationToken ct = default) where T : Object;
+        Task<Sprite> GetSpriteAsync(string address, CancellationToken ct = default);
+        Task<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName, CancellationToken ct = default);
+        Task<Texture2D> GetTextureAsync(string address, CancellationToken ct = default);
+        Task<Material> GetMaterialAsync(string address, CancellationToken ct = default);
+        void ReleaseInstance(GameObject instance);
+        void ReleaseAsset<T>(T asset) where T : Object;
         void Destroy();
     }
 
     public class AssetManager : IAssetManager
     {
-        private Dictionary<string, Object> cachedObjects;
+        private Dictionary<string, AsyncOperationHandle> _preloadedHandles = new Dictionary<string, AsyncOperationHandle>();
+        private List<GameObject> _instantiatedObjects = new List<GameObject>();
 
-        public AssetManager()
+        public async Task PreloadAssetAsync(string address, CancellationToken ct = default)
         {
-            cachedObjects = new Dictionary<string, Object>();
-        }
-
-        public void PreloadAsset(string path)
-        {
-            if (cachedObjects.ContainsKey(path))
+            if (_preloadedHandles.ContainsKey(address))
                 return;
 
-            var loadedObj = Resources.Load(path);
-            cachedObjects[path] = loadedObj;
+            var handle = Addressables.LoadAssetAsync<Object>(address);
+            await handle.Task;
+            _preloadedHandles[address] = handle;
         }
 
-        public bool IsAssetPreloaded(string path)
+        public bool IsAssetPreloaded(string address)
         {
-            return cachedObjects.ContainsKey(path);
+            return _preloadedHandles.ContainsKey(address);
         }
 
-        public T GetAsset<T>(string path, Transform instantiateParent = null, bool saveToCache = false) where T : Object
+        public async Task<T> GetAssetAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : Object
         {
-            Object loadedObj = TryGetFromCache<T>(path, saveToCache);
-
-            if (loadedObj == null)
+            if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
             {
-                Debug.LogErrorFormat("AssetManager.GetAsset: Asset in path {0} does not exist !" , path);
-                return null;
+                var go = await Addressables.InstantiateAsync(address, parent).Task;
+                _instantiatedObjects.Add(go);
+                return go as T;
             }
 
-            var returnObj = Object.Instantiate(loadedObj, instantiateParent) as T;
-            
-            if (returnObj == null)
-            {
-                Debug.LogErrorFormat("AssetManager.GetAsset: Asset in path {0} is is not {1} type" , path, typeof(T));
-                return null;
-            }
-
-            return returnObj;
+            var asset = await Addressables.LoadAssetAsync<T>(address).Task;
+            return asset;
         }
-        
-        public T GetGameObject<T>(string path = "", Transform parent = null, bool saveToCache = false) where T : MonoBehaviour
+
+        public async Task<T> GetGameObjectAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : MonoBehaviour
         {
-            var uiObj = GetAsset<GameObject>(path, parent, saveToCache);
-            var component = uiObj.GetComponent<T>();
+            var go = await Addressables.InstantiateAsync(address, parent).Task;
+            _instantiatedObjects.Add(go);
+            var component = go.GetComponent<T>();
 
             if (component == null)
-                Debug.LogErrorFormat("AssetManager.GetGameObject There is no {0} script attached on {1} Prefab", typeof(T), uiObj);
+                Debug.LogError($"AssetManager.GetGameObjectAsync: No {typeof(T)} on {go.name}");
 
             return component;
         }
 
-		public Material GetMaterial(string path, bool saveToCache = false)
-		{
-			return TryGetFromCache<Material>(path, saveToCache);
-		}
-
-        public virtual Sprite GetSprite(string path, bool saveToCache = false)
+        public async Task<T> LoadAssetAsync<T>(string address, CancellationToken ct = default) where T : Object
         {
-            return TryGetFromCache<Sprite>(path, saveToCache);
+            return await Addressables.LoadAssetAsync<T>(address).Task;
         }
 
-        public Sprite GetSpriteFromAtlas(string path, string sprite, bool saveToCache = false)
+        public async Task<Sprite> GetSpriteAsync(string address, CancellationToken ct = default)
         {
-            var atlas = TryGetFromCache<SpriteAtlas>(path, saveToCache);
-            
-            var loadedSprite = atlas.GetSprite(sprite);
-            if (loadedSprite == null)
-            {
-                Debug.LogErrorFormat("AssetManager.GetSpriteFromAtlas: There is no Sprite in atlas {0} with name {1}", path, sprite );
-            }
-
-            return loadedSprite;
+            return await Addressables.LoadAssetAsync<Sprite>(address).Task;
         }
 
-        public Texture2D GetTexture(string path, bool saveToCache = false)
+        public async Task<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName, CancellationToken ct = default)
         {
-            return TryGetFromCache<Texture2D>(path, saveToCache);
+            var atlas = await Addressables.LoadAssetAsync<SpriteAtlas>(atlasAddress).Task;
+            var sprite = atlas.GetSprite(spriteName);
+
+            if (sprite == null)
+                Debug.LogError($"AssetManager.GetSpriteFromAtlasAsync: No sprite '{spriteName}' in atlas '{atlasAddress}'");
+
+            return sprite;
+        }
+
+        public async Task<Texture2D> GetTextureAsync(string address, CancellationToken ct = default)
+        {
+            return await Addressables.LoadAssetAsync<Texture2D>(address).Task;
+        }
+
+        public async Task<Material> GetMaterialAsync(string address, CancellationToken ct = default)
+        {
+            return await Addressables.LoadAssetAsync<Material>(address).Task;
+        }
+
+        public void ReleaseInstance(GameObject instance)
+        {
+            _instantiatedObjects.Remove(instance);
+            Addressables.ReleaseInstance(instance);
+        }
+
+        public void ReleaseAsset<T>(T asset) where T : Object
+        {
+            Addressables.Release(asset);
         }
 
         public void Destroy()
         {
-            cachedObjects = null;
-        }
+            foreach (var handle in _preloadedHandles.Values)
+                Addressables.Release(handle);
+            _preloadedHandles.Clear();
 
-        protected T TryGetFromCache<T>(string path, bool saveToCache) where T : Object 
-        {
-            T loadedObject;
-
-            if (cachedObjects.ContainsKey(path))
+            foreach (var go in _instantiatedObjects)
             {
-                loadedObject = cachedObjects[path] as T;
+                if (go != null)
+                    Addressables.ReleaseInstance(go);
             }
-            else
-            {
-                
-                loadedObject = Resources.Load<T>(path);
-                if (saveToCache)
-                    cachedObjects[path] = loadedObject;
-            }
-
-            if (loadedObject == null)
-            {
-                Debug.LogErrorFormat("AssetManager.TryGetFromCache: There is no Asset in path {0} or its not of type {1} ", path, typeof(T));
-                return null;
-            }
-
-            return loadedObject;
+            _instantiatedObjects.Clear();
         }
     }
 }

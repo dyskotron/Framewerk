@@ -1,9 +1,12 @@
 {
   "name": "com.dyskotron.framewerk",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "displayName": "Framewerk",
   "description": "Inversion of control MVCS micro-framework with dependency injection, built on StrangeIoC.",
   "unity": "2021.3",
+  "dependencies": {
+    "com.unity.addressables": "1.21.0"
+  },
   "author": {
     "name": "Dyskotron",
     "url": "https://github.com/dyskotron"
