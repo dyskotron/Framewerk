@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Framewerk;
 using Framewerk.AppStateMachine;
 using Framewerk.Managers;
@@ -47,6 +48,7 @@ namespace FramewerkDemo
 
             // Popups
             injectionBinder.Bind<IPopupManager>().To<PopupManager>().ToSingleton();
+            injectionBinder.Bind<List<PopupButtonSetting>>().ToValue(new List<PopupButtonSetting>());
             injectionBinder.Bind<PopupOpenedSignal>().ToSingleton();
             injectionBinder.Bind<PopupClosedSignal>().ToSingleton();
 

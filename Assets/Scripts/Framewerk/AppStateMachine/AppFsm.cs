@@ -82,7 +82,7 @@ namespace Framewerk.AppStateMachine
 		{
 			//Debug.LogWarningFormat("<color=\"aqua\">{0}.SwitchState : {1}</color>", this, newState.GetType());
 			
-			InjectionBinder.injector.Inject(newState);
+			InjectionBinder.injector.Inject(newState, false);
 
 		    if (_currentTransition == TransitionType.None)
 			{

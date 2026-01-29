@@ -297,6 +297,13 @@ Use MCP tools for:
 - Creating folders/moving assets
 - **Reading Unity console output** — always check after changes to verify they work
 
+### ALWAYS Save Scenes & Assets
+After modifying ANY scene or asset (adding objects, changing properties, etc.):
+- **Save the scene** via MCP before committing, testing, or finishing work
+- **Save modified assets** too — unsaved changes are lost on crash or recompile
+- Unity does NOT auto-save scenes. If you don't save, your changes only exist in memory.
+- Do this BEFORE entering Play mode, BEFORE committing, and BEFORE reporting "done"
+
 ### Verify Your Work
 After making changes (code AND assets):
 1. **Stop Play mode first** — if Unity is in Play mode, stop it before making changes. Use MCP to check and stop if needed.
