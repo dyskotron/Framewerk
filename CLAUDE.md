@@ -299,11 +299,19 @@ Use MCP tools for:
 
 ### Verify Your Work
 After making changes (code AND assets):
-1. Use MCP to **refresh the asset database**
-2. Use MCP to **check the Unity console** for errors/warnings
-3. If there are errors, **fix them before moving on**
-4. Do NOT assume things work — verify via console output
-5. If something requires entering Play mode to test, tell the user
+1. **Stop Play mode first** — if Unity is in Play mode, stop it before making changes. Use MCP to check and stop if needed.
+2. Use MCP to **refresh the asset database** and let Unity recompile
+3. Use MCP to **check the Unity console** for compile errors/warnings — fix any that appear
+4. Once compile is clean, **enter Play mode** via MCP to test runtime behavior
+5. **Wait 1-2 minutes** in Play mode, then check the console again for runtime errors
+6. If there are runtime errors, **stop Play mode, fix them, and repeat from step 1**
+7. Do NOT assume things work — always verify via console output after Play mode
+
+### Workflow: Starting New Work
+1. **Always stop Unity Play mode first** — it may be running from a previous session
+2. Let Unity recompile if you've made code changes
+3. Check console for compile errors before entering Play mode
+4. Only enter Play mode to verify after all code/asset changes are done
 
 ---
 

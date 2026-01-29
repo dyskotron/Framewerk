@@ -1,6 +1,5 @@
 using System;
 using Framewerk.AppStateMachine;
-using Framewerk.Managers;
 using Framewerk.Popups;
 using FramewerkDemo.Examples.ExampleListPanel;
 using FramewerkDemo.Examples.ExamplePopup;
@@ -10,7 +9,6 @@ namespace FramewerkDemo.Examples
 {
     public class ExamplesScreen : AppStateScreen
     {
-        [Inject] public IUiManager UiManager { get; set; }
         [Inject] public IPopupManager PopupManager { get; set; }
 
         public void InitExample(ExampleId exampleId)
