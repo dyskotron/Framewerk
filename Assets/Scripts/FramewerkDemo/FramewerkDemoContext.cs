@@ -40,6 +40,8 @@ namespace FramewerkDemo
 
             // FSM
             injectionBinder.Bind<IAppFsm>().To<AppFsm>().ToSingleton();
+            injectionBinder.Bind<MenuScreen>().To<MenuScreen>();
+            injectionBinder.Bind<ExamplesScreen>().To<ExamplesScreen>();
             injectionBinder.Bind<AppStateEnterSignal>().ToSingleton();
             injectionBinder.Bind<AppStateExitSignal>().ToSingleton();
 
