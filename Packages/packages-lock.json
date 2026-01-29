@@ -9,6 +9,12 @@
       },
       "hash": "6b1c2c97c436feaa61acf030bc03c1e6afe680ba"
     },
+    "com.dyskotron.framewerk": {
+      "version": "file:com.dyskotron.framewerk",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

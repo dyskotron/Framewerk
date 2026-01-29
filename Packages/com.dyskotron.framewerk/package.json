@@ -1,0 +1,23 @@
+{
+  "name": "com.dyskotron.framewerk",
+  "version": "2.0.0",
+  "displayName": "Framewerk",
+  "description": "Inversion of control MVCS micro-framework with dependency injection, built on StrangeIoC.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Dyskotron",
+    "url": "https://github.com/dyskotron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dyskotron/Framewerk.git"
+  },
+  "keywords": [
+    "framework",
+    "mvcs",
+    "dependency-injection",
+    "strangeioc",
+    "ioc"
+  ],
+  "license": "MIT"
+}
