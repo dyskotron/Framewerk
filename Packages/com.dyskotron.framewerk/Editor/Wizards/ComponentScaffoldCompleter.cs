@@ -32,20 +32,14 @@ namespace Framewerk.Editor.Wizards
             // Clear the pending job immediately to prevent reprocessing
             EditorPrefs.DeleteKey(PENDING_JOB_KEY);
 
-            // Defer execution to avoid restricted context during script reload
-            // Unity may not allow prefab creation during DidReloadScripts callback
-            Debug.Log("[ComponentScaffoldCompleter] Deferring job completion until editor is ready...");
-            EditorApplication.delayCall += () =>
+            try
             {
-                try
-                {
-                    CopyTemplatePrefabs(job);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"Failed to copy template prefabs: {e.Message}\n{e.StackTrace}");
-                }
-            };
+                CopyTemplatePrefabs(job);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to copy template prefabs: {e.Message}\n{e.StackTrace}");
+            }
         }
 
         private static void CopyTemplatePrefabs(WizardJob job)
