@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Framewerk.AppStateMachine;
 using Framewerk.Popups;
 using FramewerkDemo.Examples.ExampleListPanel;
@@ -12,13 +11,13 @@ namespace FramewerkDemo.Examples
     {
         [Inject] public IPopupManager PopupManager { get; set; }
 
-        public async Task InitExampleAsync(ExampleId exampleId)
+        public void InitExample(ExampleId exampleId)
         {
             switch (exampleId)
             {
                 case ExampleId.Popup:
                     InstantiateView<TopMenuView>("Examples/");
-                    await PopupManager.InstantiatePopupAsync<ExamplePopupView>();
+                    PopupManager.InstantiatePopup<ExamplePopupView>();
                     break;
                 case ExampleId.List:
                     InstantiateView<TopMenuView>("Examples/");

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using strange.extensions.injector.api;
 using strange.extensions.signal.impl;
 
@@ -30,24 +29,14 @@ namespace Framewerk.AppStateMachine
         {
             RegisterHandlers();
             Enter();
-            PerformEnterInternalAsync();
+            Screen.PerformEnter();
+            EnterFinished();
         }
 
         public virtual void PerformExit()
         {
             Exit();
-            PerformExitInternalAsync();
-        }
-
-        private async void PerformEnterInternalAsync()
-        {
-            await Screen.PerformEnterAsync();
-            EnterFinished();
-        }
-
-        private async void PerformExitInternalAsync()
-        {
-            await Screen.PerformExitAsync();
+            Screen.PerformExit();
             ExitFinished();
         }
 

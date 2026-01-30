@@ -119,18 +119,18 @@ namespace Framewerk.AppStateMachine
 
         #region FSM API
 
-        public async Task PerformEnterAsync()
+        public void PerformEnter()
         {
             TransitionType = TransitionType.Enter;
-            await EnterAsync();
+            Enter();
             TransitionType = TransitionType.None;
             EnterFinishedSignal.Dispatch();
         }
 
-        public async Task PerformExitAsync()
+        public void PerformExit()
         {
             TransitionType = TransitionType.Exit;
-            await ExitAsync();
+            Exit();
             TransitionType = TransitionType.None;
             ExitFinishedSignal.Dispatch();
         }
@@ -150,14 +150,12 @@ namespace Framewerk.AppStateMachine
 
         #region Life cycle
 
-        protected virtual Task EnterAsync()
+        protected virtual void Enter()
         {
-            return Task.CompletedTask;
         }
 
-        protected virtual Task ExitAsync()
+        protected virtual void Exit()
         {
-            return Task.CompletedTask;
         }
 
         #endregion
