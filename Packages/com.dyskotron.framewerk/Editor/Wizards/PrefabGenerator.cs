@@ -14,7 +14,7 @@ namespace Framewerk.Editor.Wizards
     {
         private const string TEMPLATE_PATH = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
 
-        public static GameObject CreatePrefab(string prefabPath, Type viewType)
+        public static GameObject CreatePrefab(string prefabPath, Type viewType, ComponentType componentType)
         {
             if (viewType == null)
             {
@@ -22,8 +22,8 @@ namespace Framewerk.Editor.Wizards
                 return null;
             }
 
-            // Determine which template to use based on the view type
-            string templatePath = GetTemplatePath(viewType);
+            // Determine which template to use based on the component type
+            string templatePath = GetTemplatePath(componentType);
             GameObject go;
 
             if (!string.IsNullOrEmpty(templatePath))
@@ -62,17 +62,17 @@ namespace Framewerk.Editor.Wizards
                 go = CreateEmptyPrefab(viewType);
             }
 
-            // Ensure the directory exists
-            string directory = System.IO.Path.GetDirectoryName(prefabPath);
-            if (!System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-                Debug.Log($"Created directory: {directory}");
-            }
-
             // Save as prefab
             try
             {
+                // Ensure the directory exists before saving
+                string directory = System.IO.Path.GetDirectoryName(prefabPath);
+                if (!System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                    Debug.Log($"Created directory: {directory}");
+                }
+
                 GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
 
                 if (prefabAsset == null)
@@ -107,24 +107,21 @@ namespace Framewerk.Editor.Wizards
             return go;
         }
 
-        private static string GetTemplatePath(Type viewType)
+        private static string GetTemplatePath(ComponentType componentType)
         {
-            if (viewType == null)
-                return null;
-
-            // Check the base type to determine which template to use
-            Type baseType = viewType.BaseType;
-
-            if (baseType.Name == "ListView")
-                return TEMPLATE_PATH + "ListTemplate.prefab";
-            else if (baseType.Name == "ListItemView")
-                return TEMPLATE_PATH + "ListItemTemplate.prefab";
-            else if (baseType.Name == "PopupView")
-                return TEMPLATE_PATH + "PopupTemplate.prefab";
-            else if (baseType.Name == "View")
-                return TEMPLATE_PATH + "PanelTemplate.prefab";
-
-            return null;
+            switch (componentType)
+            {
+                case ComponentType.List:
+                    return TEMPLATE_PATH + "ListTemplate.prefab";
+                case ComponentType.ListItem:
+                    return TEMPLATE_PATH + "ListItemTemplate.prefab";
+                case ComponentType.Popup:
+                    return TEMPLATE_PATH + "PopupTemplate.prefab";
+                case ComponentType.Screen:
+                    return TEMPLATE_PATH + "PanelTemplate.prefab";
+                default:
+                    return null;
+            }
         }
 
         private static Type GetBaseViewType(Type viewType)

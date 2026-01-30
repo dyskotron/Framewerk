@@ -52,7 +52,7 @@ namespace Framewerk.Editor.Wizards
             }
 
             // Create main prefab
-            var prefab = PrefabGenerator.CreatePrefab(job.prefabPath, viewType);
+            var prefab = PrefabGenerator.CreatePrefab(job.prefabPath, viewType, type);
             if (prefab == null)
             {
                 Debug.LogError($"Failed to create prefab at {job.prefabPath}");
@@ -73,7 +73,7 @@ namespace Framewerk.Editor.Wizards
                 Type itemViewType = FindType(job.itemViewTypeName);
                 if (itemViewType != null)
                 {
-                    var itemPrefab = PrefabGenerator.CreatePrefab(job.itemPrefabPath, itemViewType);
+                    var itemPrefab = PrefabGenerator.CreatePrefab(job.itemPrefabPath, itemViewType, ComponentType.ListItem);
                     if (itemPrefab != null)
                     {
                         Debug.Log($"Created item prefab: {job.itemPrefabPath}");
