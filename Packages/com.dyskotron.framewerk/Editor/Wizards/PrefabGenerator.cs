@@ -32,6 +32,7 @@ namespace Framewerk.Editor.Wizards
                 GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(templatePath);
                 if (template != null)
                 {
+                    Debug.Log($"Loading template from {templatePath} for view type {viewType.Name}");
                     go = UnityEngine.Object.Instantiate(template);
                     go.name = viewType.Name.Replace("View", "");
 
@@ -39,7 +40,13 @@ namespace Framewerk.Editor.Wizards
                     Type baseViewType = GetBaseViewType(viewType);
                     if (baseViewType != null)
                     {
+                        Debug.Log($"Swapping component: {baseViewType.Name} → {viewType.Name}");
                         SwapComponent(go, baseViewType, viewType);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"No base view type found for {viewType.Name}, adding component without swap");
+                        go.AddComponent(viewType);
                     }
                 }
                 else
@@ -51,6 +58,7 @@ namespace Framewerk.Editor.Wizards
             else
             {
                 // No template available, create empty GameObject
+                Debug.Log($"No template found for {viewType.Name}, creating empty GameObject");
                 go = CreateEmptyPrefab(viewType);
             }
 
@@ -59,15 +67,37 @@ namespace Framewerk.Editor.Wizards
             if (!System.IO.Directory.Exists(directory))
             {
                 System.IO.Directory.CreateDirectory(directory);
+                Debug.Log($"Created directory: {directory}");
             }
 
             // Save as prefab
-            GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
+            try
+            {
+                GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
 
-            // Clean up the scene object
-            UnityEngine.Object.DestroyImmediate(go);
+                if (prefabAsset == null)
+                {
+                    Debug.LogError($"Failed to create prefab at {prefabPath} - SaveAsPrefabAsset returned null");
+                }
+                else
+                {
+                    Debug.Log($"Successfully created prefab at {prefabPath}");
+                }
 
-            return prefabAsset;
+                // Clean up the scene object
+                UnityEngine.Object.DestroyImmediate(go);
+
+                return prefabAsset;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Exception while creating prefab at {prefabPath}: {e.Message}\n{e.StackTrace}");
+
+                // Clean up the scene object even on error
+                UnityEngine.Object.DestroyImmediate(go);
+
+                return null;
+            }
         }
 
         private static GameObject CreateEmptyPrefab(Type viewType)
@@ -127,19 +157,49 @@ namespace Framewerk.Editor.Wizards
                 return;
             }
 
-            // Use ComponentUtility to copy component values
+            // Add the new component first
             Component newComponent = go.AddComponent(newType);
 
-            // Use Unity's built-in component copy utility which preserves references
-            if (!ComponentUtility.CopyComponent(oldComponent))
+            // Use SerializedObject to copy matching field values
+            // This preserves references to child objects and other serialized data
+            SerializedObject oldSO = new SerializedObject(oldComponent);
+            SerializedObject newSO = new SerializedObject(newComponent);
+
+            SerializedProperty oldProp = oldSO.GetIterator();
+            int copiedFields = 0;
+            int failedFields = 0;
+
+            // Iterate through all serialized properties of the old component
+            while (oldProp.NextVisible(true))
             {
-                Debug.LogError($"Failed to copy component {oldType.Name}");
+                // Skip the script reference
+                if (oldProp.name == "m_Script")
+                    continue;
+
+                // Try to find the same property in the new component
+                SerializedProperty newProp = newSO.FindProperty(oldProp.name);
+                if (newProp != null && newProp.propertyType == oldProp.propertyType)
+                {
+                    try
+                    {
+                        // Copy the property value
+                        newSO.CopyFromSerializedProperty(oldProp);
+                        copiedFields++;
+                        Debug.Log($"Copied field '{oldProp.name}' from {oldType.Name} to {newType.Name}");
+                    }
+                    catch (System.Exception e)
+                    {
+                        failedFields++;
+                        Debug.LogWarning($"Failed to copy field '{oldProp.name}': {e.Message}");
+                    }
+                }
             }
 
-            if (!ComponentUtility.PasteComponentValues(newComponent))
-            {
-                Debug.LogError($"Failed to paste component values to {newType.Name}");
-            }
+            // Apply the changes to the new component
+            newSO.ApplyModifiedProperties();
+
+            Debug.Log($"Component swap complete: {copiedFields} fields copied, {failedFields} failed. " +
+                     $"Swapped {oldType.Name} → {newType.Name} on {go.name}");
 
             // Remove the old component
             UnityEngine.Object.DestroyImmediate(oldComponent);
