@@ -11,6 +11,7 @@
   - [ ] **Template prefabs** — Template prefabs for each component type shipped with Framewerk. Use actual base framework View classes (ListView, PopupView, etc.) with serialized references wired up. Wizard clones template, generates real View script, swaps component — Unity preserves field references since field names match.
   - [ ] **Skinning system** — SkinConfig ScriptableObject maps component types → blueprint prefab overrides. Project creates custom SkinConfig to replace framework defaults. No SkinConfig = use framework blueprints. Wizard reads active skin when scaffolding.
   - [ ] Wizard creates prefab with real components (not empty GameObjects)
+  - [ ] **MCP tool for wizard** — Expose wizard as an MCP tool so CC/AI agents can scaffold UI components headlessly (e.g. `create_ui_component(name, type, context, path)`). Would let CC create Lists, Popups etc. without manual UI interaction.
 - [ ] **2. Addressables Setup Streamlining** — Think through the Addressables setup in projects that use Framewerk. Can we make onboarding smoother for users? Auto-setup, conventions, editor wizards?
 - [x] **3. Popup Info Passing Cleanup** — BindingUtils extracted, auto-binds interfaces (on) and base classes (opt-in). ExplicitType overloads kept for edge cases.
 - [ ] **4. Port UNet to Mirror** — Port the networking package from UNet to Mirror. Make it a proper optional package.
