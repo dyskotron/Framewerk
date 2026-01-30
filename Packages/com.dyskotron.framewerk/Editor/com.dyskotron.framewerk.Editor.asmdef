@@ -1,0 +1,24 @@
+{
+    "name": "com.dyskotron.framewerk.Editor",
+    "rootNamespace": "Framewerk.Editor",
+    "references": [
+        "com.dyskotron.framewerk"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "FRAMEWERK_ADDRESSABLES"
+        }
+    ],
+    "noEngineReferences": false
+}
