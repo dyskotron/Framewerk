@@ -18,12 +18,7 @@ namespace Framewerk.Popups.OkCancelWindow
         public override void Execute()
         {
             Retain();
-            ShowPopupAsync();
-        }
-
-        private async void ShowPopupAsync()
-        {
-            await PopupManager.InstantiatePopupAsync<OkCancelWindowView>(Message,
+            PopupManager.InstantiatePopup<OkCancelWindowView>(Message,
                 new PopupButtonSetting[]
                 {
                     new PopupButtonSetting()

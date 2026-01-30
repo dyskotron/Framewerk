@@ -37,6 +37,52 @@ namespace Framewerk.AppStateMachine
             return view;
         }
 
+        protected GameObject InstantiateView(string path = "", Transform parent = null)
+        {
+            var view = UiManager.InstantiateView(path, parent);
+            _views.Add(view);
+            return view;
+        }
+
+        protected T InstantiateView<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
+        {
+            var view = UiManager.InstantiateView<T>(path, parent);
+            _views.Add(view.gameObject);
+            return view;
+        }
+
+        protected T InstantiateGamePrefab<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
+        {
+            if (parent == null)
+                parent = ViewConfig.Container3d;
+
+            path += UiManager.GetViewName(typeof(T));
+            var go = AssetManager.GetAsset<GameObject>("GamePrefabs/" + path);
+            go.transform.SetParent(parent, false);
+
+            var component = go.GetComponent<T>();
+            if (component == null)
+            {
+                Debug.LogError($"AppStateScreen.InstantiateGamePrefab: Can't find {typeof(T)} on {go}");
+                return null;
+            }
+
+            _views.Add(go);
+            return component;
+        }
+
+        protected GameObject InstantiateGamePrefab(string path, Transform parent = null)
+        {
+            if (parent == null)
+                parent = ViewConfig.Container3d;
+
+            var go = AssetManager.GetAsset<GameObject>("GamePrefabs/" + path);
+            go.transform.SetParent(parent, false);
+
+            _views.Add(go);
+            return go;
+        }
+
         protected async Task<T> InstantiateGamePrefabAsync<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
         {
             if (parent == null)

@@ -14,15 +14,15 @@ namespace FramewerkDemo.Examples
 
         public async Task InitExampleAsync(ExampleId exampleId)
         {
-            await InstantiateViewAsync<TopMenuView>("Examples/");
-
             switch (exampleId)
             {
                 case ExampleId.Popup:
+                    InstantiateView<TopMenuView>("Examples/");
                     await PopupManager.InstantiatePopupAsync<ExamplePopupView>();
                     break;
                 case ExampleId.List:
-                    await InstantiateViewAsync<ExampleListPanelView>("ListPanel/");
+                    InstantiateView<TopMenuView>("Examples/");
+                    InstantiateView<ExampleListPanelView>("ListPanel/");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);

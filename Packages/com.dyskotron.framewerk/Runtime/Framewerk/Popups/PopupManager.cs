@@ -27,6 +27,12 @@ namespace Framewerk.Popups
         Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
+
+        T InstantiatePopup<T>() where T : IPopupView;
+        T InstantiatePopup<T>(object[] popupMediatorInjects) where T : IPopupView;
+        T InstantiatePopup<T>(PopupButtonSetting[] popupOptions) where T : IPopupView;
+        T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions) where T : IPopupView;
+        T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions) where T : IPopupView;
     }
 
     public class PopupManager : IPopupManager
@@ -83,6 +89,31 @@ namespace Framewerk.Popups
         public async Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
         {
             return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct, caption, text, new List<PopupButtonSetting>(popupOptions));
+        }
+
+        public T InstantiatePopup<T>() where T : IPopupView
+        {
+            return UiManager.InstantiateView<T>(_resourcePath, _popupParent);
+        }
+
+        public T InstantiatePopup<T>(object[] popupMediatorInjects) where T : IPopupView
+        {
+            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, popupMediatorInjects);
+        }
+
+        public T InstantiatePopup<T>(PopupButtonSetting[] popupOptions) where T : IPopupView
+        {
+            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, new List<PopupButtonSetting>(popupOptions));
+        }
+
+        public T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions) where T : IPopupView
+        {
+            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, text, new List<PopupButtonSetting>(popupOptions));
+        }
+
+        public T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions) where T : IPopupView
+        {
+            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, caption, text, new List<PopupButtonSetting>(popupOptions));
         }
 
         private void OnPopupOpenedHandler(IPopupMediator popup)

@@ -12,9 +12,10 @@ namespace FramewerkDemo.MainMenu
 
         private MenuView _menuView;
 
-        protected override async Task EnterAsync()
+        protected override Task EnterAsync()
         {
-            _menuView = await InstantiateViewAsync<MenuView>("Menu/");
+            _menuView = InstantiateView<MenuView>("Menu/");
+            return Task.CompletedTask;
         }
     }
 }

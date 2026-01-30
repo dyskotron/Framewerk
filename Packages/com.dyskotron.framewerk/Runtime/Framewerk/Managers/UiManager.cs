@@ -18,6 +18,11 @@ namespace Framewerk.Managers
         Task<T> InstantiateViewAsync<T>(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView;
         Task<T> InstantiateViewExplicitTypeAsync<T>(string path = "", Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
 
+        GameObject InstantiateView(string path, Transform parent = null, params object[] mediatorInjects);
+        GameObject InstantiateViewExplicitType(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes);
+        T InstantiateView<T>(string path = "", Transform parent = null, params object[] mediatorInjects) where T : IView;
+        T InstantiateViewExplicitType<T>(string path = "", Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
+
         string GetViewName(Type type);
     }
 
@@ -91,6 +96,58 @@ namespace Framewerk.Managers
 
             if (component == null)
                 Debug.LogError($"UIManager.InstantiateViewExplicitTypeAsync: No {typeof(T)} on {uiObj}");
+
+            return component;
+        }
+
+        public GameObject InstantiateView(string path, Transform parent = null, params object[] mediatorInjects)
+        {
+            if (parent == null)
+                parent = _uiParent;
+
+            BindParams(mediatorInjects);
+            GameObject uiObj = AssetManager.GetAsset<GameObject>(UI_PREFABS_ROOT + path, parent);
+            UnbindParams(mediatorInjects);
+
+            return uiObj;
+        }
+
+        public GameObject InstantiateViewExplicitType(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes)
+        {
+            if (parent == null)
+                parent = _uiParent;
+
+            BindParams(mediatorInjectsWithTypes);
+            GameObject uiObj = AssetManager.GetAsset<GameObject>(UI_PREFABS_ROOT + path, parent);
+            UnbindParams(mediatorInjectsWithTypes);
+
+            return uiObj;
+        }
+
+        public T InstantiateView<T>(string path = "", Transform parent = null, params object[] mediatorInjects) where T : IView
+        {
+            if (parent == null)
+                parent = _uiParent;
+
+            var uiObj = InstantiateView(GetViewPath(typeof(T), path), parent, mediatorInjects);
+            var component = uiObj.GetComponent<T>();
+
+            if (component == null)
+                Debug.LogError($"UIManager.InstantiateView: No {typeof(T)} on {uiObj}");
+
+            return component;
+        }
+
+        public T InstantiateViewExplicitType<T>(string path = "", Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
+        {
+            if (parent == null)
+                parent = _uiParent;
+
+            var uiObj = InstantiateViewExplicitType(GetViewPath(typeof(T), path), parent, mediatorInjectsWithTypes);
+            var component = uiObj.GetComponent<T>();
+
+            if (component == null)
+                Debug.LogError($"UIManager.InstantiateViewExplicitType: No {typeof(T)} on {uiObj}");
 
             return component;
         }
