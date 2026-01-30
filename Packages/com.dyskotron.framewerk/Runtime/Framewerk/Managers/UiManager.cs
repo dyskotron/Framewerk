@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Framewerk.Utils;
 using Plugins.Framewerk;
 using strange.extensions.injector.api;
 using strange.extensions.mediation.api;
@@ -33,6 +34,8 @@ namespace Framewerk.Managers
 
         public string TypeKey { get; set; } = "UI";
         public bool TypeKeyIsPrefix { get; set; } = false;
+        public bool BindInterfaces { get; set; } = true;
+        public bool BindBaseClasses { get; set; } = false;
 
         [Inject]
         public IAssetManager AssetManager { get; set; }
@@ -67,9 +70,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjects);
+            BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
             GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
-            UnbindParams(mediatorInjects);
+            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
 
             return uiObj;
         }
@@ -79,9 +82,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjectsWithTypes);
+            BindingUtils.Bind(InjectionBinder, mediatorInjectsWithTypes);
             GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
-            UnbindParams(mediatorInjectsWithTypes);
+            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
 
             return uiObj;
         }
@@ -119,9 +122,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjects);
+            BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
             GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
-            UnbindParams(mediatorInjects);
+            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
 
             return uiObj;
         }
@@ -131,9 +134,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjectsWithTypes);
+            BindingUtils.Bind(InjectionBinder, mediatorInjectsWithTypes);
             GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
-            UnbindParams(mediatorInjectsWithTypes);
+            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
 
             return uiObj;
         }
@@ -174,9 +177,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjects);
+            BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
             GameObject view = GameObject.Instantiate(viewPrefab, parent, false);
-            UnbindParams(mediatorInjects);
+            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
 
             return view;
         }
@@ -189,9 +192,9 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindParams(mediatorInjectsWithType);
+            BindingUtils.Bind(InjectionBinder, mediatorInjectsWithType);
             GameObject view = GameObject.Instantiate(viewPrefab, parent, false);
-            UnbindParams(mediatorInjectsWithType);
+            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithType);
 
             return view;
         }
@@ -211,48 +214,5 @@ namespace Framewerk.Managers
                 return BuildAddress(customPath, TypeKey, viewName);
         }
 
-        private void BindParams(params Tuple<object, Type>[] bindparamsWithType)
-        {
-            if (bindparamsWithType != null)
-            {
-                foreach (var param in bindparamsWithType)
-                {
-                    InjectionBinder.Bind(param.Item2).ToValue(param.Item1);
-                }
-            }
-        }
-
-        private void UnbindParams(params Tuple<object, Type>[] bindparamsWithType)
-        {
-            if (bindparamsWithType != null)
-            {
-                foreach (var param in bindparamsWithType)
-                {
-                    InjectionBinder.Unbind(param.Item2);
-                }
-            }
-        }
-
-        private void BindParams(params object[] bindparams)
-        {
-            if (bindparams != null)
-            {
-                foreach (var param in bindparams)
-                {
-                    InjectionBinder.Bind(param.GetType()).ToValue(param);
-                }
-            }
-        }
-
-        private void UnbindParams(params object[] bindparams)
-        {
-            if (bindparams != null)
-            {
-                foreach (var param in bindparams)
-                {
-                    InjectionBinder.Unbind(param.GetType());
-                }
-            }
-        }
     }
 }
