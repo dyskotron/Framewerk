@@ -16,77 +16,77 @@ MonoBehaviour:
   m_GUID: af44ffdf75558433ebd453eef1000147
   m_SerializeEntries:
   - m_GUID: 1194fe1e846754516a59f0b8ca84a5fe
-    m_Address: Prefabs/UI/TabPanel/TabItem3
+    m_Address: Examples/TabPanel/UI/TabItem3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1e078f13fbe554fbb8820ba239e96735
-    m_Address: Prefabs/UI/TabPanel/TabItem1
+    m_Address: Examples/TabPanel/UI/TabItem1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23267d9cbe9cf4c89a2c2b5ecf735818
-    m_Address: Prefabs/UI/Examples/TopMenu
+    m_Address: Examples/UI/TopMenu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 28b879afcf99b43cc8a6dc1417009e1d
-    m_Address: Prefabs/UI/Menu/Menu
+    m_Address: Examples/Menu/UI/Menu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ba679e0491ae45d48a4e3460fa6b35d
-    m_Address: Prefabs/UI/Popups/ExamplePopup
+    m_Address: Examples/Popups/ExamplePopup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 30df552f511b1406a84caf62d190d482
-    m_Address: Prefabs/UI/VirtualListPanel/ExampleVitualListItem
+    m_Address: Examples/VirtualListPanel/UI/ExampleVitualListItem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3e4abcba13baf4be5b1769eb7e66fa13
-    m_Address: Prefabs/UI/Menu/MenuItem
+    m_Address: Examples/Menu/UI/MenuItem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3ffdcaa5e54ee4e07951b524573cf094
-    m_Address: Prefabs/UI/VirtualListPanel/ExampleVirtualListPanel
+    m_Address: Examples/VirtualListPanel/UI/ExampleVirtualListPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ed504c3d5c7e4102830156e5ab392e7
-    m_Address: Prefabs/UI/Preload/PreloadPanel
+    m_Address: Examples/Preload/UI/PreloadPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c8ee688162b94404ab288df61ddec280
-    m_Address: Prefabs/UI/TabPanel/ExampleTabPanel
+    m_Address: Examples/TabPanel/UI/ExampleTabPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ce280f21de0824df2b78126cc5146834
-    m_Address: Prefabs/UI/ListPanel/ExampleListItem
+    m_Address: Examples/ListPanel/UI/ExampleListItem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e1582e8f500de4347ac3f00350e9a493
-    m_Address: Prefabs/UI/ListPanel/ExampleListPanel
+    m_Address: Examples/ListPanel/UI/ExampleListPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e258107821bdd4b5e93bbe2866f0c1cd
-    m_Address: Prefabs/UI/TabPanel/TabItem2
+    m_Address: Examples/TabPanel/UI/TabItem2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dccd733086d4f45b5aa16e5e85ca7c9f
-    m_Address: Examples/WizardList/WizardList
+    m_Address: Examples/WizardList/UI/WizardList
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b7cb7b8d5e4fe43ce80a0919e54669da
-    m_Address: Examples/WizardList/WizardListItem
+    m_Address: Examples/WizardList/UI/WizardListItem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
