@@ -82,6 +82,9 @@ namespace {ns}
 {{
     public class {name}View : PopupView, IPopupView
     {{
+        // Inherited from PopupView:
+        // public Transform buttonContainer;
+        // public GameObject buttonPrefab;
     }}
 }}
 ";
@@ -106,14 +109,17 @@ namespace {ns}
 
         private static string GetListPanelViewTemplate(string name, string ns)
         {
-            return $@"using Framewerk.UI;
+            return $@"using Framewerk.UI.List;
 using UnityEngine;
 
 namespace {ns}
 {{
-    public class {name}View : MonoBehaviour
+    public class {name}View : ListView
     {{
-        public Transform itemContainer;
+        // Inherited from ListView:
+        // public RectTransform ContentsParent;
+        // public GameObject ItemPrefab;
+        // public GameObject EmptyContent;
     }}
 }}
 ";
@@ -144,16 +150,18 @@ namespace {ns}
 
         public static string GetListItemViewTemplate(string name, string ns)
         {
-            return $@"using UnityEngine;
+            return $@"using Framewerk.UI.List;
 using UnityEngine.UI;
 using TMPro;
 
 namespace {ns}
 {{
-    public class {name}ItemView : MonoBehaviour
+    public class {name}ItemView : ListItemView
     {{
+        // Inherited from ListItemView:
+        // public Button SelectButton;
+
         public TextMeshProUGUI label;
-        public Button button;
     }}
 }}
 ";

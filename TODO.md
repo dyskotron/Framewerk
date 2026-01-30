@@ -8,7 +8,7 @@
   - [x] Completer (ComponentScaffoldCompleter.cs) — post-compile asset creation + Addressable setup
   - [x] WizardList example — 3rd menu item to test wizard List output
   - [x] Fix Addressable address mismatches (postfix mode)
-  - [ ] **Blueprint prefabs** — Base template prefabs for each component type (List, Popup, Panel, etc.) shipped with Framewerk. Use base View scripts with serialized references (itemContainer, label, button, etc.). Wizard clones blueprint, generates real View script, swaps component — Unity preserves field references since names match.
+  - [ ] **Template prefabs** — Template prefabs for each component type shipped with Framewerk. Use actual base framework View classes (ListView, PopupView, etc.) with serialized references wired up. Wizard clones template, generates real View script, swaps component — Unity preserves field references since field names match.
   - [ ] **Skinning system** — SkinConfig ScriptableObject maps component types → blueprint prefab overrides. Project creates custom SkinConfig to replace framework defaults. No SkinConfig = use framework blueprints. Wizard reads active skin when scaffolding.
   - [ ] Wizard creates prefab with real components (not empty GameObjects)
 - [ ] **2. Addressables Setup Streamlining** — Think through the Addressables setup in projects that use Framewerk. Can we make onboarding smoother for users? Auto-setup, conventions, editor wizards?
