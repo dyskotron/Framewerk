@@ -22,7 +22,7 @@ namespace FramewerkDemo.Examples
                     await PopupManager.InstantiatePopupAsync<ExamplePopupView>();
                     break;
                 case ExampleId.List:
-                    await UiManager.InstantiateViewAsync<ExampleListPanelView>("ListPanel/");
+                    await InstantiateViewAsync<ExampleListPanelView>("ListPanel/");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);

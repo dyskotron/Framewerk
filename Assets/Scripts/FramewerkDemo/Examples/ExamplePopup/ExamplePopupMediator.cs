@@ -19,6 +19,7 @@ namespace FramewerkDemo.Examples.ExamplePopup
         private void ButtonHandler()
         {
             ShowMenuSignal.Dispatch();
+            Close();
         }
     }
 }
