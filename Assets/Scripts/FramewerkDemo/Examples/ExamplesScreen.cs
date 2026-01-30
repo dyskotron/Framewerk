@@ -26,7 +26,7 @@ namespace FramewerkDemo.Examples
                     break;
                 case ExampleId.WizardList:
                     InstantiateView<TopMenuView>("Examples");
-                    InstantiateView<WizardListView>("Examples/WizardList/WizardList");
+                    InstantiateView<WizardListView>("Examples/WizardList");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);
