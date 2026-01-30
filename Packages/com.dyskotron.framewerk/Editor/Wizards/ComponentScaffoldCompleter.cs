@@ -67,8 +67,8 @@ namespace Framewerk.Editor.Wizards
                 AddressableHelper.MarkAsAddressable(job.prefabPath, job.addressableAddress);
             }
 
-            // Create item prefab for ListPanel
-            if (type == ComponentType.ListPanel && !string.IsNullOrEmpty(job.itemViewTypeName))
+            // Create item prefab for List
+            if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemViewTypeName))
             {
                 Type itemViewType = FindType(job.itemViewTypeName);
                 if (itemViewType != null)
@@ -94,8 +94,8 @@ namespace Framewerk.Editor.Wizards
                 string mediatorName = job.componentName + "Mediator";
                 ContextInjector.InjectBinding(job.contextFilePath, viewName, mediatorName, job.namespaceName);
 
-                // Also inject item binding for ListPanel
-                if (type == ComponentType.ListPanel && !string.IsNullOrEmpty(job.itemViewTypeName))
+                // Also inject item binding for List
+                if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemViewTypeName))
                 {
                     string itemViewName = job.componentName + "ItemView";
                     string itemMediatorName = job.componentName + "ItemMediator";

@@ -105,7 +105,7 @@ namespace Framewerk.Editor.Wizards
             var baseType = type.BaseType;
             while (baseType != null)
             {
-                if (baseType.Name == "MVCSContext")
+                if (baseType.Name == "MVCSContext" || baseType.Name == "FramewerkMVCSContext")
                     return true;
                 baseType = baseType.BaseType;
             }
@@ -234,7 +234,7 @@ namespace Framewerk.Editor.Wizards
                 EditorGUILayout.LabelField($"  • {componentName}View.cs", EditorStyles.miniLabel);
                 EditorGUILayout.LabelField($"  • {componentName}Mediator.cs", EditorStyles.miniLabel);
 
-                if (componentType == ComponentType.ListPanel)
+                if (componentType == ComponentType.List)
                 {
                     EditorGUILayout.LabelField($"  • {componentName}Data.cs", EditorStyles.miniLabel);
                     EditorGUILayout.LabelField($"  • {componentName}ItemView.cs", EditorStyles.miniLabel);
@@ -310,7 +310,7 @@ namespace Framewerk.Editor.Wizards
                 addressableAddress = $"UI/{componentName}"
             };
 
-            if (componentType == ComponentType.ListPanel)
+            if (componentType == ComponentType.List)
             {
                 job.dataTypeName = $"{namespaceName}.{componentName}Data";
                 job.itemViewTypeName = $"{namespaceName}.{componentName}ItemView";
@@ -340,8 +340,8 @@ namespace Framewerk.Editor.Wizards
             string mediatorPath = Path.Combine(scriptFolder, $"{componentName}Mediator.cs");
             File.WriteAllText(mediatorPath, mediatorCode);
 
-            // For ListPanel, generate additional files
-            if (componentType == ComponentType.ListPanel)
+            // For List, generate additional files
+            if (componentType == ComponentType.List)
             {
                 string dataCode = CodeTemplates.GetListDataTemplate(componentName, namespaceName);
                 string dataPath = Path.Combine(scriptFolder, $"{componentName}Data.cs");

@@ -4,7 +4,7 @@ namespace Framewerk.Editor.Wizards
     {
         Screen,
         Popup,
-        ListPanel,
+        List,
         ListItem
     }
 
@@ -18,7 +18,7 @@ namespace Framewerk.Editor.Wizards
                     return GetScreenViewTemplate(name, ns);
                 case ComponentType.Popup:
                     return GetPopupViewTemplate(name, ns);
-                case ComponentType.ListPanel:
+                case ComponentType.List:
                     return GetListPanelViewTemplate(name, ns);
                 case ComponentType.ListItem:
                     return GetListItemViewTemplate(name, ns);
@@ -35,7 +35,7 @@ namespace Framewerk.Editor.Wizards
                     return GetScreenMediatorTemplate(name, ns);
                 case ComponentType.Popup:
                     return GetPopupMediatorTemplate(name, ns);
-                case ComponentType.ListPanel:
+                case ComponentType.List:
                     return GetListPanelMediatorTemplate(name, ns);
                 case ComponentType.ListItem:
                     return GetListItemMediatorTemplate(name, ns);
