@@ -82,9 +82,6 @@ namespace {ns}
 {{
     public class {name}View : PopupView, IPopupView
     {{
-        // Inherited from PopupView:
-        // public Transform buttonContainer;
-        // public GameObject buttonPrefab;
     }}
 }}
 ";
@@ -116,10 +113,6 @@ namespace {ns}
 {{
     public class {name}View : ListView
     {{
-        // Inherited from ListView:
-        // public RectTransform ContentsParent;
-        // public GameObject ItemPrefab;
-        // public GameObject EmptyContent;
     }}
 }}
 ";
@@ -127,21 +120,15 @@ namespace {ns}
 
         private static string GetListPanelMediatorTemplate(string name, string ns)
         {
-            return $@"using Framewerk.UI;
-using System.Collections.Generic;
+            return $@"using Framewerk.UI.List;
 
 namespace {ns}
 {{
-    public class {name}Mediator : ExtendedMediator<{name}View>
+    public class {name}Mediator : ListMediator<{name}View, {name}Data>
     {{
         public override void OnRegister()
         {{
             base.OnRegister();
-        }}
-
-        private void PopulateList(List<{name}Data> items)
-        {{
-            // TODO: Implement list population logic
         }}
     }}
 }}
@@ -158,9 +145,6 @@ namespace {ns}
 {{
     public class {name}ItemView : ListItemView
     {{
-        // Inherited from ListItemView:
-        // public Button SelectButton;
-
         public TextMeshProUGUI label;
     }}
 }}
@@ -169,28 +153,15 @@ namespace {ns}
 
         public static string GetListItemMediatorTemplate(string name, string ns)
         {
-            return $@"using Framewerk.UI;
+            return $@"using Framewerk.UI.List;
 
 namespace {ns}
 {{
-    public class {name}ItemMediator : ExtendedMediator<{name}ItemView>
+    public class {name}ItemMediator : ListItemMediator<{name}ItemView, {name}Data>
     {{
-        private {name}Data _data;
-
-        public void SetData({name}Data data)
-        {{
-            _data = data;
-            UpdateView();
-        }}
-
         public override void OnRegister()
         {{
             base.OnRegister();
-        }}
-
-        private void UpdateView()
-        {{
-            // TODO: Update view with data
         }}
     }}
 }}
@@ -199,11 +170,12 @@ namespace {ns}
 
         public static string GetListDataTemplate(string name, string ns)
         {
-            return $@"namespace {ns}
+            return $@"using Framewerk.UI.List;
+
+namespace {ns}
 {{
-    public class {name}Data
+    public class {name}Data : IListItemDataProvider
     {{
-        // TODO: Add data fields
     }}
 }}
 ";

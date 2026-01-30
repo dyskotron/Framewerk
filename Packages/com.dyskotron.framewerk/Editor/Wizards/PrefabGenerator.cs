@@ -1,127 +1,98 @@
 using System;
 using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
 
 namespace Framewerk.Editor.Wizards
 {
     /// <summary>
-    /// Generates prefabs from template prefabs by cloning and swapping the base View component
-    /// with the generated View script. Unity preserves serialized field references when
-    /// field names match between the old and new component.
+    /// AssetPostprocessor that swaps the base View component with the generated View script
+    /// after prefab reimport. Unity preserves serialized field references when field names match.
     /// </summary>
-    public static class PrefabGenerator
+    public class PrefabGenerator : AssetPostprocessor
     {
-        private const string TEMPLATE_PATH = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
-
-        public static GameObject CreatePrefab(string prefabPath, Type viewType, ComponentType componentType)
+        private static void OnPostprocessAllAssets(
+            string[] importedAssets,
+            string[] deletedAssets,
+            string[] movedAssets,
+            string[] movedFromAssetPaths)
         {
-            if (viewType == null)
+            // Check if we have a pending swap job
+            if (!ComponentScaffoldCompleter.HasPendingSwap(out WizardJob job))
+                return;
+
+            bool mainPrefabProcessed = false;
+            bool itemPrefabProcessed = false;
+
+            // Check if any of the imported assets match our pending prefabs
+            foreach (string assetPath in importedAssets)
             {
-                Debug.LogError($"Cannot create prefab: viewType is null");
-                return null;
+                if (assetPath == job.prefabPath)
+                {
+                    ProcessPrefabSwap(assetPath, job.viewTypeName, job.componentName);
+                    mainPrefabProcessed = true;
+                }
+                else if (!string.IsNullOrEmpty(job.itemPrefabPath) && assetPath == job.itemPrefabPath)
+                {
+                    ProcessPrefabSwap(assetPath, job.itemViewTypeName, job.componentName + "Item");
+                    itemPrefabProcessed = true;
+                }
             }
 
-            // Determine which template to use based on the component type
-            string templatePath = GetTemplatePath(componentType);
-            GameObject go;
+            // If all expected prefabs have been processed, link and complete the job
+            ComponentType type = (ComponentType)job.componentType;
+            bool allDone = mainPrefabProcessed && (type != ComponentType.List || itemPrefabProcessed);
 
-            if (!string.IsNullOrEmpty(templatePath))
+            if (allDone)
             {
-                // Clone from template
-                GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(templatePath);
-                if (template != null)
+                // Link the List's ItemPrefab field to the ListItem prefab
+                if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemPrefabPath))
                 {
-                    Debug.Log($"Loading template from {templatePath} for view type {viewType.Name}");
-                    go = UnityEngine.Object.Instantiate(template);
-                    go.name = viewType.Name.Replace("View", "");
+                    LinkListItemPrefab(job.prefabPath, job.itemPrefabPath);
+                }
 
-                    // Swap the base View component with the new custom View
-                    Type baseViewType = GetBaseViewType(viewType);
-                    if (baseViewType != null)
-                    {
-                        Debug.Log($"Swapping component: {baseViewType.Name} → {viewType.Name}");
-                        SwapComponent(go, baseViewType, viewType);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"No base view type found for {viewType.Name}, adding component without swap");
-                        go.AddComponent(viewType);
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"Template not found at {templatePath}, creating empty GameObject");
-                    go = CreateEmptyPrefab(viewType);
-                }
+                ComponentScaffoldCompleter.CompletePrefabSwap(job);
+            }
+        }
+
+        private static void ProcessPrefabSwap(string prefabPath, string viewTypeName, string prefabName)
+        {
+            Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
+            if (viewType == null)
+            {
+                Debug.LogError($"Could not find type: {viewTypeName}");
+                return;
+            }
+
+            // Load prefab contents
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(prefabPath);
+            if (prefabContents == null)
+            {
+                Debug.LogError($"Failed to load prefab contents from {prefabPath}");
+                return;
+            }
+
+            // Rename the root GameObject
+            prefabContents.name = prefabName;
+
+            // Swap the base View component with the new custom View
+            Type baseViewType = GetBaseViewType(viewType);
+            if (baseViewType != null)
+            {
+                SwapComponent(prefabContents, baseViewType, viewType);
             }
             else
             {
-                // No template available, create empty GameObject
-                Debug.Log($"No template found for {viewType.Name}, creating empty GameObject");
-                go = CreateEmptyPrefab(viewType);
+                Debug.LogWarning($"No base view type found for {viewType.Name}, adding component without swap");
+                prefabContents.AddComponent(viewType);
             }
 
-            // Save as prefab
-            try
-            {
-                // Ensure the directory exists before saving
-                string directory = System.IO.Path.GetDirectoryName(prefabPath);
-                if (!System.IO.Directory.Exists(directory))
-                {
-                    System.IO.Directory.CreateDirectory(directory);
-                    Debug.Log($"Created directory: {directory}");
-                }
+            // Save the modified prefab contents back to the asset
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, prefabPath);
 
-                GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
+            // Unload the prefab contents (cleanup)
+            PrefabUtility.UnloadPrefabContents(prefabContents);
 
-                if (prefabAsset == null)
-                {
-                    Debug.LogError($"Failed to create prefab at {prefabPath} - SaveAsPrefabAsset returned null");
-                }
-                else
-                {
-                    Debug.Log($"Successfully created prefab at {prefabPath}");
-                }
-
-                // Clean up the scene object
-                UnityEngine.Object.DestroyImmediate(go);
-
-                return prefabAsset;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Exception while creating prefab at {prefabPath}: {e.Message}\n{e.StackTrace}");
-
-                // Clean up the scene object even on error
-                UnityEngine.Object.DestroyImmediate(go);
-
-                return null;
-            }
-        }
-
-        private static GameObject CreateEmptyPrefab(Type viewType)
-        {
-            GameObject go = new GameObject(viewType.Name.Replace("View", ""));
-            go.AddComponent(viewType);
-            return go;
-        }
-
-        private static string GetTemplatePath(ComponentType componentType)
-        {
-            switch (componentType)
-            {
-                case ComponentType.List:
-                    return TEMPLATE_PATH + "ListTemplate.prefab";
-                case ComponentType.ListItem:
-                    return TEMPLATE_PATH + "ListItemTemplate.prefab";
-                case ComponentType.Popup:
-                    return TEMPLATE_PATH + "PopupTemplate.prefab";
-                case ComponentType.Screen:
-                    return TEMPLATE_PATH + "PanelTemplate.prefab";
-                default:
-                    return null;
-            }
+            Debug.Log($"Processed prefab swap: {prefabPath}");
         }
 
         private static Type GetBaseViewType(Type viewType)
@@ -149,7 +120,6 @@ namespace Framewerk.Editor.Wizards
             if (oldComponent == null)
             {
                 Debug.LogWarning($"Could not find component of type {oldType.Name} on {go.name}");
-                // Just add the new component
                 go.AddComponent(newType);
                 return;
             }
@@ -158,13 +128,11 @@ namespace Framewerk.Editor.Wizards
             Component newComponent = go.AddComponent(newType);
 
             // Use SerializedObject to copy matching field values
-            // This preserves references to child objects and other serialized data
             SerializedObject oldSO = new SerializedObject(oldComponent);
             SerializedObject newSO = new SerializedObject(newComponent);
 
             SerializedProperty oldProp = oldSO.GetIterator();
             int copiedFields = 0;
-            int failedFields = 0;
 
             // Iterate through all serialized properties of the old component
             while (oldProp.NextVisible(true))
@@ -179,14 +147,11 @@ namespace Framewerk.Editor.Wizards
                 {
                     try
                     {
-                        // Copy the property value
                         newSO.CopyFromSerializedProperty(oldProp);
                         copiedFields++;
-                        Debug.Log($"Copied field '{oldProp.name}' from {oldType.Name} to {newType.Name}");
                     }
-                    catch (System.Exception e)
+                    catch (Exception e)
                     {
-                        failedFields++;
                         Debug.LogWarning($"Failed to copy field '{oldProp.name}': {e.Message}");
                     }
                 }
@@ -195,11 +160,71 @@ namespace Framewerk.Editor.Wizards
             // Apply the changes to the new component
             newSO.ApplyModifiedProperties();
 
-            Debug.Log($"Component swap complete: {copiedFields} fields copied, {failedFields} failed. " +
-                     $"Swapped {oldType.Name} → {newType.Name} on {go.name}");
+            Debug.Log($"Swapped {oldType.Name} → {newType.Name} ({copiedFields} fields copied)");
 
             // Remove the old component
             UnityEngine.Object.DestroyImmediate(oldComponent);
+        }
+
+        private static void LinkListItemPrefab(string listPrefabPath, string itemPrefabPath)
+        {
+            // Load the item prefab asset
+            GameObject itemPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(itemPrefabPath);
+            if (itemPrefabAsset == null)
+            {
+                Debug.LogError($"Failed to load item prefab from {itemPrefabPath}");
+                return;
+            }
+
+            // Load the list prefab contents
+            GameObject listPrefabContents = PrefabUtility.LoadPrefabContents(listPrefabPath);
+            if (listPrefabContents == null)
+            {
+                Debug.LogError($"Failed to load list prefab contents from {listPrefabPath}");
+                return;
+            }
+
+            // Find the ListView component (or any component that extends it)
+            Component viewComponent = listPrefabContents.GetComponent("ListView");
+            if (viewComponent == null)
+            {
+                // Try to find any component that might extend ListView
+                Component[] components = listPrefabContents.GetComponents<Component>();
+                foreach (var component in components)
+                {
+                    if (component != null && component.GetType().BaseType?.Name == "ListView")
+                    {
+                        viewComponent = component;
+                        break;
+                    }
+                }
+            }
+
+            if (viewComponent == null)
+            {
+                Debug.LogError($"Could not find ListView component on {listPrefabPath}");
+                PrefabUtility.UnloadPrefabContents(listPrefabContents);
+                return;
+            }
+
+            // Use SerializedObject to set the ItemPrefab field
+            SerializedObject so = new SerializedObject(viewComponent);
+            SerializedProperty itemPrefabProp = so.FindProperty("ItemPrefab");
+
+            if (itemPrefabProp != null)
+            {
+                itemPrefabProp.objectReferenceValue = itemPrefabAsset;
+                so.ApplyModifiedProperties();
+                Debug.Log($"Linked ItemPrefab: {listPrefabPath} -> {itemPrefabPath}");
+            }
+            else
+            {
+                Debug.LogWarning($"ItemPrefab field not found on {viewComponent.GetType().Name}");
+            }
+
+            // Save the modified prefab
+            PrefabUtility.SaveAsPrefabAsset(listPrefabContents, listPrefabPath);
+            PrefabUtility.UnloadPrefabContents(listPrefabContents);
         }
     }
 }

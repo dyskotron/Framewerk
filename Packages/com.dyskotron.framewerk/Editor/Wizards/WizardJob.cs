@@ -23,6 +23,7 @@ namespace Framewerk.Editor.Wizards
         public string itemViewTypeName;
         public string itemMediatorTypeName;
         public string itemPrefabPath;
+        public string itemAddressableAddress;
         public string dataTypeName;
     }
 }
