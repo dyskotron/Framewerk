@@ -6,6 +6,7 @@ namespace FramewerkDemo.MainMenu.Model
     {
         Popup,
         List,
+        WizardList,
     }
 
     public interface IMenuModel
@@ -24,10 +25,12 @@ namespace FramewerkDemo.MainMenu.Model
             _titles = new Dictionary<ExampleId, string>();
             _titles.Add(ExampleId.Popup, "Simple Popup example");
             _titles.Add(ExampleId.List, "List example");
+            _titles.Add(ExampleId.WizardList, "Wizard List example");
 
             _providers = new List<MenuDataProvider>();
             _providers.Add(CreateDataProvider(ExampleId.Popup));
             _providers.Add(CreateDataProvider(ExampleId.List));
+            _providers.Add(CreateDataProvider(ExampleId.WizardList));
         }
 
         public List<MenuDataProvider> GetMenuData()

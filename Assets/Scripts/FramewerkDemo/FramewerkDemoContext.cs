@@ -7,6 +7,7 @@ using Framewerk.StrangeCore;
 using FramewerkDemo.Examples;
 using FramewerkDemo.Examples.ExampleListPanel;
 using FramewerkDemo.Examples.ExamplePopup;
+using FramewerkDemo.Examples.WizardList;
 using FramewerkDemo.MainMenu;
 using FramewerkDemo.MainMenu.Controller;
 using FramewerkDemo.MainMenu.Model;
@@ -62,6 +63,8 @@ namespace FramewerkDemo
             mediationBinder.Bind<ExamplePopupView>().To<ExamplePopupMediator>();
             mediationBinder.Bind<ExampleListItemView>().To<ExampleLisItemMediator>();
             mediationBinder.Bind<ExampleListPanelView>().To<ExampleListPanelMediator>();
+            mediationBinder.Bind<WizardListView>().To<WizardListMediator>();
+            mediationBinder.Bind<WizardListItemView>().To<WizardListItemMediator>();
 
             // SIGNALS
             injectionBinder.Bind<MenuItemSelectedSignal>().ToSingleton();

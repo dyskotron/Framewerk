@@ -80,6 +80,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dccd733086d4f45b5aa16e5e85ca7c9f
+    m_Address: Examples/WizardList/WizardList
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7cb7b8d5e4fe43ce80a0919e54669da
+    m_Address: Examples/WizardList/WizardListItem
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 3206b2745889e43d9abf821be8a02a40, type: 2}
   m_SchemaSet:
