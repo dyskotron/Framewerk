@@ -21,7 +21,7 @@ namespace FramewerkDemo.Examples
                     break;
                 case ExampleId.List:
                     InstantiateView<TopMenuView>("Examples/");
-                    InstantiateView<ExampleListPanelView>("ListPanel/");
+                    InstantiateView<ExampleListPanelView>("Examples/ListPanel/");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);

@@ -28,7 +28,7 @@ namespace Framewerk.Managers
 
     public class UiManager : IUiManager
     {
-        public const string UI_PREFABS_ROOT = "Prefabs/UI/";
+        public const string UI_PREFABS_ROOT = "UI/";
         public const string VIEW_SUFFIX = "View";
 
         [Inject]

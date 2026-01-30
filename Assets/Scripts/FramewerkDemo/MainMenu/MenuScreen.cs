@@ -13,7 +13,7 @@ namespace FramewerkDemo.MainMenu
 
         protected override void Enter()
         {
-            _menuView = InstantiateView<MenuView>("Menu/");
+            _menuView = InstantiateView<MenuView>("Examples/Menu/");
         }
     }
 }

@@ -14,7 +14,7 @@ namespace FramewerkDemo
 
         public override void Execute()
         {
-            PopupManager.Init(Framewerk.Popups.PopupManager.UI_PREFABS_ROOT, ViewConfig.Popups);
+            PopupManager.Init("Popups/Examples/", ViewConfig.Popups);
             Fsm.SwitchState(new MenuState());
         }
     }
