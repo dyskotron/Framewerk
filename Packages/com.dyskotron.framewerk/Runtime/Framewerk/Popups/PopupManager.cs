@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Framewerk.Managers;
@@ -37,7 +38,8 @@ namespace Framewerk.Popups
 
     public class PopupManager : IPopupManager
     {
-        public const string UI_PREFABS_ROOT = "Popups/";
+        public string TypeKey { get; set; } = "Popups";
+
         [Inject] public PopupOpenedSignal PopupOpenedSignal { get; set; }
         [Inject] public IUiManager UiManager { get; set; }
         [Inject] public IInjectionBinder InjectionBinder { get; set; }
@@ -46,6 +48,20 @@ namespace Framewerk.Popups
 
         private string _resourcePath;
         private Transform _popupParent;
+
+        private string BuildAddress(params string[] segments)
+        {
+            var parts = segments.Where(seg => !string.IsNullOrEmpty(seg))
+                                .Select(seg => seg.Trim('/'))
+                                .ToList();
+            return string.Join("/", parts);
+        }
+
+        private string GetPopupPath(Type popupType)
+        {
+            var viewName = UiManager.GetViewName(popupType);
+            return BuildAddress(_resourcePath, TypeKey, viewName);
+        }
 
         public void Init(string resourcePath, Transform popupParent)
         {
@@ -68,52 +84,72 @@ namespace Framewerk.Popups
 
         public async Task<T> InstantiatePopupAsync<T>(CancellationToken ct = default) where T : IPopupView
         {
-            return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct);
+            var path = GetPopupPath(typeof(T));
+            var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct);
+            return uiObj.GetComponent<T>();
         }
 
         public async Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, CancellationToken ct = default) where T : IPopupView
         {
-            return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct, popupMediatorInjects);
+            var path = GetPopupPath(typeof(T));
+            var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, popupMediatorInjects);
+            return uiObj.GetComponent<T>();
         }
 
         public async Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
         {
-            return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         public async Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
         {
-            return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct, text, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, text, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         public async Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
         {
-            return await UiManager.InstantiateViewAsync<T>(_resourcePath, _popupParent, ct, caption, text, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, caption, text, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         public T InstantiatePopup<T>() where T : IPopupView
         {
-            return UiManager.InstantiateView<T>(_resourcePath, _popupParent);
+            var path = GetPopupPath(typeof(T));
+            var uiObj = UiManager.InstantiateView(path, _popupParent);
+            return uiObj.GetComponent<T>();
         }
 
         public T InstantiatePopup<T>(object[] popupMediatorInjects) where T : IPopupView
         {
-            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, popupMediatorInjects);
+            var path = GetPopupPath(typeof(T));
+            var uiObj = UiManager.InstantiateView(path, _popupParent, popupMediatorInjects);
+            return uiObj.GetComponent<T>();
         }
 
         public T InstantiatePopup<T>(PopupButtonSetting[] popupOptions) where T : IPopupView
         {
-            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = UiManager.InstantiateView(path, _popupParent, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         public T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions) where T : IPopupView
         {
-            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, text, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = UiManager.InstantiateView(path, _popupParent, text, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         public T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions) where T : IPopupView
         {
-            return UiManager.InstantiateView<T>(_resourcePath, _popupParent, caption, text, new List<PopupButtonSetting>(popupOptions));
+            var path = GetPopupPath(typeof(T));
+            var uiObj = UiManager.InstantiateView(path, _popupParent, caption, text, new List<PopupButtonSetting>(popupOptions));
+            return uiObj.GetComponent<T>();
         }
 
         private void OnPopupOpenedHandler(IPopupMediator popup)

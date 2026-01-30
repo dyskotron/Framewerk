@@ -16,12 +16,12 @@ namespace FramewerkDemo.Examples
             switch (exampleId)
             {
                 case ExampleId.Popup:
-                    InstantiateView<TopMenuView>("Examples/");
+                    InstantiateView<TopMenuView>("Examples");
                     PopupManager.InstantiatePopup<ExamplePopupView>();
                     break;
                 case ExampleId.List:
-                    InstantiateView<TopMenuView>("Examples/");
-                    InstantiateView<ExampleListPanelView>("Examples/ListPanel/");
+                    InstantiateView<TopMenuView>("Examples");
+                    InstantiateView<ExampleListPanelView>("Examples/ListPanel");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(exampleId), exampleId, null);

@@ -28,8 +28,10 @@ namespace Framewerk.Managers
 
     public class UiManager : IUiManager
     {
-        public const string UI_PREFABS_ROOT = "UI/";
         public const string VIEW_SUFFIX = "View";
+
+        public string TypeKey { get; set; } = "UI";
+        public bool TypeKeyIsPrefix { get; set; } = false;
 
         [Inject]
         public IAssetManager AssetManager { get; set; }
@@ -48,13 +50,24 @@ namespace Framewerk.Managers
 
         private Transform _uiParent;
 
+        private string BuildAddress(params string[] segments)
+        {
+            var parts = new List<string>();
+            foreach (var seg in segments)
+            {
+                if (string.IsNullOrEmpty(seg)) continue;
+                parts.Add(seg.Trim('/'));
+            }
+            return string.Join("/", parts);
+        }
+
         public async Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects)
         {
             if (parent == null)
                 parent = _uiParent;
 
             BindParams(mediatorInjects);
-            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(UI_PREFABS_ROOT + path, parent, ct);
+            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
             UnbindParams(mediatorInjects);
 
             return uiObj;
@@ -66,7 +79,7 @@ namespace Framewerk.Managers
                 parent = _uiParent;
 
             BindParams(mediatorInjectsWithTypes);
-            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(UI_PREFABS_ROOT + path, parent, ct);
+            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
             UnbindParams(mediatorInjectsWithTypes);
 
             return uiObj;
@@ -106,7 +119,7 @@ namespace Framewerk.Managers
                 parent = _uiParent;
 
             BindParams(mediatorInjects);
-            GameObject uiObj = AssetManager.GetAsset<GameObject>(UI_PREFABS_ROOT + path, parent);
+            GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
             UnbindParams(mediatorInjects);
 
             return uiObj;
@@ -118,7 +131,7 @@ namespace Framewerk.Managers
                 parent = _uiParent;
 
             BindParams(mediatorInjectsWithTypes);
-            GameObject uiObj = AssetManager.GetAsset<GameObject>(UI_PREFABS_ROOT + path, parent);
+            GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
             UnbindParams(mediatorInjectsWithTypes);
 
             return uiObj;
@@ -190,7 +203,11 @@ namespace Framewerk.Managers
 
         protected virtual string GetViewPath(Type type, string customPath)
         {
-            return customPath + GetViewName(type);
+            var viewName = GetViewName(type);
+            if (TypeKeyIsPrefix)
+                return BuildAddress(TypeKey, customPath, viewName);
+            else
+                return BuildAddress(customPath, TypeKey, viewName);
         }
 
         private void BindParams(params Tuple<object, Type>[] bindparamsWithType)
