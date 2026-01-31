@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Framewerk.Networking.Serialization
 {
@@ -185,14 +184,10 @@ namespace Framewerk.Networking.Serialization
             Write((byte) ((value >> 24) & 0xFF));
         }
 
-        public void Write(NetworkInstanceId value)
+        // Replaced UNet types with uint for compatibility
+        public void WriteNetworkId(uint value)
         {
-            WritePacked((UInt32) (value.Value));
-        }
-
-        public void Write(NetworkSceneId value)
-        {
-            WritePacked((UInt32) (value.Value));
+            WritePacked(value);
         }
 
         static UIntFloat s_FloatConverter;
