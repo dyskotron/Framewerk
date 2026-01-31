@@ -50,3 +50,5 @@ sysinfo.txt
 *.unitypackage
 *.app
 Assets/TextMesh Pro/
+Assets/Mirror/
+Assets/Mirror.meta
