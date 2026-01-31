@@ -3,7 +3,9 @@
     "rootNamespace": "",
     "references": [
         "com.dyskotron.framewerk",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Mirror",
+        "Mirror.Transports"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
