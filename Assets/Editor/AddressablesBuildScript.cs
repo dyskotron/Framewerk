@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class AddressablesBuildScript
 {
-    [MenuItem("Framewerk/Build Addressables")]
+    [MenuItem("Framewerk/Addressables/Build")]
     public static void Build()
     {
         Debug.Log("[AddressablesBuild] Starting Addressables build...");
@@ -18,7 +18,7 @@ public static class AddressablesBuildScript
             Debug.Log($"[AddressablesBuild] Build complete! Output: {result.OutputPath}");
     }
 
-    [MenuItem("Framewerk/Setup + Build Addressables")]
+    [MenuItem("Framewerk/Addressables/Setup + Build")]
     public static void SetupAndBuild()
     {
         AddressablesSetup.Setup();
