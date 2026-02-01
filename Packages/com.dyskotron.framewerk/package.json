@@ -1,6 +1,6 @@
 {
   "name": "com.dyskotron.framewerk",
-  "version": "2.0.0-preview.1",
+  "version": "2.0.0-preview.2",
   "displayName": "Framewerk",
   "description": "Inversion of control MVCS micro-framework with dependency injection, built on StrangeIoC.",
   "unity": "2021.3",

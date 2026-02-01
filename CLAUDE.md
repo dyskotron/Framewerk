@@ -62,6 +62,67 @@ Packages/com.dyskotron.framewerk/
 Assets/Scripts/FramewerkDemo/   # Demo app (Bootstrap, Context, States, Screens)
 ```
 
+## MCP Tools (Unity ↔ AI)
+
+This project has **MCP For Unity** (`com.coplaydev.unity-mcp`) which lets you call Unity Editor functions via MCP. The server runs on `http://localhost:8080/mcp`.
+
+### Built-in MCP tools
+Standard tools: `manage_asset`, `manage_gameobject`, `manage_scene`, `manage_prefabs`, `create_script`, `apply_text_edits`, `validate_script`, `read_console`, `execute_menu_item`, `find_gameobjects`, `manage_components`, `manage_material`, `manage_editor`, etc.
+
+### Framewerk custom tool: `framewerk_scaffold`
+
+Creates UI component prefabs with correct hierarchy and wiring. Use this instead of manually creating prefabs — it handles View component attachment, serialized reference wiring, and Addressable marking.
+
+**Actions:**
+
+#### `create_popup`
+Creates a Popup prefab with the View component attached.
+```json
+{
+  "action": "create_popup",
+  "name": "MyPopup",
+  "namespace": "MyGame.UI",
+  "viewTypeName": "MyGame.UI.MyPopupView",
+  "prefabFolder": "Assets/Prefabs",
+  "overwrite": false
+}
+```
+
+#### `create_list`
+Creates a List prefab + ListItem prefab, attaches View components, wires ItemPrefab reference.
+```json
+{
+  "action": "create_list",
+  "name": "MyList",
+  "namespace": "MyGame.UI",
+  "viewTypeName": "MyGame.UI.MyListView",
+  "itemViewTypeName": "MyGame.UI.MyListItemView",
+  "prefabFolder": "Assets/Prefabs",
+  "overwrite": false
+}
+```
+
+#### `mark_addressable`
+Marks a prefab as Addressable with the given address.
+```json
+{
+  "action": "mark_addressable",
+  "prefabPath": "Assets/Prefabs/MyPopup.prefab",
+  "address": "UI/MyPopup"
+}
+```
+
+### Workflow: Creating a new UI component
+1. **Write scripts** — Create View, Mediator (and Data/ItemView/ItemMediator for Lists)
+2. **Wait for compile** — Unity must compile the scripts before prefabs can reference them
+3. **Call `framewerk_scaffold`** — Use `create_popup` or `create_list` to create prefabs with components attached
+4. **Call `mark_addressable`** — Mark prefabs as Addressable
+5. **Edit Context** — Add mediation and injection bindings to the project's Context class
+
+## Plan Mode
+- Make the plan extremely concise. Sacrifice grammar for the sake of concision.
+- At the end of each plan, give me a list of unresolved questions to answer, if any.
+
 ## Conventions
 
 - All mediators should extend `ExtendedMediator<TView>` for auto-cleanup

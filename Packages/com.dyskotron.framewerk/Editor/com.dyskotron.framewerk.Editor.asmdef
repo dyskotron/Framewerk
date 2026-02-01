@@ -3,7 +3,8 @@
     "rootNamespace": "Framewerk.Editor",
     "references": [
         "com.dyskotron.framewerk",
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+        "MCPForUnity.Editor"
     ],
     "includePlatforms": [
         "Editor"
