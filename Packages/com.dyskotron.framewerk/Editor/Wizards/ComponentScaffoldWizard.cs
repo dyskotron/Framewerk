@@ -80,9 +80,7 @@ namespace Framewerk.Editor.Wizards
             EditorPrefs.SetBool(PREFS_MARK_ADDRESSABLE, markAddressable);
             EditorPrefs.SetBool(PREFS_OPEN_AFTER, openAfterCreate);
             EditorPrefs.SetString(PREFS_ADDRESSABLE_PREFIX, addressablePrefix);
-            EditorPrefs.SetString(PREFS_UI_TYPE_KEY, uiTypeKey);
-            EditorPrefs.SetBool(PREFS_UI_TYPE_KEY_IS_PREFIX, uiTypeKeyIsPrefix);
-            EditorPrefs.SetString(PREFS_POPUP_TYPE_KEY, popupTypeKey);
+            // UI TypeKey, TypeKey is Prefix, and Popup TypeKey are now saved by FramewerkSettingsWindow
         }
 
         private void FindContextTypes()
@@ -148,7 +146,16 @@ namespace Framewerk.Editor.Wizards
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
             GUILayout.Space(10);
+
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Framewerk Component Wizard", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Settings...", GUILayout.Width(80)))
+            {
+                FramewerkSettingsWindow.ShowWindow();
+            }
+            EditorGUILayout.EndHorizontal();
+
             GUILayout.Space(10);
 
             // Component Type - exclude Screen from dropdown
@@ -166,17 +173,7 @@ namespace Framewerk.Editor.Wizards
             // Addressable Prefix
             addressablePrefix = EditorGUILayout.TextField("Addressable Prefix", addressablePrefix);
 
-            GUILayout.Space(5);
-            EditorGUILayout.LabelField("Manager Settings", EditorStyles.boldLabel);
-
-            // UI Manager settings (for List components)
-            uiTypeKey = EditorGUILayout.TextField("UI TypeKey", uiTypeKey);
-            uiTypeKeyIsPrefix = EditorGUILayout.Toggle("UI TypeKey is Prefix", uiTypeKeyIsPrefix);
-
-            // Popup Manager settings (for Popup components)
-            popupTypeKey = EditorGUILayout.TextField("Popup TypeKey", popupTypeKey);
-
-            GUILayout.Space(5);
+            GUILayout.Space(10);
 
             // Namespace
             EditorGUILayout.BeginHorizontal();
