@@ -1,0 +1,28 @@
+using Framewerk;
+using Framewerk.StrangeCore;
+using Plugins.Framewerk;
+using strange.extensions.context.impl;
+
+namespace #NAMESPACE#
+{
+    public class #SCENENAME#Context : FramewerkMVCSContext
+    {
+        private readonly ViewConfig _viewConfig;
+
+        public #SCENENAME#Context(ContextView view, ViewConfig viewConfig) : base(view, true)
+        {
+            _viewConfig = viewConfig;
+        }
+
+        protected override void mapBindings()
+        {
+            base.mapBindings();
+
+            // Framewerk core
+            injectionBinder.Bind<ViewConfig>().ToValue(_viewConfig);
+
+            // COMMANDS
+            commandBinder.Bind<ContextStartSignal>().To<#SCENENAME#StartCommand>();
+        }
+    }
+}

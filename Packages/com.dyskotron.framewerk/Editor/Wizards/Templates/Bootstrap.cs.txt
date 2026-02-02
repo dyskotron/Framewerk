@@ -1,0 +1,31 @@
+using Plugins.Framewerk;
+using strange.extensions.context.impl;
+using UnityEngine;
+
+namespace #NAMESPACE#
+{
+    public class #SCENENAME#Bootstrap : ContextView
+    {
+        public ViewConfig viewConfig;
+
+        private #SCENENAME#Context _context;
+
+        private void Start()
+        {
+            if (viewConfig == null)
+            {
+                Debug.LogError("[#SCENENAME#] ViewConfig is not assigned on #SCENENAME#Bootstrap! " +
+                               "Please assign a ViewConfig component in the inspector.", this);
+                return;
+            }
+
+            _context = new #SCENENAME#Context(this, viewConfig);
+            _context.Start();
+        }
+
+        private void OnApplicationQuit()
+        {
+            _context?.OnRemove();
+        }
+    }
+}

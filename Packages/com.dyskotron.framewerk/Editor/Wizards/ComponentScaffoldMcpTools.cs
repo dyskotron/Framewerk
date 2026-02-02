@@ -14,7 +14,7 @@ namespace Framewerk.Editor.Wizards
     /// </summary>
     public static class ComponentScaffoldMcpTools
     {
-        private const string SupportedActions = "create_popup, create_list, mark_addressable";
+        private const string SupportedActions = "create_popup, create_list, mark_addressable, create_scene";
 
         public static object HandleCommand(JObject @params)
         {
@@ -39,6 +39,8 @@ namespace Framewerk.Editor.Wizards
                         return CreateList(@params);
                     case "mark_addressable":
                         return MarkAddressable(@params);
+                    case "create_scene":
+                        return CreateScene(@params);
                     default:
                         return new ErrorResponse($"Unknown action: '{action}'. Valid actions are: {SupportedActions}.");
                 }
@@ -506,6 +508,118 @@ namespace Framewerk.Editor.Wizards
             {
                 PrefabUtility.UnloadPrefabContents(listPrefabContents);
             }
+        }
+
+        private static object CreateScene(JObject @params)
+        {
+            string sceneName = @params["sceneName"]?.ToString();
+            if (string.IsNullOrEmpty(sceneName))
+            {
+                return new ErrorResponse("'sceneName' parameter is required for create_scene.");
+            }
+
+            string namespaceName = @params["namespace"]?.ToString();
+            if (string.IsNullOrEmpty(namespaceName))
+            {
+                return new ErrorResponse("'namespace' parameter is required for create_scene.");
+            }
+
+            string sceneFolder = @params["sceneFolder"]?.ToString();
+            if (string.IsNullOrEmpty(sceneFolder))
+            {
+                return new ErrorResponse("'sceneFolder' parameter is required for create_scene.");
+            }
+
+            string scriptFolder = @params["scriptFolder"]?.ToString();
+            if (string.IsNullOrEmpty(scriptFolder))
+            {
+                return new ErrorResponse("'scriptFolder' parameter is required for create_scene.");
+            }
+
+            // Ensure folders exist
+            EnsureDirectoryExists(sceneFolder);
+            EnsureDirectoryExists(scriptFolder);
+
+            // Build paths
+            string scenePath = Path.Combine(sceneFolder, $"{sceneName}.unity").Replace("\\", "/");
+            string bootstrapPath = Path.Combine(scriptFolder, $"{sceneName}Bootstrap.cs").Replace("\\", "/");
+            string contextPath = Path.Combine(scriptFolder, $"{sceneName}Context.cs").Replace("\\", "/");
+            string startCommandPath = Path.Combine(scriptFolder, $"{sceneName}StartCommand.cs").Replace("\\", "/");
+
+            // Check for existing files
+            if (File.Exists(scenePath))
+            {
+                return new ErrorResponse($"Scene already exists at '{scenePath}'.");
+            }
+
+            if (File.Exists(bootstrapPath) || File.Exists(contextPath) || File.Exists(startCommandPath))
+            {
+                return new ErrorResponse($"One or more script files already exist for {sceneName}.");
+            }
+
+            // Load templates
+            string templatePath = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
+            string bootstrapTemplate = File.ReadAllText(templatePath + "Bootstrap.cs.txt");
+            string contextTemplate = File.ReadAllText(templatePath + "Context.cs.txt");
+            string startCommandTemplate = File.ReadAllText(templatePath + "StartCommand.cs.txt");
+
+            // Replace placeholders
+            string bootstrapCode = bootstrapTemplate
+                .Replace("#SCENENAME#", sceneName)
+                .Replace("#NAMESPACE#", namespaceName);
+            string contextCode = contextTemplate
+                .Replace("#SCENENAME#", sceneName)
+                .Replace("#NAMESPACE#", namespaceName);
+            string startCommandCode = startCommandTemplate
+                .Replace("#SCENENAME#", sceneName)
+                .Replace("#NAMESPACE#", namespaceName);
+
+            // Write scripts
+            File.WriteAllText(bootstrapPath, bootstrapCode);
+            File.WriteAllText(contextPath, contextCode);
+            File.WriteAllText(startCommandPath, startCommandCode);
+
+            // Copy scene template
+            string sceneTemplatePath = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/SceneTemplate.unity";
+            if (!File.Exists(sceneTemplatePath))
+            {
+                return new ErrorResponse("SceneTemplate.unity not found in Templates folder.");
+            }
+
+            File.Copy(sceneTemplatePath, scenePath);
+
+            // Create SceneJob for post-domain reload setup
+            SceneJob job = new SceneJob
+            {
+                sceneName = sceneName,
+                namespaceName = namespaceName,
+                sceneFolder = sceneFolder,
+                scriptFolder = scriptFolder,
+                scenePath = scenePath,
+                bootstrapTypeName = $"{namespaceName}.{sceneName}Bootstrap",
+                contextTypeName = $"{namespaceName}.{sceneName}Context",
+                startCommandTypeName = $"{namespaceName}.{sceneName}StartCommand"
+            };
+
+            // Save job to EditorPrefs
+            string json = JsonUtility.ToJson(job);
+            EditorPrefs.SetString("FramewerkWizard_PendingSceneJob", json);
+
+            // Refresh to trigger recompile
+            AssetDatabase.Refresh();
+
+            Debug.Log($"Generated scene and scripts for {sceneName}. Waiting for recompile to complete scene setup...");
+
+            return new SuccessResponse(
+                $"Scene '{sceneName}' created successfully. Scripts generated, waiting for compile...",
+                new {
+                    scenePath,
+                    bootstrapPath,
+                    contextPath,
+                    startCommandPath,
+                    success = true
+                }
+            );
         }
     }
 }

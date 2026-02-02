@@ -1,0 +1,15 @@
+using Plugins.Framewerk;
+using strange.extensions.command.impl;
+
+namespace #NAMESPACE#
+{
+    public class #SCENENAME#StartCommand : Command
+    {
+        [Inject] public ViewConfig ViewConfig { get; set; }
+
+        public override void Execute()
+        {
+            // Initialize your app here
+        }
+    }
+}
