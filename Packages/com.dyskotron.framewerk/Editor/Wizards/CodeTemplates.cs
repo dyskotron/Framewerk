@@ -5,7 +5,8 @@ namespace Framewerk.Editor.Wizards
         Screen,
         Popup,
         List,
-        ListItem
+        ListItem,
+        View
     }
 
     public static class CodeTemplates
@@ -22,6 +23,8 @@ namespace Framewerk.Editor.Wizards
                     return GetListPanelViewTemplate(name, ns);
                 case ComponentType.ListItem:
                     return GetListItemViewTemplate(name, ns);
+                case ComponentType.View:
+                    return GetScreenViewTemplate(name, ns);
                 default:
                     return GetScreenViewTemplate(name, ns);
             }
@@ -39,6 +42,8 @@ namespace Framewerk.Editor.Wizards
                     return GetListPanelMediatorTemplate(name, ns);
                 case ComponentType.ListItem:
                     return GetListItemMediatorTemplate(name, ns);
+                case ComponentType.View:
+                    return GetScreenMediatorTemplate(name, ns);
                 default:
                     return GetScreenMediatorTemplate(name, ns);
             }

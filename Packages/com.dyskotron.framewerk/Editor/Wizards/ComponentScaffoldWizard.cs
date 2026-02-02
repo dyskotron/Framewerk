@@ -159,8 +159,8 @@ namespace Framewerk.Editor.Wizards
             GUILayout.Space(10);
 
             // Component Type - exclude Screen from dropdown
-            ComponentType[] validTypes = new ComponentType[] { ComponentType.Popup, ComponentType.List };
-            string[] typeNames = new string[] { "Popup", "List" };
+            ComponentType[] validTypes = new ComponentType[] { ComponentType.Popup, ComponentType.List, ComponentType.View };
+            string[] typeNames = new string[] { "Popup", "List", "View" };
             int currentIndex = System.Array.IndexOf(validTypes, componentType);
             if (currentIndex == -1) currentIndex = 0; // Default to Popup if Screen was somehow selected
 
@@ -395,7 +395,7 @@ namespace Framewerk.Editor.Wizards
             }
             else
             {
-                // List uses UiManager's TypeKey and respects TypeKeyIsPrefix setting
+                // List and View use UiManager's TypeKey and respect TypeKeyIsPrefix setting
                 if (uiTypeKeyIsPrefix)
                     mainAddress = BuildAddress(uiTypeKey, addressablePrefix, effectiveName);
                 else

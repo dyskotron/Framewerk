@@ -167,6 +167,8 @@ namespace Framewerk.Editor.Wizards
                     return TEMPLATE_PATH + "PopupTemplate.prefab";
                 case ComponentType.Screen:
                     return TEMPLATE_PATH + "PanelTemplate.prefab";
+                case ComponentType.View:
+                    return TEMPLATE_PATH + "ViewTemplate.prefab";
                 default:
                     return null;
             }

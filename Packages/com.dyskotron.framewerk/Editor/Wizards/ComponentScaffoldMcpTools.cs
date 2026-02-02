@@ -14,7 +14,7 @@ namespace Framewerk.Editor.Wizards
     /// </summary>
     public static class ComponentScaffoldMcpTools
     {
-        private const string SupportedActions = "create_popup, create_list, mark_addressable, create_scene";
+        private const string SupportedActions = "create_popup, create_list, create_view, mark_addressable, create_scene";
 
         public static object HandleCommand(JObject @params)
         {
@@ -37,6 +37,8 @@ namespace Framewerk.Editor.Wizards
                         return CreatePopup(@params);
                     case "create_list":
                         return CreateList(@params);
+                    case "create_view":
+                        return CreateView(@params);
                     case "mark_addressable":
                         return MarkAddressable(@params);
                     case "create_scene":
@@ -130,6 +132,88 @@ namespace Framewerk.Editor.Wizards
 
             return new SuccessResponse(
                 $"Popup prefab created successfully at '{prefabPath}'.",
+                new { prefabPath, success = true }
+            );
+        }
+
+        private static object CreateView(JObject @params)
+        {
+            string name = @params["name"]?.ToString();
+            if (string.IsNullOrEmpty(name))
+            {
+                return new ErrorResponse("'name' parameter is required for create_view.");
+            }
+
+            string namespaceName = @params["namespace"]?.ToString();
+            if (string.IsNullOrEmpty(namespaceName))
+            {
+                return new ErrorResponse("'namespace' parameter is required for create_view.");
+            }
+
+            string viewTypeName = @params["viewTypeName"]?.ToString();
+            if (string.IsNullOrEmpty(viewTypeName))
+            {
+                return new ErrorResponse("'viewTypeName' parameter is required for create_view.");
+            }
+
+            string prefabFolder = @params["prefabFolder"]?.ToString();
+            if (string.IsNullOrEmpty(prefabFolder))
+            {
+                return new ErrorResponse("'prefabFolder' parameter is required for create_view.");
+            }
+
+            bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
+
+            // Ensure prefab folder exists
+            EnsureDirectoryExists(prefabFolder);
+
+            // Build prefab path
+            string prefabPath = Path.Combine(prefabFolder, $"{name}.prefab").Replace("\\", "/");
+
+            // Check if prefab already exists
+            if (!overwrite && File.Exists(prefabPath))
+            {
+                return new ErrorResponse(
+                    $"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.",
+                    new { prefabPath }
+                );
+            }
+
+            // Find the view type to ensure it exists
+            Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
+            if (viewType == null)
+            {
+                return new ErrorResponse($"Could not find type: {viewTypeName}");
+            }
+
+            // Get template path
+            string templatePath = GetTemplatePath(ComponentType.View);
+            if (string.IsNullOrEmpty(templatePath))
+            {
+                return new ErrorResponse("View template not found.");
+            }
+
+            // Copy template to target path
+            if (!AssetDatabase.CopyAsset(templatePath, prefabPath))
+            {
+                return new ErrorResponse($"Failed to copy template from {templatePath} to {prefabPath}");
+            }
+
+            // Swap the base View component with the custom View
+            try
+            {
+                ProcessPrefabSwap(prefabPath, viewTypeName, name);
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Failed to swap component: {e.Message}");
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            return new SuccessResponse(
+                $"View prefab created successfully at '{prefabPath}'.",
                 new { prefabPath, success = true }
             );
         }
@@ -327,6 +411,8 @@ namespace Framewerk.Editor.Wizards
                     return TEMPLATE_PATH + "PopupTemplate.prefab";
                 case ComponentType.Screen:
                     return TEMPLATE_PATH + "PanelTemplate.prefab";
+                case ComponentType.View:
+                    return TEMPLATE_PATH + "ViewTemplate.prefab";
                 default:
                     return null;
             }
