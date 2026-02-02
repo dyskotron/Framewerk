@@ -10,7 +10,7 @@ public static class AddressablesSetup
     private const string GroupName = "Framewerk Demo Assets";
     private const string ResourcesPrefabsPath = "Assets/Resources/Prefabs";
 
-    [MenuItem("Framewerk/Setup Addressables")]
+    [MenuItem("Framewerk/Addressables/Setup")]
     public static void Setup()
     {
         // Create or get default settings

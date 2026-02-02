@@ -18,6 +18,9 @@ namespace Framewerk.Editor.Wizards
         private const string PREFS_MARK_ADDRESSABLE = "FramewerkWizard_MarkAddressable";
         private const string PREFS_OPEN_AFTER = "FramewerkWizard_OpenAfter";
         private const string PREFS_ADDRESSABLE_PREFIX = "FramewerkWizard_AddressablePrefix";
+        private const string PREFS_UI_TYPE_KEY = "FramewerkWizard_UiTypeKey";
+        private const string PREFS_UI_TYPE_KEY_IS_PREFIX = "FramewerkWizard_UiTypeKeyIsPrefix";
+        private const string PREFS_POPUP_TYPE_KEY = "FramewerkWizard_PopupTypeKey";
 
         private string componentName = "";
         private ComponentType componentType = ComponentType.Popup;
@@ -29,6 +32,9 @@ namespace Framewerk.Editor.Wizards
         private bool markAddressable = true;
         private bool openAfterCreate = false;
         private string addressablePrefix = "";
+        private string uiTypeKey = "UI";
+        private bool uiTypeKeyIsPrefix = false;
+        private string popupTypeKey = "Popups";
 
         private List<Type> contextTypes = new List<Type>();
         private string[] contextNames = new string[0];
@@ -59,6 +65,9 @@ namespace Framewerk.Editor.Wizards
             markAddressable = EditorPrefs.GetBool(PREFS_MARK_ADDRESSABLE, true);
             openAfterCreate = EditorPrefs.GetBool(PREFS_OPEN_AFTER, false);
             addressablePrefix = EditorPrefs.GetString(PREFS_ADDRESSABLE_PREFIX, "");
+            uiTypeKey = EditorPrefs.GetString(PREFS_UI_TYPE_KEY, "UI");
+            uiTypeKeyIsPrefix = EditorPrefs.GetBool(PREFS_UI_TYPE_KEY_IS_PREFIX, false);
+            popupTypeKey = EditorPrefs.GetString(PREFS_POPUP_TYPE_KEY, "Popups");
         }
 
         private void SavePreferences()
@@ -71,6 +80,7 @@ namespace Framewerk.Editor.Wizards
             EditorPrefs.SetBool(PREFS_MARK_ADDRESSABLE, markAddressable);
             EditorPrefs.SetBool(PREFS_OPEN_AFTER, openAfterCreate);
             EditorPrefs.SetString(PREFS_ADDRESSABLE_PREFIX, addressablePrefix);
+            // UI TypeKey, TypeKey is Prefix, and Popup TypeKey are now saved by FramewerkSettingsWindow
         }
 
         private void FindContextTypes()
@@ -120,12 +130,32 @@ namespace Framewerk.Editor.Wizards
             return false;
         }
 
+        private string BuildAddress(params string[] segments)
+        {
+            var parts = new List<string>();
+            foreach (var seg in segments)
+            {
+                if (string.IsNullOrEmpty(seg)) continue;
+                parts.Add(seg.Trim('/'));
+            }
+            return string.Join("/", parts);
+        }
+
         private void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
             GUILayout.Space(10);
+
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Framewerk Component Wizard", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Settings...", GUILayout.Width(80)))
+            {
+                FramewerkSettingsWindow.ShowWindow();
+            }
+            EditorGUILayout.EndHorizontal();
+
             GUILayout.Space(10);
 
             // Component Type - exclude Screen from dropdown
@@ -142,6 +172,8 @@ namespace Framewerk.Editor.Wizards
 
             // Addressable Prefix
             addressablePrefix = EditorGUILayout.TextField("Addressable Prefix", addressablePrefix);
+
+            GUILayout.Space(10);
 
             // Namespace
             EditorGUILayout.BeginHorizontal();
@@ -354,9 +386,21 @@ namespace Framewerk.Editor.Wizards
             // Generate script files
             GenerateScripts(effectiveName);
 
-            // Build addressable address matching UiManager.GetViewPath format (default postfix: {customPath}/UI/{viewName})
-            // TODO: Read UiManager/PopupManager config to determine prefix/postfix mode and TypeKey instead of hardcoding
-            string mainAddress = string.IsNullOrEmpty(addressablePrefix) ? $"UI/{effectiveName}" : $"{addressablePrefix}/UI/{effectiveName}";
+            // Build addressable address matching manager settings
+            string mainAddress;
+            if (componentType == ComponentType.Popup)
+            {
+                // Popup always uses PopupManager's TypeKey in postfix position
+                mainAddress = BuildAddress(addressablePrefix, popupTypeKey, effectiveName);
+            }
+            else
+            {
+                // List uses UiManager's TypeKey and respects TypeKeyIsPrefix setting
+                if (uiTypeKeyIsPrefix)
+                    mainAddress = BuildAddress(uiTypeKey, addressablePrefix, effectiveName);
+                else
+                    mainAddress = BuildAddress(addressablePrefix, uiTypeKey, effectiveName);
+            }
 
             // Create wizard job
             WizardJob job = new WizardJob
@@ -378,7 +422,13 @@ namespace Framewerk.Editor.Wizards
             if (componentType == ComponentType.List)
             {
                 string itemName = effectiveName + "Item";
-                string itemAddress = string.IsNullOrEmpty(addressablePrefix) ? $"UI/{itemName}" : $"{addressablePrefix}/UI/{itemName}";
+                // List items use the same UiManager settings as the parent list
+                string itemAddress;
+                if (uiTypeKeyIsPrefix)
+                    itemAddress = BuildAddress(uiTypeKey, addressablePrefix, itemName);
+                else
+                    itemAddress = BuildAddress(addressablePrefix, uiTypeKey, itemName);
+
                 job.dataTypeName = $"{namespaceName}.{effectiveName}Data";
                 job.itemViewTypeName = $"{namespaceName}.{itemName}View";
                 job.itemMediatorTypeName = $"{namespaceName}.{itemName}Mediator";
