@@ -36,6 +36,15 @@ All wiring happens in a **Context** class (e.g., `FramewerkDemoContext`):
 | `UiManager` | UI prefab instantiation on canvas |
 | `ViewConfig` | Centralized UI camera/canvas references (partial class, extensible per-project) |
 
+### Startup / Initialization Flow
+
+`Bootstrap.Start()` → `Context.Start()` → `instantiateCoreComponents()` → `mapBindings()` → `postBindings()` → `Launch()` → `ContextStartSignal.Dispatch()`
+
+Framework services (AssetManager, UiManager, PopupManager, etc.) are only available after `ContextStartSignal` fires. Do not use them before init completes (e.g. not in `Bootstrap.Start()` or `mapBindings()`). Map a startup command to `ContextStartSignal` to kick things off:
+```csharp
+commandBinder.Bind<ContextStartSignal>().To<MyStartCommand>();
+```
+
 ### Signal → Command → Service Flow
 
 1. View dispatches a **Signal** (type-safe event)
@@ -118,6 +127,50 @@ Marks a prefab as Addressable with the given address.
 3. **Call `framewerk_scaffold`** — Use `create_popup` or `create_list` to create prefabs with components attached
 4. **Call `mark_addressable`** — Mark prefabs as Addressable
 5. **Edit Context** — Add mediation and injection bindings to the project's Context class
+
+## Scene Setup Blueprint (MCP)
+
+When creating a new Framewerk test/demo scene via MCP, replicate this exact structure from `SampleScene`. **Do NOT use a single Canvas with children — use separate root Canvas objects per UI layer.**
+
+### Required hierarchy (root GameObjects)
+
+```
+Main Camera          — Transform, Camera (clearFlags: Skybox), AudioListener
+Directional Light    — Transform, Light
+EventSystem          — Transform, EventSystem, StandaloneInputModule
+Bootstrap            — Transform, [YourBootstrap], ViewConfig
+UI.Main              — RectTransform, Canvas, CanvasScaler, GraphicRaycaster
+UI.Popups            — RectTransform, Canvas, CanvasScaler, GraphicRaycaster
+```
+
+### Canvas configuration (both UI.Main and UI.Popups)
+
+| Component | Property | Value |
+|---|---|---|
+| Canvas | renderMode | `0` (Screen Space - Overlay) |
+| CanvasScaler | uiScaleMode | `1` (Scale With Screen Size) |
+| CanvasScaler | referenceResolution | `800 x 600` |
+| CanvasScaler | screenMatchMode | `0` (Match Width Or Height) |
+| CanvasScaler | matchWidthOrHeight | `0` |
+
+### ViewConfig wiring on Bootstrap
+
+| Field | Target |
+|---|---|
+| `Camera3d` | Main Camera → Camera component |
+| `UICamera` | Main Camera → Camera component |
+| `Container3d` | Main Camera → Transform component |
+| `UiBottom` | `UI.Main` → RectTransform |
+| `UiDefault` | `UI.Main` → RectTransform |
+| `Popups` | `UI.Popups` → RectTransform |
+| `UiOverlay` | `UI.Popups` → RectTransform |
+
+### Common mistakes to avoid
+- **Never** use World Space (`renderMode: 2`) for UI canvases — use Screen Space - Overlay (`0`)
+- **Never** put UiDefault/Popups as children of a single Canvas — they must be separate root Canvas objects
+- **Never** use Constant Pixel Size (`uiScaleMode: 0`) — use Scale With Screen Size (`1`)
+- **Never** leave ViewConfig fields null — all 7 fields must be wired
+- For text fields in Views, use `TMP_Text` (TextMeshPro), not `UnityEngine.UI.Text`
 
 ## Plan Mode
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
