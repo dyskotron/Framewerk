@@ -180,6 +180,7 @@ namespace Framewerk.Editor.Wizards
                 }
             }
             EditorGUILayout.EndHorizontal();
+            GUILayout.Space(20);
 
             // 4. Prefab Folder
             EditorGUILayout.BeginHorizontal();
@@ -197,6 +198,7 @@ namespace Framewerk.Editor.Wizards
                 }
             }
             EditorGUILayout.EndHorizontal();
+            GUILayout.Space(20);
 
             // 5. Namespace
             EditorGUILayout.BeginHorizontal();
