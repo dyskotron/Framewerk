@@ -15,9 +15,7 @@ namespace Framewerk.Editor.Wizards
         private const string PREFS_PREFAB_FOLDER = "FramewerkWizard_PrefabFolder";
         private const string PREFS_CONTEXT_INDEX = "FramewerkWizard_ContextIndex";
         private const string PREFS_SETUP_IN_CONTEXT = "FramewerkWizard_SetupInContext";
-        private const string PREFS_MARK_ADDRESSABLE = "FramewerkWizard_MarkAddressable";
-        private const string PREFS_OPEN_AFTER = "FramewerkWizard_OpenAfter";
-        private const string PREFS_ADDRESSABLE_PREFIX = "FramewerkWizard_AddressablePrefix";
+        private const string PREFS_ADDRESSABLE_ROOT = "FramewerkWizard_AddressableRoot";
         private const string PREFS_UI_TYPE_KEY = "FramewerkWizard_UiTypeKey";
         private const string PREFS_UI_TYPE_KEY_IS_PREFIX = "FramewerkWizard_UiTypeKeyIsPrefix";
         private const string PREFS_POPUP_TYPE_KEY = "FramewerkWizard_PopupTypeKey";
@@ -29,9 +27,7 @@ namespace Framewerk.Editor.Wizards
         private string prefabFolder = "Assets/Prefabs";
         private int selectedContextIndex = 0;
         private bool setupInContext = true;
-        private bool markAddressable = true;
-        private bool openAfterCreate = false;
-        private string addressablePrefix = "";
+        private string addressableRoot = "";
         private string uiTypeKey = "UI";
         private bool uiTypeKeyIsPrefix = false;
         private string popupTypeKey = "Popups";
@@ -62,9 +58,7 @@ namespace Framewerk.Editor.Wizards
             prefabFolder = EditorPrefs.GetString(PREFS_PREFAB_FOLDER, "Assets/Prefabs");
             selectedContextIndex = EditorPrefs.GetInt(PREFS_CONTEXT_INDEX, 0);
             setupInContext = EditorPrefs.GetBool(PREFS_SETUP_IN_CONTEXT, true);
-            markAddressable = EditorPrefs.GetBool(PREFS_MARK_ADDRESSABLE, true);
-            openAfterCreate = EditorPrefs.GetBool(PREFS_OPEN_AFTER, false);
-            addressablePrefix = EditorPrefs.GetString(PREFS_ADDRESSABLE_PREFIX, "");
+            addressableRoot = EditorPrefs.GetString(PREFS_ADDRESSABLE_ROOT, "");
             uiTypeKey = EditorPrefs.GetString(PREFS_UI_TYPE_KEY, "UI");
             uiTypeKeyIsPrefix = EditorPrefs.GetBool(PREFS_UI_TYPE_KEY_IS_PREFIX, false);
             popupTypeKey = EditorPrefs.GetString(PREFS_POPUP_TYPE_KEY, "Popups");
@@ -77,9 +71,7 @@ namespace Framewerk.Editor.Wizards
             EditorPrefs.SetString(PREFS_PREFAB_FOLDER, prefabFolder);
             EditorPrefs.SetInt(PREFS_CONTEXT_INDEX, selectedContextIndex);
             EditorPrefs.SetBool(PREFS_SETUP_IN_CONTEXT, setupInContext);
-            EditorPrefs.SetBool(PREFS_MARK_ADDRESSABLE, markAddressable);
-            EditorPrefs.SetBool(PREFS_OPEN_AFTER, openAfterCreate);
-            EditorPrefs.SetString(PREFS_ADDRESSABLE_PREFIX, addressablePrefix);
+            EditorPrefs.SetString(PREFS_ADDRESSABLE_ROOT, addressableRoot);
             // UI TypeKey, TypeKey is Prefix, and Popup TypeKey are now saved by FramewerkSettingsWindow
         }
 
@@ -158,35 +150,21 @@ namespace Framewerk.Editor.Wizards
 
             GUILayout.Space(10);
 
-            // Component Type - exclude Screen from dropdown
+            // 1. Component Name
+            componentName = EditorGUILayout.TextField("Name", componentName);
+
+            // 2. Component Type - exclude Screen from dropdown
             ComponentType[] validTypes = new ComponentType[] { ComponentType.Popup, ComponentType.List, ComponentType.View };
             string[] typeNames = new string[] { "Popup", "List", "View" };
             int currentIndex = System.Array.IndexOf(validTypes, componentType);
             if (currentIndex == -1) currentIndex = 0; // Default to Popup if Screen was somehow selected
 
-            int newIndex = EditorGUILayout.Popup("Component Type", currentIndex, typeNames);
+            int newIndex = EditorGUILayout.Popup("Type", currentIndex, typeNames);
             componentType = validTypes[newIndex];
 
-            // Component Name
-            componentName = EditorGUILayout.TextField("Component Name", componentName);
-
-            // Addressable Prefix
-            addressablePrefix = EditorGUILayout.TextField("Addressable Prefix", addressablePrefix);
-
             GUILayout.Space(10);
 
-            // Namespace
-            EditorGUILayout.BeginHorizontal();
-            namespaceName = EditorGUILayout.TextField("Namespace", namespaceName);
-            if (GUILayout.Button("Auto", GUILayout.Width(50)))
-            {
-                namespaceName = NamespaceResolver.ResolveFromPath(scriptFolder);
-            }
-            EditorGUILayout.EndHorizontal();
-
-            GUILayout.Space(10);
-
-            // Script Folder
+            // 3. Script Folder
             EditorGUILayout.BeginHorizontal();
             scriptFolder = EditorGUILayout.TextField("Script Folder", scriptFolder);
             if (GUILayout.Button("Browse", GUILayout.Width(60)))
@@ -203,7 +181,7 @@ namespace Framewerk.Editor.Wizards
             }
             EditorGUILayout.EndHorizontal();
 
-            // Prefab Folder
+            // 4. Prefab Folder
             EditorGUILayout.BeginHorizontal();
             prefabFolder = EditorGUILayout.TextField("Prefab Folder", prefabFolder);
             if (GUILayout.Button("Browse", GUILayout.Width(60)))
@@ -219,6 +197,18 @@ namespace Framewerk.Editor.Wizards
                 }
             }
             EditorGUILayout.EndHorizontal();
+
+            // 5. Namespace
+            EditorGUILayout.BeginHorizontal();
+            namespaceName = EditorGUILayout.TextField("Namespace", namespaceName);
+            if (GUILayout.Button("Auto", GUILayout.Width(50)))
+            {
+                namespaceName = NamespaceResolver.ResolveFromPath(scriptFolder);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // 6. Addressable Root (renamed from Addressable Prefix)
+            addressableRoot = EditorGUILayout.TextField("Addressable Root", addressableRoot);
 
             GUILayout.Space(10);
 
@@ -237,10 +227,6 @@ namespace Framewerk.Editor.Wizards
                 EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
             }
-
-            markAddressable = EditorGUILayout.Toggle("Mark prefab as Addressable", markAddressable);
-
-            openAfterCreate = EditorGUILayout.Toggle("Open generated scripts after creation", openAfterCreate);
 
             GUILayout.Space(10);
 
@@ -285,28 +271,76 @@ namespace Framewerk.Editor.Wizards
             {
                 string previewName = componentType == ComponentType.List ? componentName + "List" : componentName;
 
-                EditorGUILayout.LabelField("Will generate:", EditorStyles.miniBoldLabel);
+                // Compute addressable addresses for preview
+                string mainAddress = ComputeAddressableAddress(previewName);
+                string itemAddress = componentType == ComponentType.List ? ComputeAddressableAddress(previewName + "Item") : null;
 
-                EditorGUILayout.LabelField($"  • {previewName}View.cs", EditorStyles.miniLabel);
-                EditorGUILayout.LabelField($"  • {previewName}Mediator.cs", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField("Scripts:", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField($"  {previewName}View.cs", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField($"  {previewName}Mediator.cs", EditorStyles.miniLabel);
 
                 if (componentType == ComponentType.List)
                 {
-                    EditorGUILayout.LabelField($"  • {previewName}Data.cs", EditorStyles.miniLabel);
-                    EditorGUILayout.LabelField($"  • {previewName}ItemView.cs", EditorStyles.miniLabel);
-                    EditorGUILayout.LabelField($"  • {previewName}ItemMediator.cs", EditorStyles.miniLabel);
-                    EditorGUILayout.LabelField($"  • {previewName}Item.prefab", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"  {previewName}Data.cs", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"  {previewName}ItemView.cs", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"  {previewName}ItemMediator.cs", EditorStyles.miniLabel);
                 }
 
-                EditorGUILayout.LabelField($"  • {previewName}.prefab", EditorStyles.miniLabel);
+                GUILayout.Space(5);
 
-                if (contextTypes.Count > 0 && selectedContextIndex < contextTypes.Count)
+                // Prefabs table
+                EditorGUILayout.LabelField("Prefabs:", EditorStyles.miniBoldLabel);
+
+                // Table header
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("File", EditorStyles.miniLabel, GUILayout.Width(150));
+                EditorGUILayout.LabelField("Addressable ID", EditorStyles.miniLabel);
+                EditorGUILayout.EndHorizontal();
+
+                // Separator line
+                var rect = EditorGUILayout.GetControlRect(false, 1);
+                EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 0.5f));
+
+                // Main prefab row
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"  {previewName}.prefab", EditorStyles.miniLabel, GUILayout.Width(150));
+                EditorGUILayout.LabelField(mainAddress, EditorStyles.miniLabel);
+                EditorGUILayout.EndHorizontal();
+
+                // Item prefab row (for Lists)
+                if (componentType == ComponentType.List)
                 {
-                    EditorGUILayout.LabelField($"  • Context binding in {contextTypes[selectedContextIndex].Name}", EditorStyles.miniLabel);
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"  {previewName}Item.prefab", EditorStyles.miniLabel, GUILayout.Width(150));
+                    EditorGUILayout.LabelField(itemAddress, EditorStyles.miniLabel);
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                if (setupInContext && contextTypes.Count > 0 && selectedContextIndex < contextTypes.Count)
+                {
+                    GUILayout.Space(5);
+                    EditorGUILayout.LabelField($"Context binding: {contextTypes[selectedContextIndex].Name}", EditorStyles.miniLabel);
                 }
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private string ComputeAddressableAddress(string name)
+        {
+            if (componentType == ComponentType.Popup)
+            {
+                // Popup always uses PopupManager's TypeKey in postfix position
+                return BuildAddress(addressableRoot, popupTypeKey, name);
+            }
+            else
+            {
+                // List and View use UiManager's TypeKey and respect TypeKeyIsPrefix setting
+                if (uiTypeKeyIsPrefix)
+                    return BuildAddress(uiTypeKey, addressableRoot, name);
+                else
+                    return BuildAddress(addressableRoot, uiTypeKey, name);
+            }
         }
 
         private void Generate()
@@ -387,22 +421,9 @@ namespace Framewerk.Editor.Wizards
             GenerateScripts(effectiveName);
 
             // Build addressable address matching manager settings
-            string mainAddress;
-            if (componentType == ComponentType.Popup)
-            {
-                // Popup always uses PopupManager's TypeKey in postfix position
-                mainAddress = BuildAddress(addressablePrefix, popupTypeKey, effectiveName);
-            }
-            else
-            {
-                // List and View use UiManager's TypeKey and respect TypeKeyIsPrefix setting
-                if (uiTypeKeyIsPrefix)
-                    mainAddress = BuildAddress(uiTypeKey, addressablePrefix, effectiveName);
-                else
-                    mainAddress = BuildAddress(addressablePrefix, uiTypeKey, effectiveName);
-            }
+            string mainAddress = ComputeAddressableAddress(effectiveName);
 
-            // Create wizard job
+            // Create wizard job (always marks as addressable)
             WizardJob job = new WizardJob
             {
                 componentName = effectiveName,
@@ -411,8 +432,8 @@ namespace Framewerk.Editor.Wizards
                 scriptFolder = scriptFolder,
                 prefabFolder = prefabFolder,
                 contextFilePath = setupInContext ? GetContextFilePath() : null,
-                markAddressable = markAddressable,
-                openAfterCreate = openAfterCreate,
+                markAddressable = true, // Always mark as addressable
+                openAfterCreate = false,
                 viewTypeName = $"{namespaceName}.{effectiveName}View",
                 mediatorTypeName = $"{namespaceName}.{effectiveName}Mediator",
                 prefabPath = Path.Combine(prefabFolder, $"{effectiveName}.prefab"),
@@ -422,12 +443,7 @@ namespace Framewerk.Editor.Wizards
             if (componentType == ComponentType.List)
             {
                 string itemName = effectiveName + "Item";
-                // List items use the same UiManager settings as the parent list
-                string itemAddress;
-                if (uiTypeKeyIsPrefix)
-                    itemAddress = BuildAddress(uiTypeKey, addressablePrefix, itemName);
-                else
-                    itemAddress = BuildAddress(addressablePrefix, uiTypeKey, itemName);
+                string itemAddress = ComputeAddressableAddress(itemName);
 
                 job.dataTypeName = $"{namespaceName}.{effectiveName}Data";
                 job.itemViewTypeName = $"{namespaceName}.{itemName}View";
