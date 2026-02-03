@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Framewerk.Managers;
+using Plugins.Framewerk;
 using strange.extensions.injector.api;
 using strange.extensions.promise.api;
 using UnityEngine;
@@ -20,55 +20,47 @@ namespace Framewerk.Popups
 
     public interface IPopupManager
     {
-        void Init(string resourcePath, Transform popupParent);
         void CloseAllPopups();
 
-        Task<T> InstantiatePopupAsync<T>(CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView;
+        Task<T> InstantiatePopupAsync<T>(string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
+        Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
+        Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
+        Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
+        Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
 
-        T InstantiatePopup<T>() where T : IPopupView;
-        T InstantiatePopup<T>(object[] popupMediatorInjects) where T : IPopupView;
-        T InstantiatePopup<T>(PopupButtonSetting[] popupOptions) where T : IPopupView;
-        T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions) where T : IPopupView;
-        T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions) where T : IPopupView;
+        T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView;
+        T InstantiatePopup<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView;
+        T InstantiatePopup<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
+        T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
+        T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
     }
 
     public class PopupManager : IPopupManager
     {
-        public string TypeKey { get; set; } = "Popups";
-
         [Inject] public PopupOpenedSignal PopupOpenedSignal { get; set; }
         [Inject] public IUiManager UiManager { get; set; }
         [Inject] public IInjectionBinder InjectionBinder { get; set; }
 
+        private ViewConfig _viewConfig;
+        private Transform _popupParent;
         private List<IPopupMediator> _popups = new List<IPopupMediator>();
 
-        private string _resourcePath;
-        private Transform _popupParent;
-
-        private string BuildAddress(params string[] segments)
+        [Inject]
+        public ViewConfig ViewConfig
         {
-            var parts = segments.Where(seg => !string.IsNullOrEmpty(seg))
-                                .Select(seg => seg.Trim('/'))
-                                .ToList();
-            return string.Join("/", parts);
+            get => _viewConfig;
+            set
+            {
+                _viewConfig = value;
+                _popupParent = value.Popups;
+                PopupOpenedSignal.AddListener(OnPopupOpenedHandler);
+            }
         }
 
-        private string GetPopupPath(Type popupType)
+        private string GetPopupPath(Type popupType, string customPrefix)
         {
             var viewName = UiManager.GetViewName(popupType);
-            return BuildAddress(_resourcePath, TypeKey, viewName);
-        }
-
-        public void Init(string resourcePath, Transform popupParent)
-        {
-            PopupOpenedSignal.AddListener(OnPopupOpenedHandler);
-
-            _resourcePath = resourcePath;
-            _popupParent = popupParent;
+            return AddressBuilder.BuildAddress(_viewConfig, customPrefix, AddressBuilder.TypeKeys.Popup, viewName);
         }
 
         public void CloseAllPopups()
@@ -82,72 +74,72 @@ namespace Framewerk.Popups
             _popups.Clear();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(CancellationToken ct = default) where T : IPopupView
+        public async Task<T> InstantiatePopupAsync<T>(string customPrefix = null, CancellationToken ct = default) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct);
             return uiObj.GetComponent<T>();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, CancellationToken ct = default) where T : IPopupView
+        public async Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, popupMediatorInjects);
             return uiObj.GetComponent<T>();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
+        public async Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
+        public async Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, text, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, CancellationToken ct = default) where T : IPopupView
+        public async Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = await UiManager.InstantiateViewAsync(path, _popupParent, ct, caption, text, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 
-        public T InstantiatePopup<T>() where T : IPopupView
+        public T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent);
             return uiObj.GetComponent<T>();
         }
 
-        public T InstantiatePopup<T>(object[] popupMediatorInjects) where T : IPopupView
+        public T InstantiatePopup<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent, popupMediatorInjects);
             return uiObj.GetComponent<T>();
         }
 
-        public T InstantiatePopup<T>(PopupButtonSetting[] popupOptions) where T : IPopupView
+        public T InstantiatePopup<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 
-        public T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions) where T : IPopupView
+        public T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent, text, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 
-        public T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions) where T : IPopupView
+        public T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
-            var path = GetPopupPath(typeof(T));
+            var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent, caption, text, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Framewerk.Utils;
@@ -17,13 +16,13 @@ namespace Framewerk.Managers
 
         Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects);
         Task<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes);
-        Task<T> InstantiateViewAsync<T>(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView;
-        Task<T> InstantiateViewExplicitTypeAsync<T>(string path = "", Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
+        Task<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView;
+        Task<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
 
         GameObject InstantiateView(string path, Transform parent = null, params object[] mediatorInjects);
         GameObject InstantiateViewExplicitType(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes);
-        T InstantiateView<T>(string path = "", Transform parent = null, params object[] mediatorInjects) where T : IView;
-        T InstantiateViewExplicitType<T>(string path = "", Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
+        T InstantiateView<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView;
+        T InstantiateViewExplicitType<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
 
         string GetViewName(Type type);
     }
@@ -32,8 +31,12 @@ namespace Framewerk.Managers
     {
         public const string VIEW_SUFFIX = "View";
 
-        public string TypeKey { get; set; } = "UI";
-        public bool TypeKeyIsPrefix { get; set; } = false;
+        /// <summary>
+        /// TypeKey for views loaded by this manager. Default is empty (base views).
+        /// Override for specialized managers (e.g. ListManager could use "List").
+        /// </summary>
+        public string TypeKey { get; set; } = AddressBuilder.TypeKeys.View;
+
         public bool BindInterfaces { get; set; } = true;
         public bool BindBaseClasses { get; set; } = false;
 
@@ -43,26 +46,18 @@ namespace Framewerk.Managers
         [Inject]
         public IInjectionBinder InjectionBinder { get; set; }
 
+        private ViewConfig _viewConfig;
+        private Transform _uiParent;
+
         [Inject]
         public ViewConfig ViewConfig
         {
+            get => _viewConfig;
             set
             {
+                _viewConfig = value;
                 _uiParent = value.UiDefault;
             }
-        }
-
-        private Transform _uiParent;
-
-        private string BuildAddress(params string[] segments)
-        {
-            var parts = new List<string>();
-            foreach (var seg in segments)
-            {
-                if (string.IsNullOrEmpty(seg)) continue;
-                parts.Add(seg.Trim('/'));
-            }
-            return string.Join("/", parts);
         }
 
         public async Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects)
@@ -89,12 +84,12 @@ namespace Framewerk.Managers
             return uiObj;
         }
 
-        public async Task<T> InstantiateViewAsync<T>(string path = "", Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView
+        public async Task<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView
         {
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = await InstantiateViewAsync(GetViewPath(typeof(T), path), parent, ct, mediatorInjects);
+            var uiObj = await InstantiateViewAsync(GetViewPath(typeof(T), customPrefix), parent, ct, mediatorInjects);
             var component = uiObj.GetComponent<T>();
 
             if (component == null)
@@ -103,12 +98,12 @@ namespace Framewerk.Managers
             return component;
         }
 
-        public async Task<T> InstantiateViewExplicitTypeAsync<T>(string path = "", Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
+        public async Task<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
         {
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = await InstantiateViewExplicitTypeAsync(GetViewPath(typeof(T), path), parent, ct, mediatorInjectsWithTypes);
+            var uiObj = await InstantiateViewExplicitTypeAsync(GetViewPath(typeof(T), customPrefix), parent, ct, mediatorInjectsWithTypes);
             var component = uiObj.GetComponent<T>();
 
             if (component == null)
@@ -141,12 +136,12 @@ namespace Framewerk.Managers
             return uiObj;
         }
 
-        public T InstantiateView<T>(string path = "", Transform parent = null, params object[] mediatorInjects) where T : IView
+        public T InstantiateView<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView
         {
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = InstantiateView(GetViewPath(typeof(T), path), parent, mediatorInjects);
+            var uiObj = InstantiateView(GetViewPath(typeof(T), customPrefix), parent, mediatorInjects);
             var component = uiObj.GetComponent<T>();
 
             if (component == null)
@@ -155,12 +150,12 @@ namespace Framewerk.Managers
             return component;
         }
 
-        public T InstantiateViewExplicitType<T>(string path = "", Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
+        public T InstantiateViewExplicitType<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
         {
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = InstantiateViewExplicitType(GetViewPath(typeof(T), path), parent, mediatorInjectsWithTypes);
+            var uiObj = InstantiateViewExplicitType(GetViewPath(typeof(T), customPrefix), parent, mediatorInjectsWithTypes);
             var component = uiObj.GetComponent<T>();
 
             if (component == null)
@@ -205,14 +200,16 @@ namespace Framewerk.Managers
             return name.Substring(0, name.Length - VIEW_SUFFIX.Length);
         }
 
-        protected virtual string GetViewPath(Type type, string customPath)
+        /// <summary>
+        /// Builds the full addressable path for a view type.
+        /// Uses ViewConfig's ContextPrefixSO for address building.
+        /// </summary>
+        /// <param name="type">The view type</param>
+        /// <param name="customPrefix">Optional custom prefix for feature grouping</param>
+        protected virtual string GetViewPath(Type type, string customPrefix)
         {
             var viewName = GetViewName(type);
-            if (TypeKeyIsPrefix)
-                return BuildAddress(TypeKey, customPath, viewName);
-            else
-                return BuildAddress(customPath, TypeKey, viewName);
+            return AddressBuilder.BuildAddress(_viewConfig, customPrefix, TypeKey, viewName);
         }
-
     }
 }
