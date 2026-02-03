@@ -7,6 +7,45 @@ Main benefit of this design principle is creating modular, highly extensible and
 Although core part of Framewerk could be used in any C# project, significant part of it is also view mediation mechanism which is Unity specific
 and on top of that there are UI supporting classes covering basic concepts like Popups, Lists, Tabs and other ui elements.
 
+## Installation
+
+### Requirements
+- **Unity 2021.3** or newer
+- **Addressables** 1.21.0+ (automatically installed as dependency)
+
+### Via Unity Package Manager (Git URL)
+
+1. Open Unity and go to **Window > Package Manager**
+2. Click the **+** button in the top-left corner
+3. Select **Add package from git URL...**
+4. Enter the following URL:
+
+```
+https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk
+```
+
+To install a specific branch (e.g., `feature/framewerk2.0`):
+```
+https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk#feature/framewerk2.0
+```
+
+To install a specific version tag:
+```
+https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk#v2.0.0
+```
+
+### Via manifest.json
+
+Add the following to your `Packages/manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.dyskotron.framewerk": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk"
+  }
+}
+```
+
 ## Quick Start
 
  - Download project and open it in Unity 2017 or newer.
