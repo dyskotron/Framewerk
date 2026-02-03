@@ -133,6 +133,17 @@ namespace Framewerk.Editor.Wizards
             return string.Join("/", parts);
         }
 
+        /// <summary>
+        /// Gets the prefab name with type suffix appended.
+        /// Popup appends "Popup", View is basic (no suffix), List already has "List" in effectiveName.
+        /// </summary>
+        private string GetPrefabName(string effectiveName)
+        {
+            if (componentType == ComponentType.Popup)
+                return effectiveName + "Popup";
+            return effectiveName;
+        }
+
         private void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
@@ -180,7 +191,7 @@ namespace Framewerk.Editor.Wizards
                 }
             }
             EditorGUILayout.EndHorizontal();
-            GUILayout.Space(20);
+            GUILayout.Space(60);
 
             // 4. Prefab Folder
             EditorGUILayout.BeginHorizontal();
@@ -272,9 +283,10 @@ namespace Framewerk.Editor.Wizards
             else
             {
                 string previewName = componentType == ComponentType.List ? componentName + "List" : componentName;
+                string prefabName = GetPrefabName(previewName);
 
-                // Compute addressable addresses for preview
-                string mainAddress = ComputeAddressableAddress(previewName);
+                // Compute addressable addresses for preview (use prefab name which includes type suffix)
+                string mainAddress = ComputeAddressableAddress(prefabName);
                 string itemAddress = componentType == ComponentType.List ? ComputeAddressableAddress(previewName + "Item") : null;
 
                 EditorGUILayout.LabelField("Scripts:", EditorStyles.miniBoldLabel);
@@ -305,7 +317,7 @@ namespace Framewerk.Editor.Wizards
 
                 // Main prefab row
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"  {previewName}.prefab", EditorStyles.miniLabel, GUILayout.Width(150));
+                EditorGUILayout.LabelField($"  {prefabName}.prefab", EditorStyles.miniLabel, GUILayout.Width(150));
                 EditorGUILayout.LabelField(mainAddress, EditorStyles.miniLabel);
                 EditorGUILayout.EndHorizontal();
 
