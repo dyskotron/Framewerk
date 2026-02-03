@@ -24,7 +24,7 @@
 - [ ] **7. Documentation** — Comprehensive docs for all Framewerk features, APIs, and architecture.
 - [ ] **8. Tutorials** — Step-by-step guides for common use cases (getting started, building a screen, creating lists, popups, networking, etc.).
 
-- [ ] **9. Scene creation wizard** — Add `create_scene` action to `framewerk_scaffold` (or new MCP tool) that creates a fully wired Framewerk scene from the Scene Setup Blueprint (Camera, EventSystem, Bootstrap, ViewConfig, dual Canvas hierarchy).
+- [x] **9. Scene creation wizard** — Add `create_scene` action to `framewerk_scaffold` (or new MCP tool) that creates a fully wired Framewerk scene from the Scene Setup Blueprint (Camera, EventSystem, Bootstrap, ViewConfig, dual Canvas hierarchy).
 - [ ] **10. SubBinder** — Reusable binding groups for contexts. Extract common binding sets (e.g. UI services, networking) into composable units that contexts can include instead of duplicating bindings.
 - [ ] **11. Scriptable address resolver** — Replace hard-coded Addressable address strings with an injectable ScriptableObject-based resolver. Decouple asset addresses from code, allow per-project overrides.
 - [ ] **12. Scene template** — Save SampleScene structure as a reusable template asset so new scenes can be created with correct Framewerk hierarchy without manual setup.
