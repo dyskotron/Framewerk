@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Framewerk;
 using Framewerk.AppStateMachine;
-using Framewerk.Managers;
 using Framewerk.Popups;
 using Framewerk.StrangeCore;
 using FramewerkDemo.Examples;
@@ -33,11 +32,7 @@ namespace FramewerkDemo
 
             // Framewerk core
             injectionBinder.Bind<ViewConfig>().ToValue(_viewConfig);
-            injectionBinder.Bind<ICoroutineManager>().ToValue(CoroutineManager.Instance);
-            injectionBinder.Bind<IUpdater>().ToValue(Updater.Instance);
-            injectionBinder.Bind<IAppMonitor>().ToValue(AppMonitor.Instance);
-            injectionBinder.Bind<IAssetManager>().To<AssetManager>().ToSingleton();
-            injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
+            InstallBundle<FramewerkCoreBundle>();
 
             // FSM
             injectionBinder.Bind<IAppFsm>().To<AppFsm>().ToSingleton();

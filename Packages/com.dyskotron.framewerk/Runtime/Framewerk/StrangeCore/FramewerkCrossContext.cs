@@ -24,6 +24,9 @@
  * - Methods (the ICrossContextCapable API) for adding and removing the hooks between Contexts.
  */
 
+using System;
+using System.Collections.Generic;
+using Framewerk.StrangeCore.Bundles;
 using strange.extensions.dispatcher.eventdispatcher.api;
 using strange.extensions.dispatcher.eventdispatcher.impl;
 using strange.extensions.context.api;
@@ -39,6 +42,7 @@ namespace Framewerk.StrangeCore
 	{
 		private ICrossContextInjectionBinder _injectionBinder;
 		private IBinder _crossContextBridge;
+		private readonly List<BindingBundle> _installedBundles = new();
 
 		/// A Binder that handles dependency injection binding and instantiation
 		public ICrossContextInjectionBinder injectionBinder
@@ -89,6 +93,7 @@ namespace Framewerk.StrangeCore
 				injectionBinder.Bind<CrossContextBridge> ().ToSingleton ().CrossContext();
 			}
 
+			injectionBinder.Bind<ICrossContextInjectionBinder>().ToValue(injectionBinder);
 		}
 
 		protected override void instantiateCoreComponents()
@@ -168,6 +173,36 @@ namespace Framewerk.StrangeCore
 			{
 				_crossContextDispatcher = value as IEventDispatcher;
 			}
+		}
+
+		protected T InstallBundle<T>(T instance = null) where T : BindingBundle
+		{
+			// Guard against duplicate bundle types
+			foreach (var existing in _installedBundles)
+			{
+				if (existing is T)
+					throw new InvalidOperationException($"Bundle {typeof(T).Name} is already installed.");
+			}
+
+			if (instance != null)
+				injectionBinder.Bind<T>().ToValue(instance);
+			else
+				injectionBinder.Bind<T>().To<T>();
+
+			var bundle = injectionBinder.GetInstance<T>();
+			bundle.Install();
+			_installedBundles.Add(bundle);
+			return bundle;
+		}
+
+		public override void OnRemove()
+		{
+			for (int i = _installedBundles.Count - 1; i >= 0; i--)
+			{
+				_installedBundles[i].Uninstall();
+			}
+			_installedBundles.Clear();
+			base.OnRemove();
 		}
 
 	}
