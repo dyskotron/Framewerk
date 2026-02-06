@@ -155,23 +155,7 @@ namespace Framewerk.Editor.Wizards
 
         private static string GetTemplatePath(ComponentType componentType)
         {
-            const string TEMPLATE_PATH = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
-
-            switch (componentType)
-            {
-                case ComponentType.List:
-                    return TEMPLATE_PATH + "ListTemplate.prefab";
-                case ComponentType.ListItem:
-                    return TEMPLATE_PATH + "ListItemTemplate.prefab";
-                case ComponentType.Popup:
-                    return TEMPLATE_PATH + "PopupTemplate.prefab";
-                case ComponentType.Screen:
-                    return TEMPLATE_PATH + "PanelTemplate.prefab";
-                case ComponentType.View:
-                    return TEMPLATE_PATH + "ViewTemplate.prefab";
-                default:
-                    return null;
-            }
+            return SkinResolver.GetTemplatePath(componentType);
         }
 
         internal static Type FindType(string fullTypeName)

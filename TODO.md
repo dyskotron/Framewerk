@@ -9,7 +9,7 @@
   - [x] WizardList example — 3rd menu item to test wizard List output
   - [x] Fix Addressable address mismatches (postfix mode)
   - [x] **Template prefabs** — Template prefabs for each component type shipped with Framewerk. Use actual base framework View classes (ListView, PopupView, etc.) with serialized references wired up. Wizard clones template, generates real View script, swaps component — Unity preserves field references since field names match.
-  - [ ] **Skinning system** — SkinConfig ScriptableObject maps component types → blueprint prefab overrides. Project creates custom SkinConfig to replace framework defaults. No SkinConfig = use framework blueprints. Wizard reads active skin when scaffolding.
+  - [x] **Skinning system** — SkinConfig ScriptableObject maps component types → blueprint prefab overrides. Project creates custom SkinConfig to replace framework defaults. No SkinConfig = use framework blueprints. Wizard reads active skin when scaffolding.
   - [x] Wizard creates prefab with real components (not empty GameObjects)
   - [x] **Wizard reads UiManager/PopupManager config** — Wizard currently hardcodes `UI/` TypeKey in postfix position for addressable IDs. Should read the actual UiManager and PopupManager config (TypeKey, TypeKeyIsPrefix) to build addresses that match how the managers resolve them at runtime. Currently assumes default postfix mode with TypeKey="UI".
   - [x] **MCP tool for wizard** — Expose wizard as an MCP tool so CC/AI agents can scaffold UI components headlessly (e.g. `create_ui_component(name, type, context, path)`). Would let CC create Lists, Popups etc. without manual UI interaction. → `framewerk_scaffold` tool (create_popup, create_list, mark_addressable)
