@@ -2,7 +2,7 @@
 
 ## Must-have before 2.0
 
-- [ ] **1. UI Asset Scaffolding** — Auto-create View/Mediator pairs with prefab, lists with items and data classes etc. Editor tooling to scaffold new UI components quickly.
+- [x] **1. UI Asset Scaffolding** — Auto-create View/Mediator pairs with prefab, lists with items and data classes etc. Editor tooling to scaffold new UI components quickly.
   - [x] Wizard window (ComponentScaffoldWizard) — context discovery, component type selection, name input, path config
   - [x] Code templates (CodeTemplates.cs) — Panel, List, Popup templates
   - [x] Completer (ComponentScaffoldCompleter.cs) — post-compile asset creation + Addressable setup
