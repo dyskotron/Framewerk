@@ -1,4 +1,3 @@
-using Framewerk;
 using strange.extensions.command.api;
 using strange.extensions.command.impl;
 using strange.extensions.context.api;
@@ -11,7 +10,11 @@ using Object = System.Object;
 
 namespace Framewerk.StrangeCore
 {
-	public class ViewlessContext : FramewerkCrossContext
+	/// <summary>
+	/// A context for pure .NET/viewless scenarios that don't need Unity dependencies.
+	/// Extends CrossContext directly to avoid dependency on UI package.
+	/// </summary>
+	public class ViewlessContext : CrossContext
 	{
 		/// A Binder that maps Signals to Commands
 		public ICommandBinder commandBinder { get; set; }
