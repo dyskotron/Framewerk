@@ -24,7 +24,6 @@
 using System;
 using System.Linq;
 using strange.extensions.promise.api;
-using UnityEngine;
 
 namespace strange.extensions.promise.impl
 {
