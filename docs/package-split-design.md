@@ -1,37 +1,92 @@
-# Framewerk Package Split Design
+# Framewerk Package Split Design — FINAL
 
 ## Goal
 
-Split the monolithic Framewerk package into smaller, optional packages. Users install only what they need.
+Split the monolithic Framewerk package into smaller, optional packages:
+- **Pure .NET core** for server-side use without Unity
+- **Meta-package** for easy "give me everything" install
+- **Optional packages** for specific features
 
 ---
 
-## Proposed Packages
+## Package Structure
 
-### 1. `com.dyskotron.framewerk.core` (Required base)
+### 1. `com.dyskotron.framewerk.core` (Pure .NET — No Unity!)
 
-**Contents:**
-- `Strange/` — Full StrangeIoC framework (IoC/DI, signals, commands, mediation)
-- `Framewerk/StrangeCore/` — FramewerkMVCSContext, FramewerkCrossContext, DestroyingBinder, ViewlessContext
-- `Framewerk/StrangeCore/Bundles/` — BindingBundle, IBindingBundle, NullInjectionBinding
-- `Framewerk/Utils/` — BindingUtils
-- `ContextStartSignal.cs`
-- `ActionUpdater.cs`, `Updater.cs`
-- `SingletonMono.cs`
+**Purpose:** IoC, Signals, Commands, Promises — headless server-compatible
 
-**Dependencies:** None
+```
+Strange/
+├── framework/                    # Binder, Binding, SemiBinding
+├── extensions/
+│   ├── injector/                # DI core
+│   ├── signal/                  # Signals
+│   ├── command/                 # Commands, SignalCommandBinder
+│   ├── promise/                 # Promises
+│   ├── dispatcher/              # Event dispatcher
+│   ├── reflector/               # Reflection utils
+│   ├── sequencer/               # Sequencer
+│   ├── pool/                    # Object pooling
+│   ├── implicitBind/            # Attributes
+│   └── context/
+│       ├── api/                 # IContext, ICrossContextCapable, etc.
+│       └── impl/
+│           ├── Context.cs
+│           ├── CrossContext.cs
+│           ├── CrossContextBridge.cs
+│           └── ContextException.cs
+│       # NOTE: MVCSContext.cs and ContextView.cs go to `ui`
+
+Framewerk/StrangeCore/
+├── ViewlessContext.cs
+├── FramewerkCrossContext.cs
+├── DestroyingBinder.cs          # Needs cleanup: remove unused UnityEngine import
+└── Bundles/
+    ├── IBindingBundle.cs
+    ├── BindingBundle.cs         # Needs cleanup: replace Debug.Log
+    └── NullInjectionBinding.cs
+```
+
+**Dependencies:** None (pure .NET Standard 2.1)
 
 ---
 
-### 2. `com.dyskotron.framewerk.ui` (Optional)
+### 2. `com.dyskotron.framewerk.ui` (Unity)
 
-**Contents:**
-- `Framewerk/Managers/` — UiManager, AssetManager, CoroutineManager
-- `Framewerk/Popups/` — PopupManager, PopupMediator, PopupView, MessageBox, OkCancelWindow
-- `Framewerk/UI/` — ExtendedMediator, List system, DragElement, PointerElement, UiGradient
-- `ViewConfig.cs`, `SkinConfig.cs`
-- `AddressBuilder.cs`, `ContextPrefix.cs`, `MonoBinder.cs`
-- `LocalDataManager.cs`, `PlayerPrefsManager.cs`
+**Purpose:** Views, Mediators, UiManager, Popups, Lists, AssetManager, ViewConfig — the full Unity UI framework
+
+```
+Strange/extensions/
+├── mediation/                   # View, Mediator, MediationBinder
+└── context/impl/
+    ├── ContextView.cs           # MonoBehaviour bootstrap
+    └── MVCSContext.cs           # Unity MVCS
+
+Framewerk/
+├── StrangeCore/
+│   └── FramewerkMVCSContext.cs
+├── Managers/
+│   ├── AssetManager.cs
+│   ├── UiManager.cs
+│   └── CoroutineManager.cs
+├── Popups/                      # Full folder
+├── UI/
+│   ├── ExtendedMediator.cs
+│   ├── List/
+│   └── Components/
+├── ViewConfig.cs
+├── SkinConfig.cs
+├── ContextStartSignal.cs
+├── ContextPrefix.cs
+├── AddressBuilder.cs
+├── MonoBinder.cs
+├── SingletonMono.cs
+├── Updater.cs
+├── ActionUpdater.cs
+├── AppMonitor.cs
+├── LocalDataManager.cs
+└── PlayerPrefsManager.cs
+```
 
 **Dependencies:**
 - `com.dyskotron.framewerk.core`
@@ -40,108 +95,134 @@ Split the monolithic Framewerk package into smaller, optional packages. Users in
 
 ---
 
-### 3. `com.dyskotron.framewerk.screenfsm` (Optional)
+### 3. `com.dyskotron.framewerk.screenfsm` (Unity)
 
-**Contents:**
-- `Framewerk/AppStateMachine/` — AppFsm, AppState, AppStateScreen, signals
+**Purpose:** Screen-based FSM for app state/view management
+
+```
+Framewerk/AppStateMachine/
+├── AppFsm.cs
+├── AppState.cs
+├── AppStateScreen.cs
+├── AppStateEnterSignal.cs
+└── AppStateExitSignal.cs
+```
 
 **Dependencies:**
-- `com.dyskotron.framewerk.core`
 - `com.dyskotron.framewerk.ui`
-
-**Note:** State machine for switching app states AND their associated views/screens. AppStateScreen uses UiManager, AssetManager, ViewConfig — hence UI dependency. ~6 files.
 
 ---
 
 ### 4. `com.dyskotron.framewerk.networking` (Optional)
 
-**Contents:** (from `feature/mirror` branch)
-- `Framewerk/Networking/` — NetworkHost, Discovery, Serialization
-- `Framewerk/Networking/StrangeIntegration/` — NetworkCommandBinder, NetworkMessageReceivedSignal
+**Purpose:** Mirror networking integration
+
+```
+Framewerk/Networking/
+├── NetworkHost.cs
+├── Discovery/
+├── Serialization/
+└── StrangeIntegration/
+    ├── NetworkCommandBinder.cs
+    └── NetworkMessageReceivedSignal.cs
+```
 
 **Dependencies:**
-- `com.dyskotron.framewerk.core`
+- `com.dyskotron.framewerk.core` (can run headless — no Unity required!)
 - Mirror
 
 ---
 
-### 5. `com.dyskotron.framewerk.editor` (Optional, Editor-only)
+### 5. `com.dyskotron.framewerk.editor` (Unity Editor-only)
 
-**Contents:**
-- `Editor/Wizards/` — Component scaffolding, MCP tools, templates, SkinResolver
+**Purpose:** Wizards, scaffolding, code generation
+
+```
+Editor/Wizards/
+├── ComponentScaffoldWizard.cs
+├── SceneScaffoldWizard.cs
+├── CodeTemplates.cs
+├── SkinResolver.cs
+└── ...
+```
 
 **Dependencies:**
-- `com.dyskotron.framewerk.core`
 - `com.dyskotron.framewerk.ui`
 
-**Note:** Generates code that may use ScreenFSM types, but doesn't require compile-time dependency on it.
+---
+
+### 6. `com.dyskotron.framewerk` (Meta-package)
+
+**Purpose:** Convenience package — add this to get the full Framewerk workflow
+
+**Contents:** No code, just dependencies
+
+**Dependencies:**
+- `com.dyskotron.framewerk.ui`
+- `com.dyskotron.framewerk.screenfsm`
+- `com.dyskotron.framewerk.editor`
 
 ---
 
 ## Dependency Graph
 
 ```
-              Core
-           /   |   \
-         UI  Networking
-        /  \
-  ScreenFSM  Editor
+       core (pure .NET)
+        ↙        ↘
+      ui        networking
+     ↙  ↘
+screenfsm  editor
+      ↘  ↙
+   [framewerk]
 ```
-
-- **Core** has no dependencies
-- **UI, Networking** depend only on Core
-- **ScreenFSM** depends on Core + UI (AppStateScreen uses UiManager, ViewConfig, AssetManager)
-- **Editor** depends on Core + UI (generates code, no runtime ScreenFSM dependency)
-
----
-
-## What Stays Together
-
-| Component | Package | Reasoning |
-|-----------|---------|-----------|
-| Popups | UI | Tightly coupled to UiManager, ViewConfig |
-| Lists | UI | Specialized view pattern |
-| ExtendedMediator | UI | View-specific helper |
-| AssetManager | UI | Addressables loading for views |
-| BindingBundle | Core | Core architecture pattern |
-
----
-
-## Cleanup Before Split
-
-- [ ] **Delete `ClosePopupsOnAppStateExitCommand`** — One-liner wrapper, users can inline `PopupManager.CloseAllPopups()` in their own command if needed
-
----
-
-## Implementation Plan
-
-1. **Phase 1: Core + UI split** — Biggest impact, most files
-2. **Phase 2: ScreenFSM extraction** — Quick win, only 6 files (but depends on UI)
-3. **Phase 3: Networking** — When Mirror branch is ready to merge
-4. **Phase 4: Editor** — After runtime packages stabilize
-
-Each package needs:
-- Own folder structure
-- Own `package.json`
-- Own `.asmdef` with proper references
-- Own `CHANGELOG.md`
 
 ---
 
 ## Package Install Scenarios
 
-| Scenario | Packages |
-|----------|----------|
-| Minimal (IoC only) | `core` |
-| Typical game | `core` + `ui` + `screenfsm` |
-| UI-less server | `core` + `networking` |
-| Full install | all packages |
+| Scenario | Package to Install | What You Get |
+|----------|-------------------|--------------|
+| Full Unity game | `framewerk` | Everything |
+| Unity game (no FSM) | `ui` | Core + UI |
+| Pure .NET server | `core` | IoC, Signals, Commands |
+| Headless game server | `core` + `networking` | Server-side logic |
+
+---
+
+## Cleanup Before Split
+
+- [x] Remove unused `using UnityEngine` from `Promise.cs`
+- [ ] Remove unused `using UnityEngine` from `DestroyingBinder.cs`
+- [ ] Replace `Debug.Log/LogWarning` in `BindingBundle.cs` with conditional `#if UNITY_2021_1_OR_NEWER`
+
+---
+
+## Implementation Steps
+
+1. Create package folder structure:
+   - `Packages/com.dyskotron.framewerk.core/`
+   - `Packages/com.dyskotron.framewerk.ui/`
+   - `Packages/com.dyskotron.framewerk.screenfsm/`
+   - `Packages/com.dyskotron.framewerk.editor/`
+   - `Packages/com.dyskotron.framewerk/`
+
+2. For each package create:
+   - `package.json`
+   - `Runtime/` folder with `.asmdef`
+   - `CHANGELOG.md`
+
+3. Move files according to the structure above
+
+4. Update `.asmdef` references
+
+5. Test compilation
+
+6. Update examples/demos
 
 ---
 
 ## Open Questions
 
-- [ ] Version strategy — all packages share version, or independent versioning?
+- [ ] Version strategy — shared or independent?
 - [ ] Mono-repo or separate repos?
-- [ ] How to handle cross-package examples/demos?
-
+- [ ] NuGet publishing for `core` package?
