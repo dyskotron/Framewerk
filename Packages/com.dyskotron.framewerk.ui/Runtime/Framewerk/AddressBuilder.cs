@@ -6,6 +6,9 @@ namespace Plugins.Framewerk
     /// Shared utility for building Addressable IDs.
     /// Format: [ContextPrefix]/[CustomPrefix]/UI/[TypeKey]/[ClassName]
     /// Any part can be null/empty — it will be skipped.
+    /// 
+    /// Supports optional AddressResolverConfig for custom patterns.
+    /// If no resolver is provided, uses the default format.
     /// </summary>
     public static class AddressBuilder
     {
@@ -23,6 +26,30 @@ namespace Plugins.Framewerk
             public const string Popup = "Popup";
             public const string List = "List";
             public const string ListItem = "List.ListItem";
+        }
+
+        /// <summary>
+        /// Builds an Addressable ID using a resolver and context.
+        /// This is the main entry point when using custom patterns.
+        /// </summary>
+        /// <param name="resolver">Optional resolver config. If null, uses default behavior.</param>
+        /// <param name="ctx">The address context containing all variables.</param>
+        /// <returns>The full Addressable ID</returns>
+        public static string BuildAddress(AddressResolverConfig resolver, AddressContext ctx)
+        {
+            if (resolver == null)
+                return BuildAddressDefault(ctx);
+
+            return resolver.Resolve(ctx);
+        }
+
+        /// <summary>
+        /// Default address building (no custom resolver).
+        /// Format: contextPrefix/customPrefix/UI/typeKey/className
+        /// </summary>
+        private static string BuildAddressDefault(AddressContext ctx)
+        {
+            return BuildAddress(ctx.ContextPrefix, ctx.CustomPrefix, ctx.TypeKey, ctx.ClassName);
         }
 
         /// <summary>
@@ -63,15 +90,24 @@ namespace Plugins.Framewerk
 
         /// <summary>
         /// Builds an Addressable ID using ViewConfig settings.
+        /// Uses the resolver from ViewConfig if available.
         /// </summary>
-        /// <param name="viewConfig">ViewConfig containing ContextPrefixSO</param>
+        /// <param name="viewConfig">ViewConfig containing ContextPrefixSO and optional AddressResolver</param>
         /// <param name="customPrefix">Optional custom prefix passed at runtime</param>
         /// <param name="typeKey">Component type key</param>
         /// <param name="className">The class name</param>
         public static string BuildAddress(ViewConfig viewConfig, string customPrefix, string typeKey, string className)
         {
-            string contextPrefix = viewConfig?.ContextPrefixSO?.Prefix;
-            return BuildAddress(contextPrefix, customPrefix, typeKey, className);
+            var ctx = new AddressContext
+            {
+                ContextPrefix = viewConfig?.ContextPrefixSO?.Prefix,
+                CustomPrefix = customPrefix,
+                TypeKey = typeKey,
+                ClassName = className
+            };
+
+            var resolver = viewConfig?.AddressResolver;
+            return BuildAddress(resolver, ctx);
         }
 
         /// <summary>
