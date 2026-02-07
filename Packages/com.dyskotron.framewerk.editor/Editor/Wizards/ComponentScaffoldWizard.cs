@@ -419,20 +419,19 @@ namespace Framewerk.Editor.Wizards
                 string previewName = componentType == ComponentType.List ? componentName + "List" : componentName;
                 string prefabName = GetPrefabName(previewName);
 
-                // Get ViewConfig settings
-                string contextPrefix = "";
+                // Get ViewConfig for address building (uses resolver if configured)
+                ViewConfig viewConfig = null;
                 if (bootstrapConfigs.Count > 0 && selectedBootstrapIndex < bootstrapConfigs.Count)
                 {
-                    var config = bootstrapConfigs[selectedBootstrapIndex];
-                    contextPrefix = config.ContextPrefixSO?.Prefix;
+                    viewConfig = bootstrapConfigs[selectedBootstrapIndex];
                 }
 
-                // Compute addressable addresses for preview
+                // Compute addressable addresses for preview (uses resolver from ViewConfig if available)
                 string typeKey = GetTypeKey(componentType);
                 string effectiveCustomPrefix = string.IsNullOrEmpty(customPrefix) ? null : customPrefix;
-                string mainAddress = AddressBuilder.BuildAddress(contextPrefix, effectiveCustomPrefix, typeKey, prefabName);
+                string mainAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, typeKey, prefabName);
                 string itemAddress = componentType == ComponentType.List 
-                    ? AddressBuilder.BuildAddress(contextPrefix, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, previewName + "Item") 
+                    ? AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, previewName + "Item") 
                     : null;
 
                 EditorGUILayout.LabelField("Scripts:", EditorStyles.miniBoldLabel);
@@ -524,12 +523,11 @@ namespace Framewerk.Editor.Wizards
             string effectiveName = componentType == ComponentType.List ? componentName + "List" : componentName;
             string prefabName = GetPrefabName(effectiveName);
 
-            // Get ViewConfig settings
-            string contextPrefix = "";
+            // Get ViewConfig for address building (uses resolver if configured)
+            ViewConfig viewConfig = null;
             if (bootstrapConfigs.Count > 0 && selectedBootstrapIndex < bootstrapConfigs.Count)
             {
-                var config = bootstrapConfigs[selectedBootstrapIndex];
-                contextPrefix = config.ContextPrefixSO?.Prefix;
+                viewConfig = bootstrapConfigs[selectedBootstrapIndex];
             }
             string effectiveCustomPrefix = string.IsNullOrEmpty(customPrefix) ? null : customPrefix;
 
@@ -581,9 +579,9 @@ namespace Framewerk.Editor.Wizards
             // Generate script files
             GenerateScripts(effectiveName);
 
-            // Build addressable address using the new system
+            // Build addressable address (uses resolver from ViewConfig if available)
             string typeKey = GetTypeKey(componentType);
-            string mainAddress = AddressBuilder.BuildAddress(contextPrefix, effectiveCustomPrefix, typeKey, prefabName);
+            string mainAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, typeKey, prefabName);
 
             // Create wizard job (always marks as addressable)
             WizardJob job = new WizardJob
@@ -605,7 +603,7 @@ namespace Framewerk.Editor.Wizards
             if (componentType == ComponentType.List)
             {
                 string itemName = effectiveName + "Item";
-                string itemAddress = AddressBuilder.BuildAddress(contextPrefix, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, itemName);
+                string itemAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, itemName);
 
                 job.dataTypeName = $"{namespaceName}.{effectiveName}Data";
                 job.itemViewTypeName = $"{namespaceName}.{itemName}View";

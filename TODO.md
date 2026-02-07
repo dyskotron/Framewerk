@@ -29,3 +29,4 @@
 - [ ] **11. Scriptable address resolver** — Replace hard-coded Addressable address strings with an injectable ScriptableObject-based resolver. Decouple asset addresses from code, allow per-project overrides.
 - [x] **12. Scene template** — Save SampleScene structure as a reusable template asset so new scenes can be created with correct Framewerk hierarchy without manual setup.
 - [x] **13. Automatic references binder** — Component passed to bootstrap context that auto-binds all referenced GameObjects (prefabs, ScriptableObjects, etc.). Eliminates manual binding of asset references.
+- [ ] **14. Fine-tune UI templates** — Polish the default wizard templates (Panel, List, Popup, etc.) to ensure they look nice and professional out of the box.
