@@ -1,0 +1,28 @@
+{
+  "name": "com.dyskotron.framewerk.ui",
+  "version": "2.0.0",
+  "displayName": "Framewerk UI",
+  "description": "Unity UI framework with Views, Mediators, Popups, Lists, AssetManager, and ViewConfig.",
+  "unity": "2021.3",
+  "dependencies": {
+    "com.dyskotron.framewerk.core": "2.0.0",
+    "com.unity.addressables": "1.21.0",
+    "com.unity.textmeshpro": "3.0.0"
+  },
+  "author": {
+    "name": "Dyskotron",
+    "url": "https://github.com/dyskotron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dyskotron/Framewerk.git"
+  },
+  "keywords": [
+    "framework",
+    "mvcs",
+    "ui",
+    "mediation",
+    "views"
+  ],
+  "license": "MIT"
+}

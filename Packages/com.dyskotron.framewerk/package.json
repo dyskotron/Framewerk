@@ -1,11 +1,13 @@
 {
   "name": "com.dyskotron.framewerk",
-  "version": "2.0.0-preview.2",
+  "version": "2.0.0",
   "displayName": "Framewerk",
-  "description": "Inversion of control MVCS micro-framework with dependency injection, built on StrangeIoC.",
+  "description": "Meta-package that includes all Framewerk packages: core, ui, screenfsm, and editor.",
   "unity": "2021.3",
   "dependencies": {
-    "com.unity.addressables": "1.21.0"
+    "com.dyskotron.framewerk.ui": "2.0.0",
+    "com.dyskotron.framewerk.screenfsm": "2.0.0",
+    "com.dyskotron.framewerk.editor": "2.0.0"
   },
   "author": {
     "name": "Dyskotron",
