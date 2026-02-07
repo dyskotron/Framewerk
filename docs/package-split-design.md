@@ -40,15 +40,16 @@ Split the monolithic Framewerk package into smaller, optional packages. Users in
 
 ---
 
-### 3. `com.dyskotron.framewerk.fsm` (Optional)
+### 3. `com.dyskotron.framewerk.screenfsm` (Optional)
 
 **Contents:**
 - `Framewerk/AppStateMachine/` — AppFsm, AppState, AppStateScreen, signals
 
 **Dependencies:**
 - `com.dyskotron.framewerk.core`
+- `com.dyskotron.framewerk.ui`
 
-**Note:** Only ~6 files, clean boundaries. Easy to extract.
+**Note:** State machine for switching app states AND their associated views/screens. AppStateScreen uses UiManager, AssetManager, ViewConfig — hence UI dependency. ~6 files.
 
 ---
 
@@ -72,7 +73,8 @@ Split the monolithic Framewerk package into smaller, optional packages. Users in
 **Dependencies:**
 - `com.dyskotron.framewerk.core`
 - `com.dyskotron.framewerk.ui`
-- `com.dyskotron.framewerk.fsm`
+
+**Note:** Generates code that may use ScreenFSM types, but doesn't require compile-time dependency on it.
 
 ---
 
@@ -80,15 +82,16 @@ Split the monolithic Framewerk package into smaller, optional packages. Users in
 
 ```
               Core
-            /   |   \
-          UI   FSM   Networking
-           \    |
-            Editor
+           /   |   \
+         UI  Networking
+        /  \
+  ScreenFSM  Editor
 ```
 
 - **Core** has no dependencies
-- **UI, FSM, Networking** each depend only on Core
-- **Editor** depends on Core + UI + FSM (generates code for screens, popups, etc.)
+- **UI, Networking** depend only on Core
+- **ScreenFSM** depends on Core + UI (AppStateScreen uses UiManager, ViewConfig, AssetManager)
+- **Editor** depends on Core + UI (generates code, no runtime ScreenFSM dependency)
 
 ---
 
@@ -113,7 +116,7 @@ Split the monolithic Framewerk package into smaller, optional packages. Users in
 ## Implementation Plan
 
 1. **Phase 1: Core + UI split** — Biggest impact, most files
-2. **Phase 2: FSM extraction** — Quick win, only 6 files
+2. **Phase 2: ScreenFSM extraction** — Quick win, only 6 files (but depends on UI)
 3. **Phase 3: Networking** — When Mirror branch is ready to merge
 4. **Phase 4: Editor** — After runtime packages stabilize
 
@@ -130,7 +133,7 @@ Each package needs:
 | Scenario | Packages |
 |----------|----------|
 | Minimal (IoC only) | `core` |
-| Typical game | `core` + `ui` + `fsm` |
+| Typical game | `core` + `ui` + `screenfsm` |
 | UI-less server | `core` + `networking` |
 | Full install | all packages |
 
