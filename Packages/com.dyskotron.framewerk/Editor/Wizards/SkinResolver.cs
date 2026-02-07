@@ -104,8 +104,6 @@ namespace Framewerk.Editor.Wizards
                     return DEFAULT_TEMPLATE_PATH + "ListTemplate.prefab";
                 case ComponentType.ListItem:
                     return DEFAULT_TEMPLATE_PATH + "ListItemTemplate.prefab";
-                case ComponentType.Screen:
-                    return DEFAULT_TEMPLATE_PATH + "PanelTemplate.prefab";
                 case ComponentType.View:
                     return DEFAULT_TEMPLATE_PATH + "ViewTemplate.prefab";
                 default:

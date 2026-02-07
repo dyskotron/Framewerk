@@ -238,7 +238,6 @@ namespace Framewerk.Editor.Wizards
                 case ComponentType.ListItem:
                     return AddressBuilder.TypeKeys.ListItem;
                 case ComponentType.View:
-                case ComponentType.Screen:
                 default:
                     return AddressBuilder.TypeKeys.View;
             }

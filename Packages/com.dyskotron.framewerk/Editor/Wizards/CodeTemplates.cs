@@ -2,7 +2,6 @@ namespace Framewerk.Editor.Wizards
 {
     public enum ComponentType
     {
-        Screen,
         Popup,
         List,
         ListItem,
@@ -15,8 +14,6 @@ namespace Framewerk.Editor.Wizards
         {
             switch (type)
             {
-                case ComponentType.Screen:
-                    return GetScreenViewTemplate(name, ns);
                 case ComponentType.Popup:
                     return GetPopupViewTemplate(name, ns);
                 case ComponentType.List:
@@ -24,7 +21,6 @@ namespace Framewerk.Editor.Wizards
                 case ComponentType.ListItem:
                     return GetListItemViewTemplate(name, ns);
                 case ComponentType.View:
-                    return GetScreenViewTemplate(name, ns);
                 default:
                     return GetScreenViewTemplate(name, ns);
             }
@@ -34,8 +30,6 @@ namespace Framewerk.Editor.Wizards
         {
             switch (type)
             {
-                case ComponentType.Screen:
-                    return GetScreenMediatorTemplate(name, ns);
                 case ComponentType.Popup:
                     return GetPopupMediatorTemplate(name, ns);
                 case ComponentType.List:
@@ -43,7 +37,6 @@ namespace Framewerk.Editor.Wizards
                 case ComponentType.ListItem:
                     return GetListItemMediatorTemplate(name, ns);
                 case ComponentType.View:
-                    return GetScreenMediatorTemplate(name, ns);
                 default:
                     return GetScreenMediatorTemplate(name, ns);
             }
