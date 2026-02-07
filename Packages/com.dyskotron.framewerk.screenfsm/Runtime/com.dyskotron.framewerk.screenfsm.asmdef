@@ -1,11 +1,9 @@
 {
-    "name": "FramewerkDemo",
+    "name": "com.dyskotron.framewerk.screenfsm",
     "rootNamespace": "",
     "references": [
         "com.dyskotron.framewerk.core",
-        "com.dyskotron.framewerk.ui",
-        "com.dyskotron.framewerk.screenfsm",
-        "Unity.TextMeshPro"
+        "com.dyskotron.framewerk.ui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

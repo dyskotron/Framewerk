@@ -2,6 +2,10 @@
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.dyskotron.framewerk": "file:com.dyskotron.framewerk",
+    "com.dyskotron.framewerk.core": "file:com.dyskotron.framewerk.core",
+    "com.dyskotron.framewerk.ui": "file:com.dyskotron.framewerk.ui",
+    "com.dyskotron.framewerk.screenfsm": "file:com.dyskotron.framewerk.screenfsm",
+    "com.dyskotron.framewerk.editor": "file:com.dyskotron.framewerk.editor",
     "com.unity.addressables": "1.21.21",
     "com.unity.ide.rider": "3.0.39",
     "com.unity.test-framework": "1.6.0",

@@ -1,0 +1,25 @@
+{
+  "name": "com.dyskotron.framewerk.core",
+  "version": "2.0.0",
+  "displayName": "Framewerk Core",
+  "description": "Pure .NET IoC, Signals, Commands, Promises - headless server-compatible. Built on StrangeIoC.",
+  "unity": "2021.3",
+  "dependencies": {},
+  "author": {
+    "name": "Dyskotron",
+    "url": "https://github.com/dyskotron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dyskotron/Framewerk.git"
+  },
+  "keywords": [
+    "framework",
+    "ioc",
+    "dependency-injection",
+    "strangeioc",
+    "signals",
+    "commands"
+  ],
+  "license": "MIT"
+}
