@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "com.dyskotron.framewerk.core",
-        "com.dyskotron.framewerk.ui"
+        "com.dyskotron.framewerk.ui",
+        "com.dyskotron.framewerk.core.tests"
     ],
     "includePlatforms": [
         "Editor"

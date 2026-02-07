@@ -4,6 +4,6 @@ namespace Framewerk
 {
     public class ContextStartSignal : Signal
     {
-        
+
     }
 }
