@@ -37,14 +37,16 @@ Strange/
 │           └── ContextException.cs
 │       # NOTE: MVCSContext.cs and ContextView.cs go to `ui`
 
-Framewerk/StrangeCore/
-├── ViewlessContext.cs
-├── FramewerkCrossContext.cs
-├── DestroyingBinder.cs          # Needs cleanup: remove unused UnityEngine import
-└── Bundles/
-    ├── IBindingBundle.cs
-    ├── BindingBundle.cs         # Needs cleanup: replace Debug.Log
-    └── NullInjectionBinding.cs
+Framewerk/
+├── ContextStartSignal.cs
+└── StrangeCore/
+    ├── ViewlessContext.cs
+    ├── FramewerkCrossContext.cs     # ✅ Moved from UI
+    ├── DestroyingBinder.cs
+    └── Bundles/
+        ├── IBindingBundle.cs        # ✅ Moved from UI
+        ├── CoreBindingBundle.cs     # ✅ NEW — base class for headless bundles
+        └── NullInjectionBinding.cs  # ✅ Moved from UI
 ```
 
 **Dependencies:** None (pure .NET Standard 2.1)
@@ -64,7 +66,9 @@ Strange/extensions/
 
 Framewerk/
 ├── StrangeCore/
-│   └── FramewerkMVCSContext.cs
+│   ├── FramewerkMVCSContext.cs
+│   └── Bundles/
+│       └── BindingBundle.cs     # ✅ Extends CoreBindingBundle, adds MediationBinder
 ├── Managers/
 │   ├── AssetManager.cs
 │   ├── UiManager.cs
@@ -76,7 +80,6 @@ Framewerk/
 │   └── Components/
 ├── ViewConfig.cs
 ├── SkinConfig.cs
-├── ContextStartSignal.cs
 ├── ContextPrefix.cs
 ├── AddressBuilder.cs
 ├── MonoBinder.cs
@@ -189,11 +192,36 @@ screenfsm  editor
 
 ---
 
+## Bundle Architecture
+
+**CoreBindingBundle** (core package):
+- `InjectionBinder` — DI bindings
+- `CommandBinder` — Signal→Command bindings
+- Pure .NET compatible, no Unity dependencies
+- Use for headless server bundles
+
+**BindingBundle** (ui package):
+- Extends `CoreBindingBundle`
+- Adds `MediationBinder` — View→Mediator bindings
+- Use for Unity UI bundles that need mediation
+
+```
+IBindingBundle (interface)
+     ↑
+CoreBindingBundle (core)
+     ↑
+BindingBundle (ui)
+```
+
+---
+
 ## Cleanup Before Split
 
 - [x] Remove unused `using UnityEngine` from `Promise.cs`
+- [x] Split BindingBundle → CoreBindingBundle + BindingBundle
+- [x] Move FramewerkCrossContext to core
+- [x] Move IBindingBundle, NullInjectionBinding to core
 - [ ] Remove unused `using UnityEngine` from `DestroyingBinder.cs`
-- [ ] Replace `Debug.Log/LogWarning` in `BindingBundle.cs` with conditional `#if UNITY_2021_1_OR_NEWER`
 
 ---
 
