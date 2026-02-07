@@ -38,11 +38,17 @@ using strange.framework.api;
 
 namespace Framewerk.StrangeCore
 {
+	/// <summary>
+	/// Cross-context capable Context with bundle installation support.
+	/// Pure .NET compatible — no Unity dependencies.
+	/// 
+	/// For Unity UI contexts, use FramewerkMVCSContext from the UI package.
+	/// </summary>
 	public class FramewerkCrossContext : Context, ICrossContextCapable
 	{
 		private ICrossContextInjectionBinder _injectionBinder;
 		private IBinder _crossContextBridge;
-		private readonly List<BindingBundle> _installedBundles = new();
+		private readonly List<CoreBindingBundle> _installedBundles = new();
 
 		/// A Binder that handles dependency injection binding and instantiation
 		public ICrossContextInjectionBinder injectionBinder
@@ -175,7 +181,14 @@ namespace Framewerk.StrangeCore
 			}
 		}
 
-		protected T InstallBundle<T>(T instance = null) where T : BindingBundle
+		/// <summary>
+		/// Install a binding bundle. The bundle will be instantiated via the injector
+		/// and have its Install() method called.
+		/// </summary>
+		/// <typeparam name="T">Bundle type (must extend CoreBindingBundle)</typeparam>
+		/// <param name="instance">Optional pre-created instance</param>
+		/// <returns>The installed bundle instance</returns>
+		protected T InstallBundle<T>(T instance = null) where T : CoreBindingBundle
 		{
 			// Guard against duplicate bundle types
 			foreach (var existing in _installedBundles)

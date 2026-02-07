@@ -20,7 +20,7 @@
   - [ ] Tabs example
   - [ ] State machine example
   - [x] Networking example → `feature/mirror` branch (NetworkDemoBootstrap + full StrangeIoC wiring)
-- [ ] **6. Modular Package Split** — Split optional functionality into own packages: Core (IoC, FSM, commands), UI (UiManager, screens, popups), Networking (Mirror-based), etc. Users install only what they need.
+- [x] **6. Modular Package Split** — Split optional functionality into own packages: Core (IoC, FSM, commands), UI (UiManager, screens, popups), Networking (Mirror-based), etc. Users install only what they need.
 - [ ] **7. Documentation** — Comprehensive docs for all Framewerk features, APIs, and architecture.
 - [ ] **8. Tutorials** — Step-by-step guides for common use cases (getting started, building a screen, creating lists, popups, networking, etc.).
 
