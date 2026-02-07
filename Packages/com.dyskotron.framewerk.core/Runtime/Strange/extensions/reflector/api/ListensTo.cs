@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2015 StrangeIoC
  *
  *	Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 
 /**
  * @class ListensTo
- * 
+ *
  * The `[ListensTo]` attribute provides a shortcut for adding
  * Signal-to-Method binding with Mediators.
  * Example:
