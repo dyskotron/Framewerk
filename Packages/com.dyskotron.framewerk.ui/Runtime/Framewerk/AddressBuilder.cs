@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Plugins.Framewerk
 {
@@ -13,9 +14,51 @@ namespace Plugins.Framewerk
     public static class AddressBuilder
     {
         /// <summary>
+        /// Conventional path where AddressResolverConfig is stored.
+        /// </summary>
+        public const string RESOLVER_CONFIG_PATH = "Assets/Settings/Framewerk/AddressResolverConfig.asset";
+
+        /// <summary>
         /// Hardcoded root segment present in all addresses.
         /// </summary>
         public const string UI_ROOT = "UI";
+
+        private static AddressResolverConfig _cachedResolver;
+        private static bool _resolverCacheInitialized;
+
+        /// <summary>
+        /// Gets the project-wide AddressResolverConfig from the conventional path.
+        /// Returns null if no config exists (uses default behavior).
+        /// </summary>
+        public static AddressResolverConfig GetResolver()
+        {
+            if (_resolverCacheInitialized)
+                return _cachedResolver;
+
+            _resolverCacheInitialized = true;
+
+#if UNITY_EDITOR
+            // In editor, load from AssetDatabase
+            _cachedResolver = UnityEditor.AssetDatabase.LoadAssetAtPath<AddressResolverConfig>(RESOLVER_CONFIG_PATH);
+#else
+            // At runtime, load from Resources if available
+            // Note: For runtime support, the config would need to be in a Resources folder
+            // or loaded via Addressables. For now, runtime uses default behavior.
+            _cachedResolver = null;
+#endif
+
+            return _cachedResolver;
+        }
+
+        /// <summary>
+        /// Clears the cached resolver reference.
+        /// Called when assets change in editor.
+        /// </summary>
+        public static void ClearCache()
+        {
+            _cachedResolver = null;
+            _resolverCacheInitialized = false;
+        }
 
         /// <summary>
         /// TypeKey constants for different component types.
@@ -90,9 +133,9 @@ namespace Plugins.Framewerk
 
         /// <summary>
         /// Builds an Addressable ID using ViewConfig settings.
-        /// Uses the resolver from ViewConfig if available.
+        /// Uses the project-wide resolver from conventional path if available.
         /// </summary>
-        /// <param name="viewConfig">ViewConfig containing ContextPrefixSO and optional AddressResolver</param>
+        /// <param name="viewConfig">ViewConfig containing ContextPrefixSO</param>
         /// <param name="customPrefix">Optional custom prefix passed at runtime</param>
         /// <param name="typeKey">Component type key</param>
         /// <param name="className">The class name</param>
@@ -106,7 +149,7 @@ namespace Plugins.Framewerk
                 ClassName = className
             };
 
-            var resolver = viewConfig?.AddressResolver;
+            var resolver = GetResolver();
             return BuildAddress(resolver, ctx);
         }
 

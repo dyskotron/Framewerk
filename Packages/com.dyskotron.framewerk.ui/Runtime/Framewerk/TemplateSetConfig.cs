@@ -4,19 +4,15 @@ namespace Framewerk
 {
     /// <summary>
     /// Project-level configuration for overriding default UI templates.
-    /// Create one via Assets > Create > Framewerk > Skin Config.
-    /// Place at Assets/Settings/Framewerk/SkinConfig.asset for auto-discovery.
+    /// Create one via Assets > Create > Framewerk > Template Set.
+    /// Place at Assets/Settings/Framewerk/TemplateSetConfig.asset for auto-discovery.
     /// </summary>
-    [CreateAssetMenu(fileName = "SkinConfig", menuName = "Framewerk/Skin Config")]
-    public class SkinConfig : ScriptableObject
+    [CreateAssetMenu(fileName = "TemplateSetConfig", menuName = "Framewerk/Template Set")]
+    public class TemplateSetConfig : ScriptableObject
     {
-        [Header("Skin Info")]
-        [Tooltip("Name of this skin")]
-        public string SkinName;
-        
-        [Tooltip("Description of this skin")]
-        [TextArea(2, 4)]
-        public string Description;
+        [Header("Template Set Info")]
+        [Tooltip("Name of this template set")]
+        public string TemplateSetName;
 
         [Header("Template Overrides")]
         [Tooltip("Override for Popup component template")]
@@ -54,7 +50,7 @@ namespace Framewerk
         }
 
         /// <summary>
-        /// Checks if this skin has an override for the specified component type.
+        /// Checks if this template set has an override for the specified component type.
         /// </summary>
         /// <param name="componentType">Integer value of ComponentType enum</param>
         /// <returns>True if an override is set</returns>

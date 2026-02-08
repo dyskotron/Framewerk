@@ -8,9 +8,6 @@ namespace Plugins.Framewerk
         [Tooltip("Context prefix ScriptableObject (e.g. 'Examples', 'ListPopupDemo'). Optional.")]
         public ContextPrefix ContextPrefixSO;
 
-        [Tooltip("Custom address pattern resolver. If null, uses default pattern.")]
-        public AddressResolverConfig AddressResolver;
-
         [Header("Cameras")]
         public Camera Camera3d;
         public Camera UICamera;

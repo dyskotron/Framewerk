@@ -155,7 +155,7 @@ namespace Framewerk.Editor.Wizards
 
         private static string GetTemplatePath(ComponentType componentType)
         {
-            return SkinResolver.GetTemplatePath(componentType);
+            return TemplateSetResolver.GetTemplatePath(componentType);
         }
 
         internal static Type FindType(string fullTypeName)

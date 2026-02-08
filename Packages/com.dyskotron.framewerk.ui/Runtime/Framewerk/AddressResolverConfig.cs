@@ -5,17 +5,6 @@ using UnityEngine;
 namespace Plugins.Framewerk
 {
     /// <summary>
-    /// How to handle empty/null tokens in the address pattern.
-    /// </summary>
-    public enum EmptyTokenBehavior
-    {
-        /// <summary>Omit empty segments (current behavior).</summary>
-        Skip,
-        /// <summary>Keep empty string (may create double separators).</summary>
-        KeepEmpty
-    }
-
-    /// <summary>
     /// ScriptableObject-based configuration for customizing Addressable ID generation.
     /// Uses pattern-based token replacement for flexible address formats.
     /// </summary>
@@ -25,12 +14,6 @@ namespace Plugins.Framewerk
         [Tooltip("Pattern template for address generation. Use {tokens} for variables.\n" +
                  "Available tokens: {ContextPrefix}, {CustomPrefix}, {UI}, {TypeKey}, {ClassName}")]
         public string Pattern = "{ContextPrefix}/{CustomPrefix}/UI/{TypeKey}/{ClassName}";
-
-        [Tooltip("How to handle empty/null tokens.")]
-        public EmptyTokenBehavior EmptyTokenBehavior = EmptyTokenBehavior.Skip;
-
-        [Tooltip("Separator between path segments.")]
-        public string Separator = "/";
 
         /// <summary>
         /// Resolves the pattern into an address using the provided context.
@@ -52,20 +35,15 @@ namespace Plugins.Framewerk
                 string key = match.Groups[1].Value;
                 if (tokens.TryGetValue(key, out string value))
                 {
-                    if (string.IsNullOrEmpty(value) && EmptyTokenBehavior == EmptyTokenBehavior.Skip)
-                        return ""; // Will create double separators, cleaned up below
+                    // Empty tokens are skipped; double separators cleaned up below
                     return value ?? "";
                 }
                 return match.Value; // Keep unknown tokens as-is
             });
 
-            // Clean up multiple separators
-            if (!string.IsNullOrEmpty(Separator))
-            {
-                string escapedSep = Regex.Escape(Separator);
-                result = Regex.Replace(result, $"{escapedSep}+", Separator);
-                result = result.Trim(Separator[0]);
-            }
+            // Clean up multiple separators (must be "/" for Addressables tree view)
+            result = Regex.Replace(result, "/+", "/");
+            result = result.Trim('/');
 
             return result;
         }

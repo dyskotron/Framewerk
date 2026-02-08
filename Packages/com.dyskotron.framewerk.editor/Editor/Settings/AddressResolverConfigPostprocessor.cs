@@ -1,11 +1,12 @@
 using UnityEditor;
+using Plugins.Framewerk;
 
-namespace Framewerk.Editor.Wizards
+namespace Framewerk.Editor.Settings
 {
     /// <summary>
-    /// Clears SkinResolver cache when SkinConfig assets are modified.
+    /// Clears AddressBuilder cache when AddressResolverConfig assets are modified.
     /// </summary>
-    public class SkinConfigPostprocessor : AssetPostprocessor
+    public class AddressResolverConfigPostprocessor : AssetPostprocessor
     {
         private static void OnPostprocessAllAssets(
             string[] importedAssets,
@@ -17,7 +18,7 @@ namespace Framewerk.Editor.Wizards
 
             foreach (string path in importedAssets)
             {
-                if (IsSkinConfigPath(path))
+                if (IsAddressResolverConfigPath(path))
                 {
                     shouldClearCache = true;
                     break;
@@ -28,7 +29,7 @@ namespace Framewerk.Editor.Wizards
             {
                 foreach (string path in deletedAssets)
                 {
-                    if (IsSkinConfigPath(path))
+                    if (IsAddressResolverConfigPath(path))
                     {
                         shouldClearCache = true;
                         break;
@@ -40,7 +41,7 @@ namespace Framewerk.Editor.Wizards
             {
                 foreach (string path in movedAssets)
                 {
-                    if (IsSkinConfigPath(path))
+                    if (IsAddressResolverConfigPath(path))
                     {
                         shouldClearCache = true;
                         break;
@@ -52,7 +53,7 @@ namespace Framewerk.Editor.Wizards
             {
                 foreach (string path in movedFromAssetPaths)
                 {
-                    if (IsSkinConfigPath(path))
+                    if (IsAddressResolverConfigPath(path))
                     {
                         shouldClearCache = true;
                         break;
@@ -62,13 +63,13 @@ namespace Framewerk.Editor.Wizards
 
             if (shouldClearCache)
             {
-                SkinResolver.ClearCache();
+                AddressBuilder.ClearCache();
             }
         }
 
-        private static bool IsSkinConfigPath(string path)
+        private static bool IsAddressResolverConfigPath(string path)
         {
-            return path.EndsWith("SkinConfig.asset") || path.Contains("SkinConfig");
+            return path.EndsWith("AddressResolverConfig.asset") || path.Contains("AddressResolverConfig");
         }
     }
 }
