@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using strange.extensions.mediation.api;
+using strange.extensions.signal.impl;
 
 namespace Framewerk.UI.List
 {
@@ -10,6 +11,11 @@ namespace Framewerk.UI.List
     
     public interface IListMediator<TData> : IListItemParent where TData : class, IListItemDataProvider
     {
+        /// <summary>
+        /// Signal dispatched when selection changes. Parameter is the selected index (null if nothing selected).
+        /// </summary>
+        Signal<int?> SelectionChangedSignal { get; }
+        
         void SetData(List<TData> dataProviders);
 
         /// <summary>

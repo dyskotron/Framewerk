@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Framewerk.Managers;
 using strange.extensions.mediation.api;
+using strange.extensions.signal.impl;
 using UnityEngine;
 
 namespace Framewerk.UI.List
@@ -16,6 +17,7 @@ namespace Framewerk.UI.List
         [Inject] public IUiManager UiManager { get; set; }
         [Inject] public TView View { get; set; }
         
+        public Signal<int?> SelectionChangedSignal { get; } = new Signal<int?>();
         public List<int> SelectedItemIndexes { get; private set; }
         public bool Multiselect { get; set; }
         public bool Unselectable { get; set; }
@@ -245,7 +247,7 @@ namespace Framewerk.UI.List
 
         protected virtual void SelectionUpdated(int index)
         {
-            
+            SelectionChangedSignal.Dispatch(GetSelectedIndex());
         }
         
         private void ListItemClickedHandler(int itemIndex, TData dataProvider)
