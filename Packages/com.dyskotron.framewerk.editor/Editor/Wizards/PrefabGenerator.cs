@@ -40,12 +40,15 @@ namespace Framewerk.Editor.Wizards
 
             // If all expected prefabs have been processed, link and complete the job
             ComponentType type = (ComponentType)job.componentType;
-            bool allDone = mainPrefabProcessed && (type != ComponentType.List || itemPrefabProcessed);
+            bool isTabContainer = type == ComponentType.VerticalTabs || type == ComponentType.HorizontalTabs;
+            bool needsItemPrefab = type == ComponentType.List || isTabContainer;
+            bool allDone = mainPrefabProcessed && (!needsItemPrefab || itemPrefabProcessed);
 
             if (allDone)
             {
                 // Link the List's ItemPrefab field to the ListItem prefab
-                if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemPrefabPath))
+                // Tab containers also use ListView, so they need the same linking
+                if (needsItemPrefab && !string.IsNullOrEmpty(job.itemPrefabPath))
                 {
                     LinkListItemPrefab(job.prefabPath, job.itemPrefabPath);
                 }
@@ -106,6 +109,7 @@ namespace Framewerk.Editor.Wizards
             if (baseType.Name == "ListView" ||
                 baseType.Name == "ListItemView" ||
                 baseType.Name == "PopupView" ||
+                baseType.Name == "ViewStackView" ||
                 baseType.Name == "View")
             {
                 return baseType;

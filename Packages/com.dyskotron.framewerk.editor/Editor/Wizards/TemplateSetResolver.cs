@@ -133,8 +133,30 @@ namespace Framewerk.Editor.Wizards
                     return DEFAULT_TEMPLATE_PATH + "ListTemplate.prefab";
                 case ComponentType.ListItem:
                     return DEFAULT_TEMPLATE_PATH + "ListItemTemplate.prefab";
+                case ComponentType.VerticalTabs:
+                    return DEFAULT_TEMPLATE_PATH + "VerticalTabContainerTemplate.prefab";
+                case ComponentType.HorizontalTabs:
+                    return DEFAULT_TEMPLATE_PATH + "HorizontalTabContainerTemplate.prefab";
+                case ComponentType.ViewStack:
+                    return DEFAULT_TEMPLATE_PATH + "ViewStackTemplate.prefab";
                 case ComponentType.View:
                     return DEFAULT_TEMPLATE_PATH + "ViewTemplate.prefab";
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the framework default template path for a tab item (used alongside tab containers).
+        /// </summary>
+        public static string GetDefaultTabItemTemplatePath(ComponentType componentType)
+        {
+            switch (componentType)
+            {
+                case ComponentType.VerticalTabs:
+                    return DEFAULT_TEMPLATE_PATH + "VerticalTabTemplate.prefab";
+                case ComponentType.HorizontalTabs:
+                    return DEFAULT_TEMPLATE_PATH + "HorizontalTabTemplate.prefab";
                 default:
                     return null;
             }

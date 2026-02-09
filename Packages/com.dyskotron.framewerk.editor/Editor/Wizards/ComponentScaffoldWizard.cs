@@ -237,6 +237,11 @@ namespace Framewerk.Editor.Wizards
                     return AddressBuilder.TypeKeys.List;
                 case ComponentType.ListItem:
                     return AddressBuilder.TypeKeys.ListItem;
+                case ComponentType.VerticalTabs:
+                case ComponentType.HorizontalTabs:
+                    return AddressBuilder.TypeKeys.Tabs;
+                case ComponentType.ViewStack:
+                    return AddressBuilder.TypeKeys.ViewStack;
                 case ComponentType.View:
                 default:
                     return AddressBuilder.TypeKeys.View;
@@ -268,8 +273,16 @@ namespace Framewerk.Editor.Wizards
             
             componentName = EditorGUILayout.TextField("Name", componentName);
 
-            ComponentType[] validTypes = new ComponentType[] { ComponentType.Popup, ComponentType.List, ComponentType.View };
-            string[] typeNames = new string[] { "Popup", "List", "View" };
+            ComponentType[] validTypes = new ComponentType[] 
+            { 
+                ComponentType.Popup, 
+                ComponentType.List, 
+                ComponentType.VerticalTabs,
+                ComponentType.HorizontalTabs,
+                ComponentType.ViewStack,
+                ComponentType.View 
+            };
+            string[] typeNames = new string[] { "Popup", "List", "Vertical Tabs", "Horizontal Tabs", "ViewStack", "View" };
             int currentIndex = System.Array.IndexOf(validTypes, componentType);
             if (currentIndex == -1) currentIndex = 0;
 
@@ -418,6 +431,7 @@ namespace Framewerk.Editor.Wizards
             {
                 string previewName = componentType == ComponentType.List ? componentName + "List" : componentName;
                 string prefabName = GetPrefabName(previewName);
+                bool isTabContainer = componentType == ComponentType.VerticalTabs || componentType == ComponentType.HorizontalTabs;
 
                 // Get ViewConfig for address building (uses resolver if configured)
                 ViewConfig viewConfig = null;
@@ -430,15 +444,22 @@ namespace Framewerk.Editor.Wizards
                 string typeKey = GetTypeKey(componentType);
                 string effectiveCustomPrefix = string.IsNullOrEmpty(customPrefix) ? null : customPrefix;
                 string mainAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, typeKey, prefabName);
-                string itemAddress = componentType == ComponentType.List 
-                    ? AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, previewName + "Item") 
-                    : null;
+                string itemAddress = null;
+                
+                if (componentType == ComponentType.List)
+                {
+                    itemAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, previewName + "Item");
+                }
+                else if (isTabContainer)
+                {
+                    itemAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.TabItem, previewName + "Item");
+                }
 
                 EditorGUILayout.LabelField("Scripts:", EditorStyles.miniBoldLabel);
                 EditorGUILayout.LabelField($"  {previewName}View.cs", EditorStyles.miniLabel);
                 EditorGUILayout.LabelField($"  {previewName}Mediator.cs", EditorStyles.miniLabel);
 
-                if (componentType == ComponentType.List)
+                if (componentType == ComponentType.List || isTabContainer)
                 {
                     EditorGUILayout.LabelField($"  {previewName}Data.cs", EditorStyles.miniLabel);
                     EditorGUILayout.LabelField($"  {previewName}ItemView.cs", EditorStyles.miniLabel);
@@ -466,8 +487,8 @@ namespace Framewerk.Editor.Wizards
                 EditorGUILayout.LabelField(mainAddress, EditorStyles.miniLabel);
                 EditorGUILayout.EndHorizontal();
 
-                // Item prefab row (for Lists)
-                if (componentType == ComponentType.List)
+                // Item prefab row (for Lists and Tab Containers)
+                if (componentType == ComponentType.List || isTabContainer)
                 {
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"  {previewName}Item.prefab", EditorStyles.miniLabel, GUILayout.Width(150));
@@ -552,7 +573,9 @@ namespace Framewerk.Editor.Wizards
             if (File.Exists(mediatorPath)) existingFiles.Add(mediatorPath);
             if (File.Exists(prefabPath)) existingFiles.Add(prefabPath);
 
-            if (componentType == ComponentType.List)
+            bool isTabContainer = componentType == ComponentType.VerticalTabs || componentType == ComponentType.HorizontalTabs;
+            
+            if (componentType == ComponentType.List || isTabContainer)
             {
                 string dataPath = Path.Combine(scriptFolder, $"{effectiveName}Data.cs");
                 string itemViewPath = Path.Combine(scriptFolder, $"{effectiveName}ItemView.cs");
@@ -600,10 +623,23 @@ namespace Framewerk.Editor.Wizards
                 addressableAddress = mainAddress
             };
 
+            bool isTabContainerJob = componentType == ComponentType.VerticalTabs || componentType == ComponentType.HorizontalTabs;
+            
             if (componentType == ComponentType.List)
             {
                 string itemName = effectiveName + "Item";
                 string itemAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.ListItem, itemName);
+
+                job.dataTypeName = $"{namespaceName}.{effectiveName}Data";
+                job.itemViewTypeName = $"{namespaceName}.{itemName}View";
+                job.itemMediatorTypeName = $"{namespaceName}.{itemName}Mediator";
+                job.itemPrefabPath = Path.Combine(prefabFolder, $"{itemName}.prefab");
+                job.itemAddressableAddress = itemAddress;
+            }
+            else if (isTabContainerJob)
+            {
+                string itemName = effectiveName + "Item";
+                string itemAddress = AddressBuilder.BuildAddress(viewConfig, effectiveCustomPrefix, AddressBuilder.TypeKeys.TabItem, itemName);
 
                 job.dataTypeName = $"{namespaceName}.{effectiveName}Data";
                 job.itemViewTypeName = $"{namespaceName}.{itemName}View";
@@ -648,6 +684,23 @@ namespace Framewerk.Editor.Wizards
                 File.WriteAllText(itemViewPath, itemViewCode);
 
                 string itemMediatorCode = CodeTemplates.GetListItemMediatorTemplate(effectiveName, namespaceName);
+                string itemMediatorPath = Path.Combine(scriptFolder, $"{itemName}Mediator.cs");
+                File.WriteAllText(itemMediatorPath, itemMediatorCode);
+            }
+            // For Tab Containers, generate tab item files
+            else if (componentType == ComponentType.VerticalTabs || componentType == ComponentType.HorizontalTabs)
+            {
+                string itemName = effectiveName + "Item";
+
+                string dataCode = CodeTemplates.GetTabDataTemplate(effectiveName, namespaceName);
+                string dataPath = Path.Combine(scriptFolder, $"{effectiveName}Data.cs");
+                File.WriteAllText(dataPath, dataCode);
+
+                string itemViewCode = CodeTemplates.GetTabItemViewTemplate(effectiveName, namespaceName);
+                string itemViewPath = Path.Combine(scriptFolder, $"{itemName}View.cs");
+                File.WriteAllText(itemViewPath, itemViewCode);
+
+                string itemMediatorCode = CodeTemplates.GetTabItemMediatorTemplate(effectiveName, namespaceName);
                 string itemMediatorPath = Path.Combine(scriptFolder, $"{itemName}Mediator.cs");
                 File.WriteAllText(itemMediatorPath, itemMediatorCode);
             }

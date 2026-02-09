@@ -73,6 +73,21 @@ namespace Framewerk.Editor.Wizards
                     }
                 }
             }
+            
+            // Copy item prefab for Tab Containers
+            bool isTabContainer = type == ComponentType.VerticalTabs || type == ComponentType.HorizontalTabs;
+            if (isTabContainer && !string.IsNullOrEmpty(job.itemPrefabPath))
+            {
+                string itemTemplatePath = TemplateSetResolver.GetDefaultTabItemTemplatePath(type);
+                if (!string.IsNullOrEmpty(itemTemplatePath))
+                {
+                    if (!AssetDatabase.CopyAsset(itemTemplatePath, job.itemPrefabPath))
+                    {
+                        Debug.LogError($"Failed to copy tab item template from {itemTemplatePath} to {job.itemPrefabPath}");
+                        return;
+                    }
+                }
+            }
 
             // Store the job for the swap phase
             EditorPrefs.SetString(PENDING_SWAP_KEY, JsonUtility.ToJson(job));
@@ -85,12 +100,14 @@ namespace Framewerk.Editor.Wizards
         {
             ComponentType type = (ComponentType)job.componentType;
 
+            bool isTabContainer = type == ComponentType.VerticalTabs || type == ComponentType.HorizontalTabs;
+
             // Mark as addressable
             if (job.markAddressable)
             {
                 AddressableHelper.MarkAsAddressable(job.prefabPath, job.addressableAddress);
 
-                if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemPrefabPath))
+                if ((type == ComponentType.List || isTabContainer) && !string.IsNullOrEmpty(job.itemPrefabPath))
                 {
                     string itemAddress = !string.IsNullOrEmpty(job.itemAddressableAddress)
                         ? job.itemAddressableAddress
@@ -106,8 +123,8 @@ namespace Framewerk.Editor.Wizards
                 string mediatorName = job.componentName + "Mediator";
                 ContextInjector.InjectBinding(job.contextFilePath, viewName, mediatorName, job.namespaceName);
 
-                // Also inject item binding for List
-                if (type == ComponentType.List && !string.IsNullOrEmpty(job.itemViewTypeName))
+                // Also inject item binding for List and Tab Containers
+                if ((type == ComponentType.List || isTabContainer) && !string.IsNullOrEmpty(job.itemViewTypeName))
                 {
                     string itemViewName = job.componentName + "ItemView";
                     string itemMediatorName = job.componentName + "ItemMediator";

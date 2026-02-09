@@ -38,6 +38,9 @@ namespace Plugins.Framewerk
             public const string Popup = "Popup";
             public const string List = "List";
             public const string ListItem = "List.ListItem";
+            public const string Tabs = "Tabs";
+            public const string TabItem = "Tabs.TabItem";
+            public const string ViewStack = "ViewStack";
         }
 
         /// <summary>
