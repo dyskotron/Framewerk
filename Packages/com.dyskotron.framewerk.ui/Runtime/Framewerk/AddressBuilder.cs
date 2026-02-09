@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Plugins.Framewerk
@@ -8,57 +9,25 @@ namespace Plugins.Framewerk
     /// Format: [ContextPrefix]/[CustomPrefix]/UI/[TypeKey]/[ClassName]
     /// Any part can be null/empty — it will be skipped.
     /// 
-    /// Supports optional AddressResolverConfig for custom patterns.
-    /// If no resolver is provided, uses the default format.
+    /// Supports custom patterns stored in a project config file.
+    /// If no config exists, uses the default format.
     /// </summary>
     public static class AddressBuilder
     {
         /// <summary>
-        /// Conventional path where AddressResolverConfig is stored.
+        /// Path where the address resolver config is stored.
         /// </summary>
-        public const string RESOLVER_CONFIG_PATH = "Assets/Settings/Framewerk/AddressResolverConfig.asset";
+        public const string CONFIG_PATH = "Assets/Settings/Framewerk/AddressResolverConfig.asset";
+
+        /// <summary>
+        /// Default pattern used when no custom pattern is set.
+        /// </summary>
+        public const string DEFAULT_PATTERN = "{ContextPrefix}/{CustomPrefix}/UI/{TypeKey}/{ClassName}";
 
         /// <summary>
         /// Hardcoded root segment present in all addresses.
         /// </summary>
         public const string UI_ROOT = "UI";
-
-        private static AddressResolverConfig _cachedResolver;
-        private static bool _resolverCacheInitialized;
-
-        /// <summary>
-        /// Gets the project-wide AddressResolverConfig from the conventional path.
-        /// Returns null if no config exists (uses default behavior).
-        /// </summary>
-        public static AddressResolverConfig GetResolver()
-        {
-            if (_resolverCacheInitialized)
-                return _cachedResolver;
-
-            _resolverCacheInitialized = true;
-
-#if UNITY_EDITOR
-            // In editor, load from AssetDatabase
-            _cachedResolver = UnityEditor.AssetDatabase.LoadAssetAtPath<AddressResolverConfig>(RESOLVER_CONFIG_PATH);
-#else
-            // At runtime, load from Resources if available
-            // Note: For runtime support, the config would need to be in a Resources folder
-            // or loaded via Addressables. For now, runtime uses default behavior.
-            _cachedResolver = null;
-#endif
-
-            return _cachedResolver;
-        }
-
-        /// <summary>
-        /// Clears the cached resolver reference.
-        /// Called when assets change in editor.
-        /// </summary>
-        public static void ClearCache()
-        {
-            _cachedResolver = null;
-            _resolverCacheInitialized = false;
-        }
 
         /// <summary>
         /// TypeKey constants for different component types.
@@ -72,27 +41,137 @@ namespace Plugins.Framewerk
         }
 
         /// <summary>
-        /// Builds an Addressable ID using a resolver and context.
-        /// This is the main entry point when using custom patterns.
+        /// Gets the current address pattern from the project config file.
+        /// Returns default pattern if no config exists.
         /// </summary>
-        /// <param name="resolver">Optional resolver config. If null, uses default behavior.</param>
-        /// <param name="ctx">The address context containing all variables.</param>
-        /// <returns>The full Addressable ID</returns>
-        public static string BuildAddress(AddressResolverConfig resolver, AddressContext ctx)
+        public static string GetPattern()
         {
-            if (resolver == null)
-                return BuildAddressDefault(ctx);
-
-            return resolver.Resolve(ctx);
+#if UNITY_EDITOR
+            var config = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>(CONFIG_PATH);
+            if (config != null)
+            {
+                // Use reflection to access Pattern property (config is in Editor assembly)
+                var patternProp = config.GetType().GetProperty("Pattern");
+                if (patternProp != null)
+                {
+                    string pattern = patternProp.GetValue(config) as string;
+                    if (!string.IsNullOrEmpty(pattern))
+                        return pattern;
+                }
+            }
+            return DEFAULT_PATTERN;
+#else
+            return DEFAULT_PATTERN;
+#endif
         }
 
         /// <summary>
-        /// Default address building (no custom resolver).
-        /// Format: contextPrefix/customPrefix/UI/typeKey/className
+        /// Sets the address pattern in the project config file.
+        /// Creates the config file if it doesn't exist.
+        /// Pass null or empty to reset to default (deletes the config file).
         /// </summary>
-        private static string BuildAddressDefault(AddressContext ctx)
+        public static void SetPattern(string pattern)
         {
-            return BuildAddress(ctx.ContextPrefix, ctx.CustomPrefix, ctx.TypeKey, ctx.ClassName);
+#if UNITY_EDITOR
+            if (string.IsNullOrEmpty(pattern) || pattern == DEFAULT_PATTERN)
+            {
+                // Reset to default = delete the config file
+                if (System.IO.File.Exists(CONFIG_PATH))
+                {
+                    UnityEditor.AssetDatabase.DeleteAsset(CONFIG_PATH);
+                    UnityEditor.AssetDatabase.SaveAssets();
+                }
+            }
+            else
+            {
+                // Ensure directory exists
+                string directory = System.IO.Path.GetDirectoryName(CONFIG_PATH);
+                if (!UnityEditor.AssetDatabase.IsValidFolder(directory))
+                {
+                    string[] parts = directory.Split('/');
+                    string currentPath = parts[0];
+                    for (int i = 1; i < parts.Length; i++)
+                    {
+                        string nextPath = currentPath + "/" + parts[i];
+                        if (!UnityEditor.AssetDatabase.IsValidFolder(nextPath))
+                        {
+                            UnityEditor.AssetDatabase.CreateFolder(currentPath, parts[i]);
+                        }
+                        currentPath = nextPath;
+                    }
+                }
+
+                // Load or create config
+                var config = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>(CONFIG_PATH);
+                if (config == null)
+                {
+                    // Create new config using the type from the Editor assembly
+                    var configType = System.Type.GetType("Framewerk.Editor.Settings.AddressResolverConfig, Framewerk.Editor");
+                    if (configType != null)
+                    {
+                        config = ScriptableObject.CreateInstance(configType);
+                        UnityEditor.AssetDatabase.CreateAsset(config, CONFIG_PATH);
+                    }
+                }
+
+                if (config != null)
+                {
+                    // Set pattern via reflection
+                    var patternProp = config.GetType().GetProperty("Pattern");
+                    if (patternProp != null)
+                    {
+                        patternProp.SetValue(config, pattern);
+                        UnityEditor.EditorUtility.SetDirty(config);
+                        UnityEditor.AssetDatabase.SaveAssets();
+                    }
+                }
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Resolves a pattern into an address using the provided context.
+        /// </summary>
+        public static string ResolvePattern(string pattern, AddressContext ctx)
+        {
+            var tokens = new Dictionary<string, string>
+            {
+                { "ContextPrefix", ctx.ContextPrefix },
+                { "CustomPrefix", ctx.CustomPrefix },
+                { "TypeKey", ctx.TypeKey },
+                { "ClassName", ctx.ClassName },
+                { "UI", UI_ROOT }
+            };
+
+            // Replace tokens with their values
+            string result = Regex.Replace(pattern, @"\{(\w+)\}", match =>
+            {
+                string key = match.Groups[1].Value;
+                if (tokens.TryGetValue(key, out string value))
+                {
+                    // Empty tokens are skipped; double separators cleaned up below
+                    return value ?? "";
+                }
+                return match.Value; // Keep unknown tokens as-is
+            });
+
+            // Clean up multiple separators (must be "/" for Addressables tree view)
+            result = Regex.Replace(result, "/+", "/");
+            result = result.Trim('/');
+
+            return result;
+        }
+
+        /// <summary>
+        /// Builds an Addressable ID using the current pattern and context.
+        /// This is the main entry point when using custom patterns.
+        /// </summary>
+        /// <param name="ctx">The address context containing all variables.</param>
+        /// <returns>The full Addressable ID</returns>
+        public static string BuildAddress(AddressContext ctx)
+        {
+            string pattern = GetPattern();
+            return ResolvePattern(pattern, ctx);
         }
 
         /// <summary>
@@ -107,33 +186,18 @@ namespace Plugins.Framewerk
         /// <returns>The full Addressable ID</returns>
         public static string BuildAddress(string contextPrefix, string customPrefix, string typeKey, string className)
         {
-            var parts = new List<string>();
-
-            // Add context prefix if present
-            if (!string.IsNullOrEmpty(contextPrefix))
-                parts.Add(contextPrefix.Trim('/'));
-
-            // Add custom prefix if present
-            if (!string.IsNullOrEmpty(customPrefix))
-                parts.Add(customPrefix.Trim('/'));
-
-            // Always add UI root
-            parts.Add(UI_ROOT);
-
-            // Add type key if present
-            if (!string.IsNullOrEmpty(typeKey))
-                parts.Add(typeKey.Trim('/'));
-
-            // Always add class name
-            if (!string.IsNullOrEmpty(className))
-                parts.Add(className.Trim('/'));
-
-            return string.Join("/", parts);
+            var ctx = new AddressContext
+            {
+                ContextPrefix = contextPrefix,
+                CustomPrefix = customPrefix,
+                TypeKey = typeKey,
+                ClassName = className
+            };
+            return BuildAddress(ctx);
         }
 
         /// <summary>
         /// Builds an Addressable ID using ViewConfig settings.
-        /// Uses the project-wide resolver from conventional path if available.
         /// </summary>
         /// <param name="viewConfig">ViewConfig containing ContextPrefixSO</param>
         /// <param name="customPrefix">Optional custom prefix passed at runtime</param>
@@ -148,9 +212,7 @@ namespace Plugins.Framewerk
                 TypeKey = typeKey,
                 ClassName = className
             };
-
-            var resolver = GetResolver();
-            return BuildAddress(resolver, ctx);
+            return BuildAddress(ctx);
         }
 
         /// <summary>

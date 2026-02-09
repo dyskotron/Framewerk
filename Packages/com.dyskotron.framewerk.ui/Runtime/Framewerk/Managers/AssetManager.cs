@@ -55,7 +55,8 @@ namespace Framewerk.Managers
         {
             if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
             {
-                var go = await Addressables.InstantiateAsync(address, parent).Task;
+                // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
+                var go = await Addressables.InstantiateAsync(address, parent, false).Task;
                 _instantiatedObjects.Add(go);
                 return go as T;
             }
@@ -66,7 +67,8 @@ namespace Framewerk.Managers
 
         public async Task<T> GetGameObjectAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : MonoBehaviour
         {
-            var go = await Addressables.InstantiateAsync(address, parent).Task;
+            // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
+            var go = await Addressables.InstantiateAsync(address, parent, false).Task;
             _instantiatedObjects.Add(go);
             var component = go.GetComponent<T>();
 
@@ -127,7 +129,8 @@ namespace Framewerk.Managers
         {
             if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
             {
-                var go = Addressables.InstantiateAsync(address, parent).WaitForCompletion();
+                // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
+                var go = Addressables.InstantiateAsync(address, parent, false).WaitForCompletion();
                 _instantiatedObjects.Add(go);
                 return go as T;
             }
@@ -138,7 +141,8 @@ namespace Framewerk.Managers
 
         public T GetGameObject<T>(string address, Transform parent = null) where T : MonoBehaviour
         {
-            var go = Addressables.InstantiateAsync(address, parent).WaitForCompletion();
+            // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
+            var go = Addressables.InstantiateAsync(address, parent, false).WaitForCompletion();
             _instantiatedObjects.Add(go);
             var component = go.GetComponent<T>();
 

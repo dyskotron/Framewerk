@@ -32,7 +32,7 @@ namespace Framewerk.Popups
         {
             foreach (var setting in PopupOptionSettings)
             {
-                var buttonInst = Instantiate(popupView.buttonPrefab.gameObject, popupView.buttonContainer.transform);
+                var buttonInst = Instantiate(popupView.buttonPrefab.gameObject, popupView.buttonContainer.transform, false);
                 var textComp = buttonInst.GetComponentInChildren<TextMeshProUGUI>();
                 if (textComp == null)
                 {

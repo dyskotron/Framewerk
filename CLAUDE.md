@@ -172,6 +172,11 @@ UI.Popups            — RectTransform, Canvas, CanvasScaler, GraphicRaycaster
 - **Never** leave ViewConfig fields null — all 7 fields must be wired
 - For text fields in Views, use `TMP_Text` (TextMeshPro), not `UnityEngine.UI.Text`
 
+## Code Quality
+
+- **Don't add parameters that match defaults.** If a method has `instantiateInWorldSpace = false` as default, don't explicitly pass `false`. It's noise.
+- Keep changes minimal — only add what's necessary for the fix.
+
 ## Plan Mode
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.

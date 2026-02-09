@@ -14,19 +14,18 @@ namespace Framewerk.Editor.Settings
     public class FramewerkSettingsWindow : EditorWindow
     {
         private const string DEFAULT_TEMPLATE_SET_CONFIG_PATH = "Assets/Settings/Framewerk/TemplateSetConfig.asset";
-        private const string ADDRESS_RESOLVER_PATH = "Assets/Settings/Framewerk/AddressResolverConfig.asset";
         private const string ACTIVE_TEMPLATE_SET_PREF_KEY = "Framewerk_ActiveTemplateSetGUID";
+        
+        // Editor Tools preferences
+        public const string UI_PREFAB_PARENTING_FIXER_ENABLED_KEY = "Framewerk_UIPrefabParentingFixerEnabled";
 
         private TemplateSetConfig _templateSetConfig;
-        private AddressResolverConfig _addressResolverConfig;
-
         private SerializedObject _templateSetConfigSO;
-        private SerializedObject _addressResolverSO;
-
-        private bool _templateSetFoldout = true;
-        private bool _addressResolverFoldout = true;
 
         private Vector2 _scrollPosition;
+        
+        // Address resolver
+        private string _addressPattern;
         
         // Multiple template sets support
         private List<TemplateSetConfig> _allTemplateSetConfigs = new List<TemplateSetConfig>();
@@ -35,7 +34,6 @@ namespace Framewerk.Editor.Settings
         
         // Cached styles
         private GUIStyle _sectionHeaderStyle;
-        private GUIStyle _sectionHeaderBgStyle;
 
         [MenuItem("Framewerk/Settings")]
         public static void ShowWindow()
@@ -72,7 +70,7 @@ namespace Framewerk.Editor.Settings
         private void RefreshConfigs()
         {
             RefreshAllTemplateSetConfigs();
-            RefreshAddressResolverConfig();
+            _addressPattern = AddressBuilder.GetPattern();
         }
 
         private void RefreshAllTemplateSetConfigs()
@@ -136,23 +134,6 @@ namespace Framewerk.Editor.Settings
             }
         }
 
-        private void RefreshAddressResolverConfig()
-        {
-            // Load AddressResolverConfig
-            _addressResolverConfig = AssetDatabase.LoadAssetAtPath<AddressResolverConfig>(ADDRESS_RESOLVER_PATH);
-            if (_addressResolverConfig == null)
-            {
-                // Try to find it elsewhere
-                string[] guids = AssetDatabase.FindAssets("t:AddressResolverConfig", new[] { "Assets" });
-                if (guids.Length > 0)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    _addressResolverConfig = AssetDatabase.LoadAssetAtPath<AddressResolverConfig>(path);
-                }
-            }
-            _addressResolverSO = _addressResolverConfig != null ? new SerializedObject(_addressResolverConfig) : null;
-        }
-
         private void SetActiveTemplateSet(TemplateSetConfig config)
         {
             if (config == null)
@@ -179,11 +160,12 @@ namespace Framewerk.Editor.Settings
             GUILayout.Space(10);
             EditorGUILayout.LabelField("Framewerk Project Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Configure project-wide Framewerk settings. Assets are stored at:\n" +
-                "Assets/Settings/Framewerk/",
+                "Configure project-wide Framewerk settings.",
                 MessageType.Info);
             GUILayout.Space(10);
 
+            DrawEditorToolsSection();
+            GUILayout.Space(10);
             DrawAddressResolverSection();
             GUILayout.Space(10);
             DrawTemplateSetConfigSection();
@@ -217,101 +199,23 @@ namespace Framewerk.Editor.Settings
             GUILayout.Space(8);
         }
 
-        private void DrawAddressResolverSection()
+        private void DrawEditorToolsSection()
         {
-            DrawSectionHeader("Address Resolver");
+            DrawSectionHeader("Editor Tools");
             
-            _addressResolverFoldout = EditorGUILayout.Foldout(_addressResolverFoldout, "Configuration", true, EditorStyles.foldoutHeader);
-            
-            if (!_addressResolverFoldout)
-                return;
-
-            EditorGUI.indentLevel++;
-
-            if (_addressResolverConfig == null)
+            // UI Prefab Parenting Fixer toggle
+            bool fixerEnabled = EditorPrefs.GetBool(UI_PREFAB_PARENTING_FIXER_ENABLED_KEY, true);
+            EditorGUI.BeginChangeCheck();
+            fixerEnabled = EditorGUILayout.Toggle(
+                new GUIContent("UI Prefab Parenting Fixer", 
+                    "Automatically resets RectTransform position when UI prefabs are parented under a Canvas, " +
+                    "fixing the common issue where prefabs get placed at canvas center offset."),
+                fixerEnabled);
+            if (EditorGUI.EndChangeCheck())
             {
-                EditorGUILayout.HelpBox(
-                    "No AddressResolverConfig found.\n" +
-                    "Create one to customize address patterns for Addressables.",
-                    MessageType.None);
-
-                if (GUILayout.Button("Create AddressResolverConfig", GUILayout.Height(30)))
-                {
-                    CreateAddressResolverConfig();
-                }
+                EditorPrefs.SetBool(UI_PREFAB_PARENTING_FIXER_ENABLED_KEY, fixerEnabled);
+                Debug.Log($"[Framewerk] UI Prefab Parenting Fixer {(fixerEnabled ? "enabled" : "disabled")}");
             }
-            else
-            {
-                // Show asset location
-                string path = AssetDatabase.GetAssetPath(_addressResolverConfig);
-                EditorGUILayout.LabelField("Location:", path, EditorStyles.miniLabel);
-                
-                if (path != ADDRESS_RESOLVER_PATH)
-                {
-                    EditorGUILayout.HelpBox(
-                        $"Asset not at conventional path.\nExpected: {ADDRESS_RESOLVER_PATH}",
-                        MessageType.Warning);
-                    
-                    if (GUILayout.Button("Move to Conventional Path"))
-                    {
-                        MoveAsset(_addressResolverConfig, ADDRESS_RESOLVER_PATH);
-                        RefreshConfigs();
-                    }
-                }
-
-                GUILayout.Space(5);
-
-                // Draw inline editor
-                _addressResolverSO.Update();
-
-                SerializedProperty iterator = _addressResolverSO.GetIterator();
-                iterator.NextVisible(true); // Skip m_Script
-
-                while (iterator.NextVisible(false))
-                {
-                    EditorGUILayout.PropertyField(iterator, true);
-                }
-
-                if (_addressResolverSO.ApplyModifiedProperties())
-                {
-                    EditorUtility.SetDirty(_addressResolverConfig);
-                }
-
-                GUILayout.Space(5);
-
-                // Show live preview of address pattern
-                string preview = _addressResolverConfig.Resolve(new AddressContext
-                {
-                    ContextPrefix = "Examples",
-                    CustomPrefix = "CustomPrefix",
-                    TypeKey = "Popup",
-                    ClassName = "SamplePopup"
-                });
-                EditorGUILayout.LabelField("Preview:", preview, EditorStyles.helpBox);
-
-                GUILayout.Space(5);
-
-                // Delete button
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                
-                GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
-                if (GUILayout.Button("Delete", GUILayout.Width(60)))
-                {
-                    if (EditorUtility.DisplayDialog("Delete AddressResolverConfig",
-                        "Are you sure you want to delete the AddressResolverConfig?\n\n" +
-                        "The framework will use default address resolution.",
-                        "Delete", "Cancel"))
-                    {
-                        DeleteAddressResolverConfig();
-                    }
-                }
-                GUI.backgroundColor = Color.white;
-                
-                EditorGUILayout.EndHorizontal();
-            }
-
-            EditorGUI.indentLevel--;
         }
 
         private void DrawTemplateSetConfigSection()
@@ -363,13 +267,6 @@ namespace Framewerk.Editor.Settings
             EditorGUILayout.EndHorizontal();
             
             GUILayout.Space(5);
-            
-            _templateSetFoldout = EditorGUILayout.Foldout(_templateSetFoldout, "Configuration", true, EditorStyles.foldoutHeader);
-            
-            if (!_templateSetFoldout)
-                return;
-
-            EditorGUI.indentLevel++;
 
             if (_templateSetConfig == null)
             {
@@ -404,8 +301,70 @@ namespace Framewerk.Editor.Settings
                     RefreshAllTemplateSetConfigs();
                 }
             }
+        }
 
-            EditorGUI.indentLevel--;
+        private void DrawAddressResolverSection()
+        {
+            DrawSectionHeader("Address Resolver");
+
+            EditorGUILayout.HelpBox(
+                "Pattern for generating Addressable IDs (shared across the team).\n" +
+                "Tokens: {ContextPrefix}, {CustomPrefix}, {UI}, {TypeKey}, {ClassName}",
+                MessageType.None);
+
+            GUILayout.Space(5);
+
+            // Pattern text field - auto-saves on change
+            EditorGUI.BeginChangeCheck();
+            _addressPattern = EditorGUILayout.TextField("Pattern", _addressPattern);
+            if (EditorGUI.EndChangeCheck())
+            {
+                SaveAddressPattern(_addressPattern);
+            }
+
+            GUILayout.Space(5);
+
+            // Show live preview
+            string preview = AddressBuilder.ResolvePattern(_addressPattern, new AddressContext
+            {
+                ContextPrefix = "Examples",
+                CustomPrefix = "CustomPrefix",
+                TypeKey = "Popup",
+                ClassName = "SamplePopup"
+            });
+            EditorGUILayout.LabelField("Preview:", preview, EditorStyles.helpBox);
+
+            GUILayout.Space(5);
+
+            // Reset to Default button
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            
+            bool isDefault = _addressPattern == AddressBuilder.DEFAULT_PATTERN;
+            EditorGUI.BeginDisabledGroup(isDefault);
+            if (GUILayout.Button("Reset to Default", GUILayout.Width(120)))
+            {
+                DeleteAddressResolverConfig();
+                _addressPattern = AddressBuilder.DEFAULT_PATTERN;
+                Debug.Log("[Framewerk] Address pattern reset to default");
+            }
+            EditorGUI.EndDisabledGroup();
+            
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void SaveAddressPattern(string pattern)
+        {
+            // AddressBuilder.SetPattern handles all file management:
+            // - Creates config file if needed
+            // - Deletes config file if pattern equals default
+            AddressBuilder.SetPattern(pattern);
+        }
+
+        private void DeleteAddressResolverConfig()
+        {
+            // Passing null resets to default and deletes the config file
+            AddressBuilder.SetPattern(null);
         }
 
         private void ShowCreateTemplateSetDialog()
@@ -417,7 +376,7 @@ namespace Framewerk.Editor.Settings
         {
             if (string.IsNullOrWhiteSpace(templateSetName))
             {
-                templateSetName = "New Template Set";
+                templateSetName = "Default Set";
             }
             
             // Generate unique filename
@@ -468,35 +427,6 @@ namespace Framewerk.Editor.Settings
             Debug.Log($"[Framewerk] Deleted TemplateSetConfig '{deletedName}' at {path}");
         }
 
-        private void CreateAddressResolverConfig()
-        {
-            EnsureDirectoryExists(ADDRESS_RESOLVER_PATH);
-
-            var config = CreateInstance<AddressResolverConfig>();
-            AssetDatabase.CreateAsset(config, ADDRESS_RESOLVER_PATH);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            
-            RefreshConfigs();
-            
-            Debug.Log($"[Framewerk] Created AddressResolverConfig at {ADDRESS_RESOLVER_PATH}");
-        }
-
-        private void DeleteAddressResolverConfig()
-        {
-            if (_addressResolverConfig == null)
-                return;
-
-            string path = AssetDatabase.GetAssetPath(_addressResolverConfig);
-            AssetDatabase.DeleteAsset(path);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            
-            RefreshConfigs();
-            
-            Debug.Log($"[Framewerk] Deleted AddressResolverConfig at {path}");
-        }
-
         private void EnsureDirectoryExists(string assetPath)
         {
             string directory = System.IO.Path.GetDirectoryName(assetPath);
@@ -518,25 +448,6 @@ namespace Framewerk.Editor.Settings
                 }
             }
         }
-
-        private void MoveAsset(Object asset, string targetPath)
-        {
-            string currentPath = AssetDatabase.GetAssetPath(asset);
-            
-            EnsureDirectoryExists(targetPath);
-
-            string error = AssetDatabase.MoveAsset(currentPath, targetPath);
-            if (string.IsNullOrEmpty(error))
-            {
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-                Debug.Log($"[Framewerk] Moved asset to {targetPath}");
-            }
-            else
-            {
-                Debug.LogError($"[Framewerk] Failed to move asset: {error}");
-            }
-        }
     }
 
     /// <summary>
@@ -544,7 +455,7 @@ namespace Framewerk.Editor.Settings
     /// </summary>
     public class TemplateSetNamePopup : EditorWindow
     {
-        private string _templateSetName = "New Template Set";
+        private string _templateSetName = "Default Set";
         private System.Action<string> _onComplete;
         private bool _focusTextField = true;
 
