@@ -1,3 +1,4 @@
+using System;
 using Framewerk.Utils;
 using strange.extensions.injector.api;
 using UnityEngine;
@@ -21,48 +22,68 @@ namespace Framewerk
     }
 
     /// <summary>
-    /// Binds serialized Unity Object references to the injection container.
-    /// Attach to a GameObject and assign references in the Inspector.
+    /// Pairs a Unity Object reference with its binding mode.
+    /// Each binding can have its own mode for fine-grained control.
     /// </summary>
-    public class MonoBinder : MonoBehaviour
+    [Serializable]
+    public struct ReferenceBinding
     {
-        [SerializeField]
-        [Tooltip("Unity Objects to bind to the injection container.")]
-        private Object[] references;
+        [Tooltip("The Unity Object to bind to the injection container.")]
+        public Object reference;
 
-        [SerializeField]
-        [Tooltip("Controls which types each reference is bound as:\n" +
+        [Tooltip("Controls which types this reference is bound as:\n" +
                  "• ConcreteOnly: Just the concrete type\n" +
                  "• IncludeInterfaces: Concrete + all interfaces\n" +
                  "• IncludeBaseClasses: Concrete + base class hierarchy\n" +
                  "• IncludeAll: Concrete + interfaces + base classes")]
-        private BindMode bindMode = BindMode.ConcreteOnly;
+        public BindMode bindMode;
 
-        public Object[] References => references;
-        public BindMode Mode => bindMode;
+        public ReferenceBinding(Object reference, BindMode bindMode = BindMode.ConcreteOnly)
+        {
+            this.reference = reference;
+            this.bindMode = bindMode;
+        }
+    }
+
+    /// <summary>
+    /// Binds serialized Unity Object references to the injection container.
+    /// Attach to a GameObject and assign references in the Inspector.
+    /// Each binding can have its own BindMode for fine-grained control.
+    /// </summary>
+    public class MonoBinder : MonoBehaviour
+    {
+        [SerializeField]
+        [Tooltip("Unity Objects to bind, each with its own binding mode.")]
+        private ReferenceBinding[] bindings;
+
+        public ReferenceBinding[] Bindings => bindings;
 
         /// <summary>
         /// Binds all references to the injection container.
         /// Injects dependencies into each reference before binding.
+        /// Each binding uses its own BindMode setting.
         /// </summary>
         public void Bind(IInjectionBinder binder)
         {
-            var includeInterfaces = bindMode == BindMode.IncludeInterfaces || bindMode == BindMode.IncludeAll;
-            var includeBaseClasses = bindMode == BindMode.IncludeBaseClasses || bindMode == BindMode.IncludeAll;
+            if (bindings == null) return;
 
-            foreach (var reference in references)
+            foreach (var binding in bindings)
             {
-                if (reference == null) continue;
+                if (binding.reference == null) continue;
 
                 // Inject dependencies into the reference first
-                binder.injector.Inject(reference);
+                binder.injector.Inject(binding.reference);
+
+                // Determine flags from this binding's mode
+                var includeInterfaces = binding.bindMode == BindMode.IncludeInterfaces || binding.bindMode == BindMode.IncludeAll;
+                var includeBaseClasses = binding.bindMode == BindMode.IncludeBaseClasses || binding.bindMode == BindMode.IncludeAll;
 
                 // Get all types to bind based on mode
-                var types = BindingUtils.GetBindTypes(reference, includeInterfaces, includeBaseClasses);
+                var types = BindingUtils.GetBindTypes(binding.reference, includeInterfaces, includeBaseClasses);
 
                 foreach (var type in types)
                 {
-                    binder.Bind(type).ToValue(reference).ToSingleton();
+                    binder.Bind(type).ToValue(binding.reference).ToSingleton();
                 }
             }
         }
