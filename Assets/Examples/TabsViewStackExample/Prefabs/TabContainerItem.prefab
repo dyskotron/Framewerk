@@ -232,7 +232,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Framewerk.Examples.TabsViewStackExample.TabItemView
   SelectButton: {fileID: 9070482979260487285}
-  Label: {fileID: 0}
+  Label: {fileID: 4181821138676574402}
 --- !u!1 &4542473923856165413
 GameObject:
   m_ObjectHideFlags: 0
