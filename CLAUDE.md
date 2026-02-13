@@ -2,6 +2,83 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **📖 See also:** `AI_CODING_GUIDE.md` for detailed MCP workflow examples and patterns.
+
+## ⚠️ Critical: Use MCP Tools for UI Components
+
+**DO NOT** create Unity prefabs, scenes, or wire UI components manually. Use the `framewerk_scaffold` MCP tool:
+
+```bash
+python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {...}}'
+```
+
+Actions: `create_scene`, `create_popup`, `create_list`, `create_view`, `mark_addressable`
+
+Unity automation is hard. The framework has wizards for this. **Use them.**
+
+## 🎯 Development Rules: ALWAYS Use Wizards
+
+Framewerk has wizards for scaffolding. **Use them.** Manual creation misses steps.
+
+### Available Wizards
+
+| Wizard | Menu Path | Use For |
+|--------|-----------|---------|
+| **Scene Scaffold** | `Framewerk > Create Scene` | New scenes (Bootstrap, ViewConfig, Camera, EventSystem, Canvases) |
+| **View Panel** | `Framewerk > Create UI Component` | Views, Mediators, Popups |
+| **List View** | `Framewerk > Create UI Component` | List components with items |
+
+### When to use each:
+
+**Scene Scaffold Wizard** — Creating new example/test/demo scenes:
+- Bootstrap GameObject with ViewConfig pre-wired
+- Camera setup (Main Camera with proper settings)
+- EventSystem
+- UI.Main Canvas (for regular UI)
+- UI.Popups Canvas (for popups/overlays)
+
+**Component Scaffold Wizard** — Creating UI components:
+- Views, Mediators, Popups → select "View Panel" type
+- List components with items → select "List View" type
+- Handles naming conventions, Addressables registration, prefab wiring
+
+### Why wizards are mandatory:
+1. **Naming conventions** — Wizards enforce correct naming (e.g., `*View`, `*Mediator`, `*Data`, `*ItemView`)
+2. **Addressables registration** — Wizards automatically mark prefabs as Addressable with correct addresses
+3. **Proper wiring** — Prefabs get correct hierarchy, component attachment, and serialized references
+4. **Scene setup** — ViewConfig fields correctly wired to canvases/camera
+5. **Less error-prone** — Manual creation often misses steps (wrong namespace, missing registration, null refs)
+
+### The rule:
+- ✅ **Use Scene Scaffold** for ALL new scenes
+- ✅ **Use Component Scaffold** for ALL new UI components
+- ❌ **Never manually create** scenes or View/Mediator/List files by hand
+- ⚠️ **Exception:** Only create manually if the wizard literally cannot handle your specific use case (rare)
+
+## 🔄 Unity Refresh Rule: Always Call MCP After File Changes
+
+After making **any changes** to Unity files (scripts, prefabs, scenes, Addressables, ScriptableObjects, etc.), **always call `refresh_unity` via MCP** before finishing the task:
+
+```bash
+python3 ~/clawd/scripts/unity_mcp.py call refresh_unity
+```
+
+**Why:** Unity doesn't auto-detect external file changes. Without refresh, the Editor shows stale state — scripts won't compile, prefabs won't update, Addressables won't register. Don't leave the human to manually refresh.
+
+**Rule:** Every task that touches Unity files ends with `refresh_unity`. No exceptions.
+
+## 📝 Asset Rename Rule: Use MCP manage_asset
+
+When renaming Unity assets (scripts, prefabs, ScriptableObjects, etc.), **always use MCP `manage_asset` with `action: "rename"`** instead of renaming files directly via filesystem:
+
+```bash
+python3 ~/clawd/scripts/unity_mcp.py call manage_asset '{"action": "rename", "path": "Assets/Scripts/OldName.cs", "newName": "NewName.cs"}'
+```
+
+**Why:** Unity tracks assets by GUID. Renaming via filesystem breaks serialized references — prefabs, scenes, and ScriptableObjects that reference the renamed asset lose their connections. Using `manage_asset rename` goes through Unity's AssetDatabase, which preserves all references.
+
+**Rule:** Never `mv` or rename Unity assets directly. Always use MCP `manage_asset` with `action: "rename"`.
+
 ## Project Overview
 
 Framewerk is a Unity MVCS (Model-View-Controller-Service) framework built on **StrangeIoC** for dependency injection, signal-based communication, and command mapping. It is packaged as a UPM package (`com.dyskotron.framewerk` v2.1.0) at `Packages/com.dyskotron.framewerk/`, with a demo app at `Assets/Scripts/FramewerkDemo/`.

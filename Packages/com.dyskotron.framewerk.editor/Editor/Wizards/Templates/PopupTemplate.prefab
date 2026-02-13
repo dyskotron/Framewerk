@@ -398,7 +398,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: com.dyskotron.framewerk::Framewerk.Popups.PopupView
   buttonContainer: {fileID: 8270487900886518734}
-  buttonPrefab: {fileID: 0}
+  buttonPrefab: {fileID: 1234567890123456, guid: a1b2c3d4e5f6789012345678abcdef01, type: 3}
 --- !u!114 &7227844725244937602
 MonoBehaviour:
   m_ObjectHideFlags: 0

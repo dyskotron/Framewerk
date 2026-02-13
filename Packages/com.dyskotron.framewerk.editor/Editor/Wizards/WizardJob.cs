@@ -25,5 +25,10 @@ namespace Framewerk.Editor.Wizards
         public string itemPrefabPath;
         public string itemAddressableAddress;
         public string dataTypeName;
+
+        // For Popup type - button prefab
+        public string buttonPrefabPath;
+        public bool createButtonPrefab;
+        public string existingButtonPrefabPath;
     }
 }

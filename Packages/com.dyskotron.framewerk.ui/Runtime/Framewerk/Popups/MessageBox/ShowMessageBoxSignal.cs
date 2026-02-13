@@ -17,7 +17,7 @@ namespace Framewerk.Popups
 
         public override void Execute()
         {
-            PopupManager.InstantiatePopup<MessageBoxView>(Message, new PopupButtonSetting[]
+            PopupManager.InstantiatePopupAsync<MessageBoxView>(Message, new PopupButtonSetting[]
             {
                 new PopupButtonSetting()
                 {

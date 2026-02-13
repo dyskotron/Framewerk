@@ -53,6 +53,25 @@ namespace Framewerk.Editor.Wizards
                     LinkListItemPrefab(job.prefabPath, job.itemPrefabPath);
                 }
 
+                // Link button prefab for Popup type
+                if (type == ComponentType.Popup)
+                {
+                    string buttonPath = null;
+                    if (!string.IsNullOrEmpty(job.existingButtonPrefabPath))
+                    {
+                        buttonPath = job.existingButtonPrefabPath;
+                    }
+                    else if (!string.IsNullOrEmpty(job.buttonPrefabPath))
+                    {
+                        buttonPath = job.buttonPrefabPath;
+                    }
+
+                    if (!string.IsNullOrEmpty(buttonPath))
+                    {
+                        LinkPopupButtonPrefab(job.prefabPath, buttonPath);
+                    }
+                }
+
                 ComponentScaffoldCompleter.CompletePrefabSwap(job);
             }
         }
@@ -229,6 +248,76 @@ namespace Framewerk.Editor.Wizards
             // Save the modified prefab
             PrefabUtility.SaveAsPrefabAsset(listPrefabContents, listPrefabPath);
             PrefabUtility.UnloadPrefabContents(listPrefabContents);
+        }
+
+        private static void LinkPopupButtonPrefab(string popupPrefabPath, string buttonPrefabPath)
+        {
+            // Load the button prefab asset
+            GameObject buttonPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(buttonPrefabPath);
+            if (buttonPrefabAsset == null)
+            {
+                Debug.LogWarning($"Failed to load button prefab from {buttonPrefabPath}");
+                return;
+            }
+
+            // Load the popup prefab contents
+            GameObject popupPrefabContents = PrefabUtility.LoadPrefabContents(popupPrefabPath);
+            if (popupPrefabContents == null)
+            {
+                Debug.LogError($"Failed to load popup prefab contents from {popupPrefabPath}");
+                return;
+            }
+
+            // Find the PopupView component (or any component that extends it)
+            Component viewComponent = popupPrefabContents.GetComponent("PopupView");
+            if (viewComponent == null)
+            {
+                // Try to find any component that might extend PopupView
+                Component[] components = popupPrefabContents.GetComponents<Component>();
+                foreach (var component in components)
+                {
+                    if (component != null)
+                    {
+                        var baseType = component.GetType().BaseType;
+                        while (baseType != null)
+                        {
+                            if (baseType.Name == "PopupView")
+                            {
+                                viewComponent = component;
+                                break;
+                            }
+                            baseType = baseType.BaseType;
+                        }
+                        if (viewComponent != null) break;
+                    }
+                }
+            }
+
+            if (viewComponent == null)
+            {
+                Debug.LogWarning($"Could not find PopupView component on {popupPrefabPath}");
+                PrefabUtility.UnloadPrefabContents(popupPrefabContents);
+                return;
+            }
+
+            // Use SerializedObject to set the buttonPrefab field
+            SerializedObject so = new SerializedObject(viewComponent);
+            SerializedProperty buttonPrefabProp = so.FindProperty("buttonPrefab");
+
+            if (buttonPrefabProp != null)
+            {
+                buttonPrefabProp.objectReferenceValue = buttonPrefabAsset;
+                so.ApplyModifiedProperties();
+                Debug.Log($"Linked buttonPrefab: {popupPrefabPath} -> {buttonPrefabPath}");
+            }
+            else
+            {
+                Debug.LogWarning($"buttonPrefab field not found on {viewComponent.GetType().Name}");
+            }
+
+            // Save the modified prefab
+            PrefabUtility.SaveAsPrefabAsset(popupPrefabContents, popupPrefabPath);
+            PrefabUtility.UnloadPrefabContents(popupPrefabContents);
         }
     }
 }

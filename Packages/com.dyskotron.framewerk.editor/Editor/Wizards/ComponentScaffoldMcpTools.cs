@@ -14,7 +14,7 @@ namespace Framewerk.Editor.Wizards
     /// </summary>
     public static class ComponentScaffoldMcpTools
     {
-        private const string SupportedActions = "create_popup, create_list, create_view, mark_addressable, create_scene";
+        private const string SupportedActions = "create_popup, create_list, create_tabs, create_view, create_viewstack, mark_addressable, create_scene";
 
         public static object HandleCommand(JObject @params)
         {
@@ -37,8 +37,12 @@ namespace Framewerk.Editor.Wizards
                         return CreatePopup(@params);
                     case "create_list":
                         return CreateList(@params);
+                    case "create_tabs":
+                        return CreateTabs(@params);
                     case "create_view":
                         return CreateView(@params);
+                    case "create_viewstack":
+                        return CreateViewStack(@params);
                     case "mark_addressable":
                         return MarkAddressable(@params);
                     case "create_scene":
@@ -218,6 +222,88 @@ namespace Framewerk.Editor.Wizards
             );
         }
 
+        private static object CreateViewStack(JObject @params)
+        {
+            string name = @params["name"]?.ToString();
+            if (string.IsNullOrEmpty(name))
+            {
+                return new ErrorResponse("'name' parameter is required for create_viewstack.");
+            }
+
+            string namespaceName = @params["namespace"]?.ToString();
+            if (string.IsNullOrEmpty(namespaceName))
+            {
+                return new ErrorResponse("'namespace' parameter is required for create_viewstack.");
+            }
+
+            string viewTypeName = @params["viewTypeName"]?.ToString();
+            if (string.IsNullOrEmpty(viewTypeName))
+            {
+                return new ErrorResponse("'viewTypeName' parameter is required for create_viewstack.");
+            }
+
+            string prefabFolder = @params["prefabFolder"]?.ToString();
+            if (string.IsNullOrEmpty(prefabFolder))
+            {
+                return new ErrorResponse("'prefabFolder' parameter is required for create_viewstack.");
+            }
+
+            bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
+
+            // Ensure prefab folder exists
+            EnsureDirectoryExists(prefabFolder);
+
+            // Build prefab path
+            string prefabPath = Path.Combine(prefabFolder, $"{name}.prefab").Replace("\\", "/");
+
+            // Check if prefab already exists
+            if (!overwrite && File.Exists(prefabPath))
+            {
+                return new ErrorResponse(
+                    $"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.",
+                    new { prefabPath }
+                );
+            }
+
+            // Find the view type to ensure it exists
+            Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
+            if (viewType == null)
+            {
+                return new ErrorResponse($"Could not find type: {viewTypeName}");
+            }
+
+            // Get template path
+            string templatePath = GetTemplatePath(ComponentType.ViewStack);
+            if (string.IsNullOrEmpty(templatePath))
+            {
+                return new ErrorResponse("ViewStack template not found.");
+            }
+
+            // Copy template to target path
+            if (!AssetDatabase.CopyAsset(templatePath, prefabPath))
+            {
+                return new ErrorResponse($"Failed to copy template from {templatePath} to {prefabPath}");
+            }
+
+            // Swap the base ViewStackView component with the custom View
+            try
+            {
+                ProcessPrefabSwap(prefabPath, viewTypeName, name);
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Failed to swap component: {e.Message}");
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            return new SuccessResponse(
+                $"ViewStack prefab created successfully at '{prefabPath}'.",
+                new { prefabPath, success = true }
+            );
+        }
+
         private static object CreateList(JObject @params)
         {
             string name = @params["name"]?.ToString();
@@ -345,6 +431,140 @@ namespace Framewerk.Editor.Wizards
             );
         }
 
+        private static object CreateTabs(JObject @params)
+        {
+            string name = @params["name"]?.ToString();
+            if (string.IsNullOrEmpty(name))
+            {
+                return new ErrorResponse("'name' parameter is required for create_tabs.");
+            }
+
+            string namespaceName = @params["namespace"]?.ToString();
+            if (string.IsNullOrEmpty(namespaceName))
+            {
+                return new ErrorResponse("'namespace' parameter is required for create_tabs.");
+            }
+
+            string viewTypeName = @params["viewTypeName"]?.ToString();
+            if (string.IsNullOrEmpty(viewTypeName))
+            {
+                return new ErrorResponse("'viewTypeName' parameter is required for create_tabs.");
+            }
+
+            string itemViewTypeName = @params["itemViewTypeName"]?.ToString();
+            if (string.IsNullOrEmpty(itemViewTypeName))
+            {
+                return new ErrorResponse("'itemViewTypeName' parameter is required for create_tabs.");
+            }
+
+            string prefabFolder = @params["prefabFolder"]?.ToString();
+            if (string.IsNullOrEmpty(prefabFolder))
+            {
+                return new ErrorResponse("'prefabFolder' parameter is required for create_tabs.");
+            }
+
+            // orientation: "horizontal" (default) or "vertical"
+            string orientation = @params["orientation"]?.ToString()?.ToLowerInvariant() ?? "horizontal";
+            ComponentType componentType = orientation == "vertical" 
+                ? ComponentType.VerticalTabs 
+                : ComponentType.HorizontalTabs;
+
+            bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
+
+            // Ensure prefab folder exists
+            EnsureDirectoryExists(prefabFolder);
+
+            // Build prefab paths
+            string tabsPrefabPath = Path.Combine(prefabFolder, $"{name}.prefab").Replace("\\", "/");
+            string itemPrefabPath = Path.Combine(prefabFolder, $"{name}Item.prefab").Replace("\\", "/");
+
+            // Check if prefabs already exist
+            if (!overwrite)
+            {
+                if (File.Exists(tabsPrefabPath))
+                {
+                    return new ErrorResponse(
+                        $"Tabs prefab already exists at '{tabsPrefabPath}'. Set overwrite=true to replace it.",
+                        new { prefabPath = tabsPrefabPath }
+                    );
+                }
+                if (File.Exists(itemPrefabPath))
+                {
+                    return new ErrorResponse(
+                        $"Tab item prefab already exists at '{itemPrefabPath}'. Set overwrite=true to replace it.",
+                        new { prefabPath = itemPrefabPath }
+                    );
+                }
+            }
+
+            // Find the view types to ensure they exist
+            Type tabsViewType = ComponentScaffoldCompleter.FindType(viewTypeName);
+            if (tabsViewType == null)
+            {
+                return new ErrorResponse($"Could not find type: {viewTypeName}");
+            }
+
+            Type itemViewType = ComponentScaffoldCompleter.FindType(itemViewTypeName);
+            if (itemViewType == null)
+            {
+                return new ErrorResponse($"Could not find type: {itemViewTypeName}");
+            }
+
+            // Get template paths based on orientation
+            string tabsTemplatePath = TemplateSetResolver.GetDefaultTemplatePath(componentType);
+            string itemTemplatePath = TemplateSetResolver.GetDefaultTabItemTemplatePath(componentType);
+
+            if (string.IsNullOrEmpty(tabsTemplatePath) || string.IsNullOrEmpty(itemTemplatePath))
+            {
+                return new ErrorResponse($"Tabs or TabItem template not found for {orientation} orientation.");
+            }
+
+            // Copy templates
+            if (!AssetDatabase.CopyAsset(tabsTemplatePath, tabsPrefabPath))
+            {
+                return new ErrorResponse($"Failed to copy tabs template from {tabsTemplatePath} to {tabsPrefabPath}");
+            }
+
+            if (!AssetDatabase.CopyAsset(itemTemplatePath, itemPrefabPath))
+            {
+                return new ErrorResponse($"Failed to copy tab item template from {itemTemplatePath} to {itemPrefabPath}");
+            }
+
+            // Swap components
+            try
+            {
+                ProcessPrefabSwap(tabsPrefabPath, viewTypeName, name);
+                ProcessPrefabSwap(itemPrefabPath, itemViewTypeName, name + "Item");
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Failed to swap components: {e.Message}");
+            }
+
+            // Link the Tabs' ItemPrefab field to the TabItem prefab
+            try
+            {
+                LinkListItemPrefab(tabsPrefabPath, itemPrefabPath);
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Failed to link tab item prefab: {e.Message}");
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            return new SuccessResponse(
+                $"Tabs prefabs created successfully at '{tabsPrefabPath}' and '{itemPrefabPath}' ({orientation} orientation).",
+                new {
+                    tabsPrefabPath,
+                    itemPrefabPath,
+                    orientation,
+                    success = true
+                }
+            );
+        }
+
         private static object MarkAddressable(JObject @params)
         {
             string prefabPath = @params["prefabPath"]?.ToString();
@@ -399,7 +619,7 @@ namespace Framewerk.Editor.Wizards
 
         private static string GetTemplatePath(ComponentType componentType)
         {
-            const string TEMPLATE_PATH = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
+            const string TEMPLATE_PATH = "Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/";
 
             switch (componentType)
             {
@@ -411,6 +631,8 @@ namespace Framewerk.Editor.Wizards
                     return TEMPLATE_PATH + "PopupTemplate.prefab";
                 case ComponentType.View:
                     return TEMPLATE_PATH + "ViewTemplate.prefab";
+                case ComponentType.ViewStack:
+                    return TEMPLATE_PATH + "ViewStackTemplate.prefab";
                 default:
                     return null;
             }
@@ -471,6 +693,7 @@ namespace Framewerk.Editor.Wizards
             if (baseType.Name == "ListView" ||
                 baseType.Name == "ListItemView" ||
                 baseType.Name == "PopupView" ||
+                baseType.Name == "ViewStackView" ||
                 baseType.Name == "View")
             {
                 return baseType;
@@ -642,7 +865,7 @@ namespace Framewerk.Editor.Wizards
             }
 
             // Load templates
-            string templatePath = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
+            string templatePath = "Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/";
             string bootstrapTemplate = File.ReadAllText(templatePath + "Bootstrap.cs.txt");
             string contextTemplate = File.ReadAllText(templatePath + "Context.cs.txt");
             string startCommandTemplate = File.ReadAllText(templatePath + "StartCommand.cs.txt");
@@ -664,7 +887,7 @@ namespace Framewerk.Editor.Wizards
             File.WriteAllText(startCommandPath, startCommandCode);
 
             // Copy scene template
-            string sceneTemplatePath = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/SceneTemplate.unity";
+            string sceneTemplatePath = "Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/SceneTemplate.unity";
             if (!File.Exists(sceneTemplatePath))
             {
                 return new ErrorResponse("SceneTemplate.unity not found in Templates folder.");
