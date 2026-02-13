@@ -157,6 +157,7 @@
  * 
  */
 
+using Framewerk;
 using strange.extensions.implicitBind.api;
 using strange.extensions.implicitBind.impl;
 using UnityEngine;
@@ -257,6 +258,14 @@ namespace Framewerk.StrangeCore
 		
 		protected override void postBindings()
 		{
+			// Process MonoBinders - bind their references before mediation
+			var monoBinders = (contextView as GameObject)?.GetComponentsInChildren<MonoBinder>(true);
+			if (monoBinders != null)
+			{
+				foreach (var mb in monoBinders)
+					mb.Bind(injectionBinder);
+			}
+			
 			//It's possible for views to fire their Awake before bindings. This catches any early risers and attaches their Mediators.
 			mediateViewCache();
 			//Ensure that all Views underneath the ContextView are triggered
