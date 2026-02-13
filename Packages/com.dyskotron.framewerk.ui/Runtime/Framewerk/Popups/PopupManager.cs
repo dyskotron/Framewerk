@@ -22,17 +22,15 @@ namespace Framewerk.Popups
     {
         void CloseAllPopups();
 
+        // Sync method - simple instantiation, no DI injection
+        T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView;
+
+        // Async methods - full DI support with injectable parameters
         Task<T> InstantiatePopupAsync<T>(string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
         Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
-
-        T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView;
-        T InstantiatePopup<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView;
-        T InstantiatePopup<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
-        T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
-        T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
     }
 
     public class PopupManager : IPopupManager
@@ -109,38 +107,13 @@ namespace Framewerk.Popups
             return uiObj.GetComponent<T>();
         }
 
+        // Sync method - simple instantiation without DI injection
+        // Use async versions if you need to inject PopupButtonSettings or other parameters
+
         public T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView
         {
             var path = GetPopupPath(typeof(T), customPrefix);
             var uiObj = UiManager.InstantiateView(path, _popupParent);
-            return uiObj.GetComponent<T>();
-        }
-
-        public T InstantiatePopup<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView
-        {
-            var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = UiManager.InstantiateView(path, _popupParent, popupMediatorInjects);
-            return uiObj.GetComponent<T>();
-        }
-
-        public T InstantiatePopup<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
-        {
-            var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = UiManager.InstantiateView(path, _popupParent, new List<PopupButtonSetting>(popupOptions));
-            return uiObj.GetComponent<T>();
-        }
-
-        public T InstantiatePopup<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
-        {
-            var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = UiManager.InstantiateView(path, _popupParent, text, new List<PopupButtonSetting>(popupOptions));
-            return uiObj.GetComponent<T>();
-        }
-
-        public T InstantiatePopup<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
-        {
-            var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = UiManager.InstantiateView(path, _popupParent, caption, text, new List<PopupButtonSetting>(popupOptions));
             return uiObj.GetComponent<T>();
         }
 

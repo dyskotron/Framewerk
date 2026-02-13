@@ -11,18 +11,16 @@ namespace Framewerk.Managers
 {
     public interface IUiManager
     {
-        GameObject InstantiateView(GameObject viewPrefab, Transform parent = null, params object[] mediatorInjects);
-        GameObject InstantiateViewExplicitType(GameObject viewPrefab, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithType);
+        // Sync methods - simple instantiation, no DI injection params
+        GameObject InstantiateView(GameObject viewPrefab, Transform parent = null);
+        GameObject InstantiateView(string path, Transform parent = null);
+        T InstantiateView<T>(string customPrefix = null, Transform parent = null) where T : IView;
 
+        // Async methods - full DI support with injectable parameters
         Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects);
         Task<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes);
         Task<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView;
         Task<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
-
-        GameObject InstantiateView(string path, Transform parent = null, params object[] mediatorInjects);
-        GameObject InstantiateViewExplicitType(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes);
-        T InstantiateView<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView;
-        T InstantiateViewExplicitType<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
 
         string GetViewName(Type type);
     }
@@ -112,36 +110,23 @@ namespace Framewerk.Managers
             return component;
         }
 
-        public GameObject InstantiateView(string path, Transform parent = null, params object[] mediatorInjects)
+        // Sync methods - simple instantiation without DI injection
+        // Use async versions if you need to inject parameters into mediators
+
+        public GameObject InstantiateView(string path, Transform parent = null)
         {
             if (parent == null)
                 parent = _uiParent;
 
-            BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
-            GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
-            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
-
-            return uiObj;
+            return AssetManager.GetAsset<GameObject>(path, parent);
         }
 
-        public GameObject InstantiateViewExplicitType(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes)
+        public T InstantiateView<T>(string customPrefix = null, Transform parent = null) where T : IView
         {
             if (parent == null)
                 parent = _uiParent;
 
-            BindingUtils.Bind(InjectionBinder, mediatorInjectsWithTypes);
-            GameObject uiObj = AssetManager.GetAsset<GameObject>(path, parent);
-            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
-
-            return uiObj;
-        }
-
-        public T InstantiateView<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView
-        {
-            if (parent == null)
-                parent = _uiParent;
-
-            var uiObj = InstantiateView(GetViewPath(typeof(T), customPrefix), parent, mediatorInjects);
+            var uiObj = InstantiateView(GetViewPath(typeof(T), customPrefix), parent);
             var component = uiObj.GetComponent<T>();
 
             if (component == null)
@@ -150,21 +135,7 @@ namespace Framewerk.Managers
             return component;
         }
 
-        public T InstantiateViewExplicitType<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
-        {
-            if (parent == null)
-                parent = _uiParent;
-
-            var uiObj = InstantiateViewExplicitType(GetViewPath(typeof(T), customPrefix), parent, mediatorInjectsWithTypes);
-            var component = uiObj.GetComponent<T>();
-
-            if (component == null)
-                Debug.LogError($"UIManager.InstantiateViewExplicitType: No {typeof(T)} on {uiObj}");
-
-            return component;
-        }
-
-        public GameObject InstantiateView(GameObject viewPrefab, Transform parent = null, params object[] mediatorInjects)
+        public GameObject InstantiateView(GameObject viewPrefab, Transform parent = null)
         {
             if (viewPrefab == null)
                 Debug.LogError("UIManager.InstantiateView: viewPrefab is null");
@@ -172,26 +143,7 @@ namespace Framewerk.Managers
             if (parent == null)
                 parent = _uiParent;
 
-            BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
-            GameObject view = GameObject.Instantiate(viewPrefab, parent, false);
-            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
-
-            return view;
-        }
-
-        public GameObject InstantiateViewExplicitType(GameObject viewPrefab, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithType)
-        {
-            if (viewPrefab == null)
-                Debug.LogError("UIManager.InstantiateView: viewPrefab is null");
-
-            if (parent == null)
-                parent = _uiParent;
-
-            BindingUtils.Bind(InjectionBinder, mediatorInjectsWithType);
-            GameObject view = GameObject.Instantiate(viewPrefab, parent, false);
-            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithType);
-
-            return view;
+            return GameObject.Instantiate(viewPrefab, parent, false);
         }
 
         public string GetViewName(Type type)

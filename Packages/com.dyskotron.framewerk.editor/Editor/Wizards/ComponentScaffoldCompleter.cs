@@ -89,6 +89,20 @@ namespace Framewerk.Editor.Wizards
                 }
             }
 
+            // Copy button prefab for Popup if needed
+            if (type == ComponentType.Popup && job.createButtonPrefab && !string.IsNullOrEmpty(job.buttonPrefabPath))
+            {
+                string buttonTemplatePath = TemplateSetResolver.GetButtonTemplatePath();
+                if (!string.IsNullOrEmpty(buttonTemplatePath))
+                {
+                    if (!AssetDatabase.CopyAsset(buttonTemplatePath, job.buttonPrefabPath))
+                    {
+                        Debug.LogWarning($"Failed to copy button template from {buttonTemplatePath} to {job.buttonPrefabPath}");
+                        // Non-fatal - popup can still work without custom button
+                    }
+                }
+            }
+
             // Store the job for the swap phase
             EditorPrefs.SetString(PENDING_SWAP_KEY, JsonUtility.ToJson(job));
 

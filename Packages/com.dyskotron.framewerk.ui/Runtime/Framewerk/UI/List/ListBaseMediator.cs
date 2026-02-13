@@ -15,7 +15,7 @@ namespace Framewerk.UI.List
     public class ListBaseMediator<TView, TData> : ExtendedMediator<TView>, IListMediator<TData> where TView : ListView where TData : class, IListItemDataProvider
     {
         [Inject] public IUiManager UiManager { get; set; }
-        [Inject] public TView View { get; set; }
+        // View is inherited from ExtendedMediator<TView> - don't redeclare!
         
         public Signal<int?> SelectionChangedSignal { get; } = new Signal<int?>();
         public List<int> SelectedItemIndexes { get; private set; }
@@ -220,14 +220,18 @@ namespace Framewerk.UI.List
         
         protected virtual void ApplyItemSelection(int index)
         {
-            SelectedItemIndexes.Add(index); 
-            GetMediatorAt(index).SetSelected(true);    
+            SelectedItemIndexes.Add(index);
+            var mediator = GetMediatorAt(index);
+            if (mediator != null)
+                mediator.SetSelected(true);
         }
         
         protected virtual void ApplyItemUnselection(int index)
         {
             SelectedItemIndexes.Remove(index);
-            GetMediatorAt(index).SetSelected(false);    
+            var mediator = GetMediatorAt(index);
+            if (mediator != null)
+                mediator.SetSelected(false);
         }
 
         protected virtual void ListItemClicked(int index, TData dataProvider)

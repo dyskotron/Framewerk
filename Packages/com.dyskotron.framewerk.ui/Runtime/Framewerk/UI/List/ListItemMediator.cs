@@ -22,8 +22,7 @@ namespace Framewerk.UI.List
     public abstract class ListItemMediator<TView, TData> : ExtendedMediator<TView>, IListItemMediator<TData> where TView : ListItemView 
                                                                                                       where TData : IListItemDataProvider
     {
-        [Inject] public TView View { get; set; }
-
+        
         public Signal<int, TData> ListItemClickedSignal { get; } = new Signal<int, TData>();
 
         protected bool IsSelected;

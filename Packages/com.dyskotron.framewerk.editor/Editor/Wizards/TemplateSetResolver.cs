@@ -10,7 +10,7 @@ namespace Framewerk.Editor.Wizards
     /// </summary>
     public static class TemplateSetResolver
     {
-        private const string DEFAULT_TEMPLATE_PATH = "Packages/com.dyskotron.framewerk/Editor/Wizards/Templates/";
+        private const string DEFAULT_TEMPLATE_PATH = "Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/";
         private const string CONVENTIONAL_TEMPLATE_SET_PATH = "Assets/Settings/Framewerk/TemplateSetConfig.asset";
         private const string ACTIVE_TEMPLATE_SET_PREF_KEY = "Framewerk_ActiveTemplateSetGUID";
 
@@ -160,6 +160,15 @@ namespace Framewerk.Editor.Wizards
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Gets the template path for button prefabs (used by popups).
+        /// </summary>
+        public static string GetButtonTemplatePath()
+        {
+            // TODO: Support template set override for buttons
+            return DEFAULT_TEMPLATE_PATH + "ButtonTemplate.prefab";
         }
     }
 }
