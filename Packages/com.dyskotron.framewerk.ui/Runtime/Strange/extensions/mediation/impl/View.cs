@@ -27,6 +27,7 @@ using UnityEngine;
 using strange.extensions.context.api;
 using strange.extensions.context.impl;
 using strange.extensions.mediation.api;
+using Framewerk.StrangeCore;
 
 namespace strange.extensions.mediation.impl
 {
@@ -120,6 +121,8 @@ namespace strange.extensions.mediation.impl
 			const int LOOP_MAX = 100;
 			int loopLimiter = 0;
 			Transform trans = view.gameObject.transform;
+			GameObject foundContextRoot = null; // Track ContextView root even if context is null
+			
 			while (trans.parent != null && loopLimiter < LOOP_MAX)
 			{
 				loopLimiter++;
@@ -157,8 +160,21 @@ namespace strange.extensions.mediation.impl
 							return;
 						}
 					}
+					else if (foundContextRoot == null)
+					{
+						// Context not ready yet - remember this root for pending registration
+						foundContextRoot = trans.gameObject;
+					}
 				}
 			}
+			
+			// If we found a ContextView but its context wasn't ready, register as pending
+			if (type == BubbleType.Add && foundContextRoot != null)
+			{
+				FramewerkMVCSContext.RegisterPendingView(view, foundContextRoot);
+				return;
+			}
+			
 			if (requiresContext && finalTry && type == BubbleType.Add)
 			{
 				//last ditch. If there's a Context anywhere, we'll use it!

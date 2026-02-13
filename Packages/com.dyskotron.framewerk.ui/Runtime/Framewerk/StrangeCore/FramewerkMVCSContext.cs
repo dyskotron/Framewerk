@@ -157,6 +157,7 @@
  * 
  */
 
+using System.Collections.Generic;
 using Framewerk;
 using strange.extensions.implicitBind.api;
 using strange.extensions.implicitBind.impl;
@@ -192,8 +193,46 @@ namespace Framewerk.StrangeCore
 		
 		public Signal contextStartSignal { get;set; }
 
-		/// A list of Views Awake before the Context is fully set up.
-		protected static ISemiBinding viewCache = new SemiBinding();
+		/// A list of Views Awake before the Context is fully set up (per-instance).
+		protected ISemiBinding viewCache = new SemiBinding();
+		
+		/// Tracks views that Awoke before their context was ready, keyed by context root GameObject.
+		private static Dictionary<GameObject, List<MonoBehaviour>> pendingViewsByContextRoot = new Dictionary<GameObject, List<MonoBehaviour>>();
+		
+		/// Clear pending views on domain reload / play mode enter
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			pendingViewsByContextRoot = new Dictionary<GameObject, List<MonoBehaviour>>();
+		}
+		
+		/// Register a view that found a ContextView but the context wasn't ready yet.
+		/// Called from View.bubbleToContext when it finds ContextView but context is null.
+		public static void RegisterPendingView(MonoBehaviour view, GameObject contextRoot)
+		{
+			if (!pendingViewsByContextRoot.TryGetValue(contextRoot, out var list))
+			{
+				list = new List<MonoBehaviour>();
+				pendingViewsByContextRoot[contextRoot] = list;
+			}
+			list.Add(view);
+		}
+		
+		/// Claim any pending views that belong to this context's root.
+		private void ClaimPendingViews()
+		{
+			if (contextView == null) return;
+			
+			var root = contextView as GameObject;
+			if (root != null && pendingViewsByContextRoot.TryGetValue(root, out var pending))
+			{
+				pendingViewsByContextRoot.Remove(root);
+				foreach (var view in pending)
+				{
+					cacheView(view);
+				}
+			}
+		}
 		
 		public FramewerkMVCSContext() : base()
 		{}
@@ -220,6 +259,8 @@ namespace Framewerk.StrangeCore
 			{
 				throw new ContextException("MVCSContext requires a ContextView of type MonoBehaviour", ContextExceptionType.NO_CONTEXT_VIEW);
 			}
+			// Claim any views that Awoke before this context was ready
+			ClaimPendingViews();
 			return this;
 		}
 
