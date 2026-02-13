@@ -165,7 +165,7 @@ namespace strange.extensions.context.impl
 			}
 			set
 			{
-				_crossContextDispatcher = value as IEventDispatcher;
+				_crossContextBridge = value;
 			}
 		}
 

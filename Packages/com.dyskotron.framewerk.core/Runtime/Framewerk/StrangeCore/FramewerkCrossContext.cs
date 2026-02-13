@@ -177,7 +177,7 @@ namespace Framewerk.StrangeCore
 			}
 			set
 			{
-				_crossContextDispatcher = value as IEventDispatcher;
+				_crossContextBridge = value;
 			}
 		}
 
