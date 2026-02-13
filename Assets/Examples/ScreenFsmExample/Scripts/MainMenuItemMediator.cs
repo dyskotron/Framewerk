@@ -8,10 +8,7 @@ namespace Framewerk.Examples.ScreenFsmExample
         {
             base.SetData(dataProvider, index);
             
-            if (dataProvider != null && View.Label != null)
-            {
-                View.Label.text = dataProvider.Title;
-            }
+            View.Label.text = dataProvider.Title;
         }
 
     }

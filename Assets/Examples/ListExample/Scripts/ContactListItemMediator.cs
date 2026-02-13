@@ -8,10 +8,7 @@ namespace Framewerk.Examples.ListExample
         {
             base.SetData(dataProvider, index);
             
-            if (dataProvider != null && View.Label != null)
-            {
-                View.Label.text = $"{dataProvider.Name} - {dataProvider.Phone}";
-            }
+            View.Label.text = $"{dataProvider.Name} - {dataProvider.Phone}";
         }
     }
 }
