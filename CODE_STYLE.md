@@ -84,6 +84,43 @@ mediationBinder.Bind<MyView>().To<MyMediator>().ToSingleton();  // Wrong!
 
 ## Class Structure
 
+### Member Ordering
+
+Within a class, order members as follows:
+
+```csharp
+public class MyManager : IMyManager
+{
+    // 1. Constants and static fields
+    public const string SOME_CONSTANT = "value";
+    private static readonly int DefaultValue = 10;
+    
+    // 2. Injected properties ([Inject])
+    [Inject] public IService Service { get; set; }
+    [Inject] public SomeSignal Signal { get; set; }
+    
+    // 3. Public properties (non-injected)
+    public bool IsReady { get; private set; }
+    public int Count => _items.Count;
+    
+    // 4. Private/protected fields
+    private List<Item> _items = new List<Item>();
+    private bool _initialized;
+    
+    // 5. Lifecycle methods ([PostConstruct], Initialize, etc.)
+    [PostConstruct]
+    public void Init() { }
+    
+    // 6. Public methods
+    public void DoSomething() { }
+    
+    // 7. Private/protected methods
+    private void HandleEvent() { }
+}
+```
+
+**Rationale:** Injections first makes dependencies immediately visible. Public API comes before implementation details.
+
 ### Mediator Layout
 
 ```csharp
