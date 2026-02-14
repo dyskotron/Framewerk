@@ -19,12 +19,6 @@ namespace Framewerk.Popups
         public override void OnRegister()
         {
             base.OnRegister();
-            
-            if (PopupOptionSettings != null)
-                Debug.Log("PopupOptionSettings injected");
-            else
-                Debug.Log("PopupOptionSettings NOT injected");
-            
             PopupOpenedSignal.Dispatch(this);
         }
 
