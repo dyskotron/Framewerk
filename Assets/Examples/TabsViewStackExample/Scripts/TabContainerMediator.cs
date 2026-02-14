@@ -15,12 +15,6 @@ namespace Framewerk.Examples.TabsViewStackExample
         {
             base.OnRegister();
 
-            if (TabsData?.Tabs == null || TabsData.Tabs.Count == 0)
-            {
-                Debug.LogWarning("[TabsViewStackExample] No tab data provided");
-                return;
-            }
-
             SetData(TabsData.Tabs);
             ConnectToViewStack();
 
