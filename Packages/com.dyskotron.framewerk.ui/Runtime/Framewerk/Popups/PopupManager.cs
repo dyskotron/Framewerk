@@ -119,6 +119,11 @@ namespace Framewerk.Popups
 
         private void OnPopupOpenedHandler(IPopupMediator popup)
         {
+            // Guard against race condition: if popup was destroyed before this handler ran,
+            // the MonoBehaviour will be null (Unity's == override). Skip registration.
+            if (popup is MonoBehaviour mb && mb == null)
+                return;
+
             _popups.Add(popup);
             popup.PopupClosedSignal.AddListener(OnPopupClosed);
         }
