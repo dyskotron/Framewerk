@@ -54,11 +54,20 @@ namespace strange.extensions.mediation.impl
 		{
 		}
 
-		/**
-		 * Fires on removal of view.
-		 *
-		 * Override and place your cleanup code here
-		 */
+		/// <summary>
+		/// Fires automatically when the view is being destroyed.
+		/// 
+		/// Override and place your cleanup code here (listener removal, etc.).
+		/// 
+		/// <para><b>Lifecycle pattern:</b></para>
+		/// <list type="bullet">
+		/// <item><c>Destroy(gameObject)</c> = trigger to destroy (called externally)</item>
+		/// <item><c>OnRemove()</c> = cleanup reaction (called automatically by mediation system)</item>
+		/// </list>
+		/// 
+		/// <para>For MonoBehaviours: put de-init in <c>OnRemove()</c>, NOT in <c>OnDestroy()</c>.
+		/// The mediation system guarantees this is called before Unity destroys the object.</para>
+		/// </summary>
 		virtual public void OnRemove()
 		{
 		}

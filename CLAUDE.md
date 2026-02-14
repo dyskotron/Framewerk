@@ -264,3 +264,32 @@ UI.Popups            — RectTransform, Canvas, CanvasScaler, GraphicRaycaster
 - App states extend `AppState<TScreen>` where TScreen is the view type
 - Contexts define all bindings; avoid service locator patterns
 - Framework code goes in the UPM package; project-specific code in `Assets/Scripts/`
+
+## Lifecycle: Destroy() vs OnRemove()
+
+**For MonoBehaviours (Views, Mediators):**
+- `Destroy(gameObject)` = **trigger** to destroy the object (call this externally)
+- `OnRemove()` = **cleanup reaction** (called automatically by mediation system when view is destroyed)
+- **Rule:** Put listener removal and de-init in `OnRemove()`, NOT in `Destroy()` override
+- StrangeIoC's mediation system calls `OnRemove()` before Unity destroys the object
+
+**For non-MonoBehaviours (services, managers, plain classes):**
+- No automatic lifecycle callbacks exist
+- Put cleanup logic directly in `Destroy()` or a custom `Dispose()` method
+- Caller is responsible for invoking cleanup
+
+**Pattern:**
+```csharp
+// MonoBehaviour (Mediator) - CORRECT
+public override void OnRemove()
+{
+    someSignal.RemoveListener(OnSomeEvent);  // ✅ cleanup here
+    base.OnRemove();
+}
+
+// MonoBehaviour - WRONG
+void OnDestroy()  // ❌ Don't use - mediation system won't call this reliably
+{
+    someSignal.RemoveListener(OnSomeEvent);
+}
+```
