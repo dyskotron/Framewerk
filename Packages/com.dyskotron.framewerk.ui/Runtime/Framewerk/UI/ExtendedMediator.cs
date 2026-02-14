@@ -12,13 +12,13 @@ namespace Framewerk.UI
     {
         [Inject] public TView View { get; set; }
         
-        // Handlers
-        private Dictionary<GameObject, UnityAction> ButtonHandlers = new Dictionary<GameObject, UnityAction>();
-        private Dictionary<GameObject, UnityAction<bool>> ToggleHandlers = new Dictionary<GameObject, UnityAction<bool>>();
-        private Dictionary<GameObject, UnityAction<bool, Vector2>> PointerHandlers = new Dictionary<GameObject, UnityAction<bool, Vector2>>();
-        private Dictionary<GameObject, UnityAction<float>> SliderHandlers = new Dictionary<GameObject, UnityAction<float>>();
-        private Dictionary<GameObject, UnityAction<string>> InputHandlers = new Dictionary<GameObject, UnityAction<string>>();
-        private Dictionary<GameObject, Action<DragData>> DragHandlers = new Dictionary<GameObject, Action<DragData>>();
+        // Handlers - using lists to support multiple listeners per component
+        private Dictionary<GameObject, List<UnityAction>> ButtonHandlers = new Dictionary<GameObject, List<UnityAction>>();
+        private Dictionary<GameObject, List<UnityAction<bool>>> ToggleHandlers = new Dictionary<GameObject, List<UnityAction<bool>>>();
+        private Dictionary<GameObject, List<UnityAction<bool, Vector2>>> PointerHandlers = new Dictionary<GameObject, List<UnityAction<bool, Vector2>>>();
+        private Dictionary<GameObject, List<UnityAction<float>>> SliderHandlers = new Dictionary<GameObject, List<UnityAction<float>>>();
+        private Dictionary<GameObject, List<UnityAction<string>>> InputHandlers = new Dictionary<GameObject, List<UnityAction<string>>>();
+        private Dictionary<GameObject, List<Action<DragData>>> DragHandlers = new Dictionary<GameObject, List<Action<DragData>>>();
 
         public override void OnRemove()
         {
@@ -43,7 +43,8 @@ namespace Framewerk.UI
             foreach (var pair in SliderHandlers)
             {
                 var s = pair.Key.GetComponent<Slider>();
-                s.onValueChanged.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    s.onValueChanged.RemoveListener(handler);
             }
             SliderHandlers.Clear();
         }
@@ -53,7 +54,8 @@ namespace Framewerk.UI
             foreach (var pair in ButtonHandlers)
             {
                 var b = pair.Key.GetComponent<Button>();
-                b.onClick.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    b.onClick.RemoveListener(handler);
             }
             ButtonHandlers.Clear();
         }
@@ -63,7 +65,8 @@ namespace Framewerk.UI
             foreach (var pair in ToggleHandlers)
             {
                 var b = pair.Key.GetComponent<Toggle>();
-                b.onValueChanged.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    b.onValueChanged.RemoveListener(handler);
             }
             ToggleHandlers.Clear();
         }
@@ -73,7 +76,8 @@ namespace Framewerk.UI
             foreach (var pair in InputHandlers)
             {
                 var b = pair.Key.GetComponent<InputField>();
-                b.onValueChanged.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    b.onValueChanged.RemoveListener(handler);
             }
             InputHandlers.Clear();
         }
@@ -83,7 +87,8 @@ namespace Framewerk.UI
             foreach (var pair in PointerHandlers)
             {
                 var m = pair.Key.GetComponent<PointerElement>();
-                m.OnPointerChanged.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    m.OnPointerChanged.RemoveListener(handler);
             }
             PointerHandlers.Clear();
         }
@@ -93,7 +98,8 @@ namespace Framewerk.UI
             foreach (var pair in DragHandlers)
             {
                 var m = pair.Key.GetComponent<DragElement>();
-                m.DragChangedSignal.RemoveListener(pair.Value);
+                foreach (var handler in pair.Value)
+                    m.DragChangedSignal.RemoveListener(handler);
             }
             DragHandlers.Clear();
         }
@@ -105,53 +111,78 @@ namespace Framewerk.UI
         protected void AddButtonListener(Button button, Action func)
         {
             UnityAction internalAction = () => { func(); };
-            button.onClick.RemoveAllListeners();
             button.onClick.AddListener(internalAction);
-            ButtonHandlers[button.gameObject] = internalAction;
+            
+            if (!ButtonHandlers.TryGetValue(button.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction>();
+                ButtonHandlers[button.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
         }
 
         protected void AddSliderListener(Slider slider, Action<float> func)
         {
             UnityAction<float> internalAction = (val) => { func(val); };
-
-            slider.onValueChanged.RemoveAllListeners();
             slider.onValueChanged.AddListener(internalAction);
-            SliderHandlers[slider.gameObject] = internalAction;
+            
+            if (!SliderHandlers.TryGetValue(slider.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction<float>>();
+                SliderHandlers[slider.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
         }
 
         protected void AddToggleListener(Toggle toggle, Action<bool> func)
         {
             UnityAction<bool> internalAction = (val) => { func(val); };
-
-            toggle.onValueChanged.RemoveAllListeners();
             toggle.onValueChanged.AddListener(internalAction);
-            ToggleHandlers[toggle.gameObject] = internalAction;
+            
+            if (!ToggleHandlers.TryGetValue(toggle.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction<bool>>();
+                ToggleHandlers[toggle.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
         }
 
         protected void AddInputListener(InputField input, Action<string> func)
         {
             UnityAction<string> internalAction = (val) => { func(val); };
-
-            input.onEndEdit.RemoveAllListeners();
             input.onEndEdit.AddListener(internalAction);
-            InputHandlers[input.gameObject] = internalAction;
+            
+            if (!InputHandlers.TryGetValue(input.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction<string>>();
+                InputHandlers[input.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
         }
         
         protected void AddPointerListener(PointerElement pointerElement, Action<bool, Vector2> func)
         {
             UnityAction<bool, Vector2> internalAction = (state, pos) => { func(state, pos); };
-
-            pointerElement.OnPointerChanged.RemoveAllListeners();
             pointerElement.OnPointerChanged.AddListener(internalAction);
-            PointerHandlers[pointerElement.gameObject] = internalAction;
+            
+            if (!PointerHandlers.TryGetValue(pointerElement.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction<bool, Vector2>>();
+                PointerHandlers[pointerElement.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
         }
 
         protected void AddDragListener(DragElement dragElement, Action<DragData> handler)
         {
-            dragElement.DragChangedSignal.RemoveAllListeners();
             dragElement.DragChangedSignal.AddListener(handler);
-
-            DragHandlers[dragElement.gameObject] = handler;
+            
+            if (!DragHandlers.TryGetValue(dragElement.gameObject, out var handlers))
+            {
+                handlers = new List<Action<DragData>>();
+                DragHandlers[dragElement.gameObject] = handlers;
+            }
+            handlers.Add(handler);
         }
 
         #endregion
