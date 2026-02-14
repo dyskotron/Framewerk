@@ -64,8 +64,6 @@ namespace Framewerk.Popups
 
         public void Close()
         {
-            PopupClosedSignal.Dispatch(this);
-            
             Destroy(gameObject);
         }
     }
