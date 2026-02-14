@@ -2,7 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **📖 See also:** `AI_CODING_GUIDE.md` for detailed MCP workflow examples and patterns.
+> **📖 See also:**
+> - `AI_CODING_GUIDE.md` — MCP workflow examples and patterns
+> - `CODE_STYLE.md` — Coding conventions, naming, binding patterns
+> - `docs/CrossContext.md` — CrossContext sharing and cross-context communication
 
 ## ⚠️ Critical: Use MCP Tools for UI Components
 
