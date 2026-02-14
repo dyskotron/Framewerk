@@ -51,8 +51,13 @@ namespace Framewerk.Popups
             {
                 _viewConfig = value;
                 _popupParent = value.Popups;
-                PopupOpenedSignal.AddListener(OnPopupOpenedHandler);
             }
+        }
+
+        [PostConstruct]
+        public void Init()
+        {
+            PopupOpenedSignal.AddListener(OnPopupOpenedHandler);
         }
 
         private string GetPopupPath(Type popupType, string customPrefix)
