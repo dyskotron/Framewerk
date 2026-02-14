@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Framewerk.Managers;
 using Plugins.Framewerk;
 using strange.extensions.mediation.api;
+using strange.extensions.promise.api;
+using strange.extensions.promise.impl;
 using strange.extensions.signal.impl;
 using UnityEngine;
 
@@ -21,21 +22,90 @@ namespace Framewerk.AppStateMachine
 
         private List<GameObject> _views = new List<GameObject>();
 
-        #region Instantiating UI / Game Prefabs
+        #region Instantiating UI / Game Prefabs (Promise-based)
 
-        protected async Task<GameObject> InstantiateViewAsync(string path = "", Transform parent = null)
+        protected IPromise<GameObject> InstantiateViewAsync(string path = "", Transform parent = null)
         {
-            var view = await UiManager.InstantiateViewAsync(path, parent);
-            _views.Add(view);
-            return view;
+            var promise = new Promise<GameObject>();
+
+            UiManager.InstantiateViewAsync(path, parent)
+                .Then(view =>
+                {
+                    _views.Add(view);
+                    promise.Dispatch(view);
+                })
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        protected async Task<T> InstantiateViewAsync<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
+        protected IPromise<T> InstantiateViewAsync<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
         {
-            var view = await UiManager.InstantiateViewAsync<T>(path, parent);
-            _views.Add(view.gameObject);
-            return view;
+            var promise = new Promise<T>();
+
+            UiManager.InstantiateViewAsync<T>(path, parent)
+                .Then(view =>
+                {
+                    _views.Add(view.gameObject);
+                    promise.Dispatch(view);
+                })
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
+
+        protected IPromise<T> InstantiateGamePrefabAsync<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
+        {
+            var promise = new Promise<T>();
+
+            if (parent == null)
+                parent = ViewConfig.Container3d;
+
+            path += UiManager.GetViewName(typeof(T));
+
+            AssetManager.GetAssetAsync<GameObject>("GamePrefabs/" + path)
+                .Then(go =>
+                {
+                    go.transform.SetParent(parent, false);
+                    var component = go.GetComponent<T>();
+
+                    if (component == null)
+                    {
+                        Debug.LogError($"AppStateScreen.InstantiateGamePrefabAsync: Can't find {typeof(T)} on {go}");
+                        promise.ReportFail(new System.Exception($"Can't find {typeof(T)} on {go}"));
+                        return;
+                    }
+
+                    _views.Add(go);
+                    promise.Dispatch(component);
+                })
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
+        }
+
+        protected IPromise<GameObject> InstantiateGamePrefabAsync(string path, Transform parent = null)
+        {
+            var promise = new Promise<GameObject>();
+
+            if (parent == null)
+                parent = ViewConfig.Container3d;
+
+            AssetManager.GetAssetAsync<GameObject>("GamePrefabs/" + path)
+                .Then(go =>
+                {
+                    go.transform.SetParent(parent, false);
+                    _views.Add(go);
+                    promise.Dispatch(go);
+                })
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
+        }
+
+        #endregion
+
+        #region Instantiating UI / Game Prefabs (Synchronous)
 
         protected GameObject InstantiateView(string path = "", Transform parent = null)
         {
@@ -77,38 +147,6 @@ namespace Framewerk.AppStateMachine
                 parent = ViewConfig.Container3d;
 
             var go = AssetManager.GetAsset<GameObject>("GamePrefabs/" + path);
-            go.transform.SetParent(parent, false);
-
-            _views.Add(go);
-            return go;
-        }
-
-        protected async Task<T> InstantiateGamePrefabAsync<T>(string path = "", Transform parent = null) where T : MonoBehaviour, IView
-        {
-            if (parent == null)
-                parent = ViewConfig.Container3d;
-
-            path += UiManager.GetViewName(typeof(T));
-            var go = await AssetManager.GetAssetAsync<GameObject>("GamePrefabs/" + path);
-            go.transform.SetParent(parent, false);
-
-            var component = go.GetComponent<T>();
-            if (component == null)
-            {
-                Debug.LogError($"AppStateScreen.InstantiateGamePrefabAsync: Can't find {typeof(T)} on {go}");
-                return null;
-            }
-
-            _views.Add(go);
-            return component;
-        }
-
-        protected async Task<GameObject> InstantiateGamePrefabAsync(string path, Transform parent = null)
-        {
-            if (parent == null)
-                parent = ViewConfig.Container3d;
-
-            var go = await AssetManager.GetAssetAsync<GameObject>("GamePrefabs/" + path);
             go.transform.SetParent(parent, false);
 
             _views.Add(go);

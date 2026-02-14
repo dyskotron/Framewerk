@@ -4,9 +4,9 @@ namespace Framewerk.Examples.ScreenFsmExample
 {
     public class GameScreen : AppStateScreen
     {
-        protected override async void Enter()
+        protected override void Enter()
         {
-            await InstantiateViewAsync<GameContentView>();
+            InstantiateView<GameContentView>();
         }
     }
 }

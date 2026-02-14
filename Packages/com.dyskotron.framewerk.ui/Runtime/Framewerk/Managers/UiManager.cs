@@ -1,10 +1,10 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Framewerk.Utils;
 using Plugins.Framewerk;
 using strange.extensions.injector.api;
 using strange.extensions.mediation.api;
+using strange.extensions.promise.api;
+using strange.extensions.promise.impl;
 using UnityEngine;
 
 namespace Framewerk.Managers
@@ -16,11 +16,11 @@ namespace Framewerk.Managers
         GameObject InstantiateView(string path, Transform parent = null);
         T InstantiateView<T>(string customPrefix = null, Transform parent = null) where T : IView;
 
-        // Async methods - full DI support with injectable parameters
-        Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects);
-        Task<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes);
-        Task<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView;
-        Task<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
+        // Promise-based async methods - full DI support with injectable parameters
+        IPromise<GameObject> InstantiateViewAsync(string path, Transform parent = null, params object[] mediatorInjects);
+        IPromise<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes);
+        IPromise<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView;
+        IPromise<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView;
 
         string GetViewName(Type type);
     }
@@ -58,60 +58,111 @@ namespace Framewerk.Managers
             }
         }
 
-        public async Task<GameObject> InstantiateViewAsync(string path, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects)
+        #region Promise-based Async Methods
+
+        public IPromise<GameObject> InstantiateViewAsync(string path, Transform parent = null, params object[] mediatorInjects)
         {
+            var promise = new Promise<GameObject>();
+
             if (parent == null)
                 parent = _uiParent;
 
             BindingUtils.Bind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
-            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
-            BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
 
-            return uiObj;
+            AssetManager.GetAssetAsync<GameObject>(path, parent)
+                .Then(uiObj =>
+                {
+                    BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
+                    promise.Dispatch(uiObj);
+                })
+                .Fail(ex =>
+                {
+                    BindingUtils.Unbind(InjectionBinder, BindInterfaces, BindBaseClasses, mediatorInjects);
+                    promise.ReportFail(ex);
+                });
+
+            return promise;
         }
 
-        public async Task<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes)
+        public IPromise<GameObject> InstantiateViewExplicitTypeAsync(string path, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes)
         {
+            var promise = new Promise<GameObject>();
+
             if (parent == null)
                 parent = _uiParent;
 
             BindingUtils.Bind(InjectionBinder, mediatorInjectsWithTypes);
-            GameObject uiObj = await AssetManager.GetAssetAsync<GameObject>(path, parent, ct);
-            BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
 
-            return uiObj;
+            AssetManager.GetAssetAsync<GameObject>(path, parent)
+                .Then(uiObj =>
+                {
+                    BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
+                    promise.Dispatch(uiObj);
+                })
+                .Fail(ex =>
+                {
+                    BindingUtils.Unbind(InjectionBinder, mediatorInjectsWithTypes);
+                    promise.ReportFail(ex);
+                });
+
+            return promise;
         }
 
-        public async Task<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params object[] mediatorInjects) where T : IView
+        public IPromise<T> InstantiateViewAsync<T>(string customPrefix = null, Transform parent = null, params object[] mediatorInjects) where T : IView
         {
+            var promise = new Promise<T>();
+
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = await InstantiateViewAsync(GetViewPath(typeof(T), customPrefix), parent, ct, mediatorInjects);
-            var component = uiObj.GetComponent<T>();
+            InstantiateViewAsync(GetViewPath(typeof(T), customPrefix), parent, mediatorInjects)
+                .Then(uiObj =>
+                {
+                    var component = uiObj.GetComponent<T>();
+                    if (component == null)
+                    {
+                        Debug.LogError($"UIManager.InstantiateViewAsync: No {typeof(T)} on {uiObj}");
+                        promise.ReportFail(new System.Exception($"No {typeof(T)} on {uiObj}"));
+                    }
+                    else
+                    {
+                        promise.Dispatch(component);
+                    }
+                })
+                .Fail(ex => promise.ReportFail(ex));
 
-            if (component == null)
-                Debug.LogError($"UIManager.InstantiateViewAsync: No {typeof(T)} on {uiObj}");
-
-            return component;
+            return promise;
         }
 
-        public async Task<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, CancellationToken ct = default, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
+        public IPromise<T> InstantiateViewExplicitTypeAsync<T>(string customPrefix = null, Transform parent = null, params Tuple<object, Type>[] mediatorInjectsWithTypes) where T : IView
         {
+            var promise = new Promise<T>();
+
             if (parent == null)
                 parent = _uiParent;
 
-            var uiObj = await InstantiateViewExplicitTypeAsync(GetViewPath(typeof(T), customPrefix), parent, ct, mediatorInjectsWithTypes);
-            var component = uiObj.GetComponent<T>();
+            InstantiateViewExplicitTypeAsync(GetViewPath(typeof(T), customPrefix), parent, mediatorInjectsWithTypes)
+                .Then(uiObj =>
+                {
+                    var component = uiObj.GetComponent<T>();
+                    if (component == null)
+                    {
+                        Debug.LogError($"UIManager.InstantiateViewExplicitTypeAsync: No {typeof(T)} on {uiObj}");
+                        promise.ReportFail(new System.Exception($"No {typeof(T)} on {uiObj}"));
+                    }
+                    else
+                    {
+                        promise.Dispatch(component);
+                    }
+                })
+                .Fail(ex => promise.ReportFail(ex));
 
-            if (component == null)
-                Debug.LogError($"UIManager.InstantiateViewExplicitTypeAsync: No {typeof(T)} on {uiObj}");
-
-            return component;
+            return promise;
         }
 
-        // Sync methods - simple instantiation without DI injection
-        // Use async versions if you need to inject parameters into mediators
+        #endregion
+
+        #region Synchronous Methods
 
         public GameObject InstantiateView(string path, Transform parent = null)
         {
@@ -145,6 +196,8 @@ namespace Framewerk.Managers
 
             return GameObject.Instantiate(viewPrefab, parent, false);
         }
+
+        #endregion
 
         public string GetViewName(Type type)
         {

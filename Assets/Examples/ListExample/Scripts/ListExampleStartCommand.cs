@@ -9,7 +9,7 @@ namespace Framewerk.Examples.ListExample
         [Inject] public IUiManager UiManager { get; set; }
         [Inject] public ContactListDataSignal ContactListDataSignal { get; set; }
 
-        public override async void Execute()
+        public override void Execute()
         {
             // Create sample contact data
             var contacts = new List<ContactData>
@@ -21,11 +21,13 @@ namespace Framewerk.Examples.ListExample
                 new ContactData { Name = "Eve Brown", Phone = "+1 555-0105" }
             };
 
-            // Instantiate the contact list view
-            await UiManager.InstantiateViewAsync<ContactListView>();
-            
-            // Send data to the list via signal
-            ContactListDataSignal.Dispatch(contacts);
+            // Instantiate the contact list view using Promise pattern
+            UiManager.InstantiateViewAsync<ContactListView>()
+                .Then(_ =>
+                {
+                    // Send data to the list via signal after view is instantiated
+                    ContactListDataSignal.Dispatch(contacts);
+                });
         }
     }
 }

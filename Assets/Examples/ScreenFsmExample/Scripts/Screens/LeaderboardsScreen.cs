@@ -4,9 +4,9 @@ namespace Framewerk.Examples.ScreenFsmExample
 {
     public class LeaderboardsScreen : AppStateScreen
     {
-        protected override async void Enter()
+        protected override void Enter()
         {
-            await InstantiateViewAsync<LeaderboardsContentView>();
+            InstantiateView<LeaderboardsContentView>();
         }
     }
 }

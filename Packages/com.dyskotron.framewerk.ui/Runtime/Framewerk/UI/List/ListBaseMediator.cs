@@ -209,7 +209,7 @@ namespace Framewerk.UI.List
         {
             var view = UiManager.InstantiateView(prefab, parent);
             CreatedMediatorsCount++;
-            
+
             return view;
         }
         

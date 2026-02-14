@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using strange.extensions.promise.api;
+using strange.extensions.promise.impl;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -10,15 +10,15 @@ namespace Framewerk.Managers
 {
     public interface IAssetManager
     {
-        // Async methods
-        Task PreloadAssetAsync(string address, CancellationToken ct = default);
-        Task<T> GetAssetAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : Object;
-        Task<T> GetGameObjectAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : MonoBehaviour;
-        Task<T> LoadAssetAsync<T>(string address, CancellationToken ct = default) where T : Object;
-        Task<Sprite> GetSpriteAsync(string address, CancellationToken ct = default);
-        Task<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName, CancellationToken ct = default);
-        Task<Texture2D> GetTextureAsync(string address, CancellationToken ct = default);
-        Task<Material> GetMaterialAsync(string address, CancellationToken ct = default);
+        // Promise-based async methods
+        IPromise PreloadAssetAsync(string address);
+        IPromise<T> GetAssetAsync<T>(string address, Transform parent = null) where T : Object;
+        IPromise<T> GetGameObjectAsync<T>(string address, Transform parent = null) where T : MonoBehaviour;
+        IPromise<T> LoadAssetAsync<T>(string address) where T : Object;
+        IPromise<Sprite> GetSpriteAsync(string address);
+        IPromise<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName);
+        IPromise<Texture2D> GetTextureAsync(string address);
+        IPromise<Material> GetMaterialAsync(string address);
 
         // Sync methods
         void PreloadAsset(string address);
@@ -41,75 +41,218 @@ namespace Framewerk.Managers
         private Dictionary<string, AsyncOperationHandle> _preloadedHandles = new Dictionary<string, AsyncOperationHandle>();
         private List<GameObject> _instantiatedObjects = new List<GameObject>();
 
-        public async Task PreloadAssetAsync(string address, CancellationToken ct = default)
+        #region Promise-based Async Methods
+
+        public IPromise PreloadAssetAsync(string address)
         {
+            var promise = new Promise();
+
             if (_preloadedHandles.ContainsKey(address))
-                return;
-
-            var handle = Addressables.LoadAssetAsync<Object>(address);
-            await handle.Task;
-            _preloadedHandles[address] = handle;
-        }
-
-        public async Task<T> GetAssetAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : Object
-        {
-            if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
             {
-                // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
-                var go = await Addressables.InstantiateAsync(address, parent, false).Task;
-                _instantiatedObjects.Add(go);
-                return go as T;
+                promise.Dispatch();
+                return promise;
             }
 
-            var asset = await Addressables.LoadAssetAsync<T>(address).Task;
-            return asset;
+            var handle = Addressables.LoadAssetAsync<Object>(address);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    _preloadedHandles[address] = handle;
+                    promise.Dispatch();
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to preload asset: {address}"));
+                }
+            };
+
+            return promise;
         }
 
-        public async Task<T> GetGameObjectAsync<T>(string address, Transform parent = null, CancellationToken ct = default) where T : MonoBehaviour
+        public IPromise<T> GetAssetAsync<T>(string address, Transform parent = null) where T : Object
         {
-            // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
-            var go = await Addressables.InstantiateAsync(address, parent, false).Task;
-            _instantiatedObjects.Add(go);
-            var component = go.GetComponent<T>();
+            var promise = new Promise<T>();
 
-            if (component == null)
-                Debug.LogError($"AssetManager.GetGameObjectAsync: No {typeof(T)} on {go.name}");
+            if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
+            {
+                var handle = Addressables.InstantiateAsync(address, parent, false);
+                handle.Completed += op =>
+                {
+                    if (op.Status == AsyncOperationStatus.Succeeded)
+                    {
+                        _instantiatedObjects.Add(op.Result);
+                        promise.Dispatch(op.Result as T);
+                    }
+                    else
+                    {
+                        promise.ReportFail(new System.Exception($"Failed to instantiate asset: {address}"));
+                    }
+                };
+            }
+            else
+            {
+                var handle = Addressables.LoadAssetAsync<T>(address);
+                handle.Completed += op =>
+                {
+                    if (op.Status == AsyncOperationStatus.Succeeded)
+                    {
+                        promise.Dispatch(op.Result);
+                    }
+                    else
+                    {
+                        promise.ReportFail(new System.Exception($"Failed to load asset: {address}"));
+                    }
+                };
+            }
 
-            return component;
+            return promise;
         }
 
-        public async Task<T> LoadAssetAsync<T>(string address, CancellationToken ct = default) where T : Object
+        public IPromise<T> GetGameObjectAsync<T>(string address, Transform parent = null) where T : MonoBehaviour
         {
-            return await Addressables.LoadAssetAsync<T>(address).Task;
+            var promise = new Promise<T>();
+
+            var handle = Addressables.InstantiateAsync(address, parent, false);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    _instantiatedObjects.Add(op.Result);
+                    var component = op.Result.GetComponent<T>();
+
+                    if (component == null)
+                    {
+                        Debug.LogError($"AssetManager.GetGameObject: No {typeof(T)} on {op.Result.name}");
+                        promise.ReportFail(new System.Exception($"No {typeof(T)} on {op.Result.name}"));
+                    }
+                    else
+                    {
+                        promise.Dispatch(component);
+                    }
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to instantiate asset: {address}"));
+                }
+            };
+
+            return promise;
         }
 
-        public async Task<Sprite> GetSpriteAsync(string address, CancellationToken ct = default)
+        public IPromise<T> LoadAssetAsync<T>(string address) where T : Object
         {
-            return await Addressables.LoadAssetAsync<Sprite>(address).Task;
+            var promise = new Promise<T>();
+
+            var handle = Addressables.LoadAssetAsync<T>(address);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    promise.Dispatch(op.Result);
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to load asset: {address}"));
+                }
+            };
+
+            return promise;
         }
 
-        public async Task<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName, CancellationToken ct = default)
+        public IPromise<Sprite> GetSpriteAsync(string address)
         {
-            var atlas = await Addressables.LoadAssetAsync<SpriteAtlas>(atlasAddress).Task;
-            var sprite = atlas.GetSprite(spriteName);
+            var promise = new Promise<Sprite>();
 
-            if (sprite == null)
-                Debug.LogError($"AssetManager.GetSpriteFromAtlasAsync: No sprite '{spriteName}' in atlas '{atlasAddress}'");
+            var handle = Addressables.LoadAssetAsync<Sprite>(address);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    promise.Dispatch(op.Result);
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to load sprite: {address}"));
+                }
+            };
 
-            return sprite;
+            return promise;
         }
 
-        public async Task<Texture2D> GetTextureAsync(string address, CancellationToken ct = default)
+        public IPromise<Sprite> GetSpriteFromAtlasAsync(string atlasAddress, string spriteName)
         {
-            return await Addressables.LoadAssetAsync<Texture2D>(address).Task;
+            var promise = new Promise<Sprite>();
+
+            var handle = Addressables.LoadAssetAsync<SpriteAtlas>(atlasAddress);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    var sprite = op.Result.GetSprite(spriteName);
+                    if (sprite == null)
+                    {
+                        Debug.LogError($"AssetManager.GetSpriteFromAtlas: No sprite '{spriteName}' in atlas '{atlasAddress}'");
+                        promise.ReportFail(new System.Exception($"No sprite '{spriteName}' in atlas '{atlasAddress}'"));
+                    }
+                    else
+                    {
+                        promise.Dispatch(sprite);
+                    }
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to load atlas: {atlasAddress}"));
+                }
+            };
+
+            return promise;
         }
 
-        public async Task<Material> GetMaterialAsync(string address, CancellationToken ct = default)
+        public IPromise<Texture2D> GetTextureAsync(string address)
         {
-            return await Addressables.LoadAssetAsync<Material>(address).Task;
+            var promise = new Promise<Texture2D>();
+
+            var handle = Addressables.LoadAssetAsync<Texture2D>(address);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    promise.Dispatch(op.Result);
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to load texture: {address}"));
+                }
+            };
+
+            return promise;
         }
 
-        // Synchronous methods
+        public IPromise<Material> GetMaterialAsync(string address)
+        {
+            var promise = new Promise<Material>();
+
+            var handle = Addressables.LoadAssetAsync<Material>(address);
+            handle.Completed += op =>
+            {
+                if (op.Status == AsyncOperationStatus.Succeeded)
+                {
+                    promise.Dispatch(op.Result);
+                }
+                else
+                {
+                    promise.ReportFail(new System.Exception($"Failed to load material: {address}"));
+                }
+            };
+
+            return promise;
+        }
+
+        #endregion
+
+        #region Synchronous Methods
+
         public void PreloadAsset(string address)
         {
             if (_preloadedHandles.ContainsKey(address))
@@ -129,7 +272,6 @@ namespace Framewerk.Managers
         {
             if (typeof(T) == typeof(GameObject) || typeof(T).IsSubclassOf(typeof(GameObject)))
             {
-                // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
                 var go = Addressables.InstantiateAsync(address, parent, false).WaitForCompletion();
                 _instantiatedObjects.Add(go);
                 return go as T;
@@ -141,7 +283,6 @@ namespace Framewerk.Managers
 
         public T GetGameObject<T>(string address, Transform parent = null) where T : MonoBehaviour
         {
-            // Use instantiateInWorldSpace = false to preserve prefab's local RectTransform offsets
             var go = Addressables.InstantiateAsync(address, parent, false).WaitForCompletion();
             _instantiatedObjects.Add(go);
             var component = go.GetComponent<T>();
@@ -183,6 +324,10 @@ namespace Framewerk.Managers
             return Addressables.LoadAssetAsync<Material>(address).WaitForCompletion();
         }
 
+        #endregion
+
+        #region Resource Management
+
         public void ReleaseInstance(GameObject instance)
         {
             _instantiatedObjects.Remove(instance);
@@ -207,5 +352,7 @@ namespace Framewerk.Managers
             }
             _instantiatedObjects.Clear();
         }
+
+        #endregion
     }
 }

@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Framewerk.Managers;
 using Plugins.Framewerk;
 using strange.extensions.injector.api;
 using strange.extensions.promise.api;
+using strange.extensions.promise.impl;
 using UnityEngine;
 
 namespace Framewerk.Popups
@@ -25,12 +24,12 @@ namespace Framewerk.Popups
         // Sync method - simple instantiation, no DI injection
         T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView;
 
-        // Async methods - full DI support with injectable parameters
-        Task<T> InstantiatePopupAsync<T>(string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
-        Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView;
+        // Promise-based async methods - full DI support with injectable parameters
+        IPromise<T> InstantiatePopupAsync<T>(string customPrefix = null) where T : IPopupView;
+        IPromise<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView;
+        IPromise<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
+        IPromise<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
+        IPromise<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView;
     }
 
     public class PopupManager : IPopupManager
@@ -66,43 +65,71 @@ namespace Framewerk.Popups
             _popups.Clear();
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(string customPrefix = null, CancellationToken ct = default) where T : IPopupView
+        #region Promise-based Async Methods
+
+        public IPromise<T> InstantiatePopupAsync<T>(string customPrefix = null) where T : IPopupView
         {
+            var promise = new Promise<T>();
             var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = await UiManager.InstantiateViewAsync(path, ViewConfig.Popups, ct);
-            return uiObj.GetComponent<T>();
+
+            UiManager.InstantiateViewAsync(path, ViewConfig.Popups)
+                .Then(uiObj => promise.Dispatch(uiObj.GetComponent<T>()))
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
+        public IPromise<T> InstantiatePopupAsync<T>(object[] popupMediatorInjects, string customPrefix = null) where T : IPopupView
         {
+            var promise = new Promise<T>();
             var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = await UiManager.InstantiateViewAsync(path, ViewConfig.Popups, ct, popupMediatorInjects);
-            return uiObj.GetComponent<T>();
+
+            UiManager.InstantiateViewAsync(path, ViewConfig.Popups, popupMediatorInjects)
+                .Then(uiObj => promise.Dispatch(uiObj.GetComponent<T>()))
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
+        public IPromise<T> InstantiatePopupAsync<T>(PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
+            var promise = new Promise<T>();
             var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = await UiManager.InstantiateViewAsync(path, ViewConfig.Popups, ct, new List<PopupButtonSetting>(popupOptions));
-            return uiObj.GetComponent<T>();
+
+            UiManager.InstantiateViewAsync(path, ViewConfig.Popups, new List<PopupButtonSetting>(popupOptions))
+                .Then(uiObj => promise.Dispatch(uiObj.GetComponent<T>()))
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
+        public IPromise<T> InstantiatePopupAsync<T>(string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
+            var promise = new Promise<T>();
             var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = await UiManager.InstantiateViewAsync(path, ViewConfig.Popups, ct, text, new List<PopupButtonSetting>(popupOptions));
-            return uiObj.GetComponent<T>();
+
+            UiManager.InstantiateViewAsync(path, ViewConfig.Popups, text, new List<PopupButtonSetting>(popupOptions))
+                .Then(uiObj => promise.Dispatch(uiObj.GetComponent<T>()))
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        public async Task<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null, CancellationToken ct = default) where T : IPopupView
+        public IPromise<T> InstantiatePopupAsync<T>(string caption, string text, PopupButtonSetting[] popupOptions, string customPrefix = null) where T : IPopupView
         {
+            var promise = new Promise<T>();
             var path = GetPopupPath(typeof(T), customPrefix);
-            var uiObj = await UiManager.InstantiateViewAsync(path, ViewConfig.Popups, ct, caption, text, new List<PopupButtonSetting>(popupOptions));
-            return uiObj.GetComponent<T>();
+
+            UiManager.InstantiateViewAsync(path, ViewConfig.Popups, caption, text, new List<PopupButtonSetting>(popupOptions))
+                .Then(uiObj => promise.Dispatch(uiObj.GetComponent<T>()))
+                .Fail(ex => promise.ReportFail(ex));
+
+            return promise;
         }
 
-        // Sync method - simple instantiation without DI injection
-        // Use async versions if you need to inject PopupButtonSettings or other parameters
+        #endregion
+
+        #region Synchronous Methods
 
         public T InstantiatePopup<T>(string customPrefix = null) where T : IPopupView
         {
@@ -110,6 +137,8 @@ namespace Framewerk.Popups
             var uiObj = UiManager.InstantiateView(path, ViewConfig.Popups);
             return uiObj.GetComponent<T>();
         }
+
+        #endregion
 
         private void OnPopupOpenedHandler(IPopupMediator popup)
         {
