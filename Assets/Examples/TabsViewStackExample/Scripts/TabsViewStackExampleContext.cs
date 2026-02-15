@@ -30,6 +30,7 @@ namespace Framewerk.Examples.TabsViewStackExample
             injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
 
             // MEDIATION
+            mediationBinder.Bind<TabsViewStackContainerView>().To<TabsViewStackContainerMediator>();
             mediationBinder.Bind<TabContainerView>().To<TabContainerMediator>();
             mediationBinder.Bind<TabItemView>().To<TabItemMediator>();
             mediationBinder.Bind<ViewStackView>().To<TabsViewStackMediator>();

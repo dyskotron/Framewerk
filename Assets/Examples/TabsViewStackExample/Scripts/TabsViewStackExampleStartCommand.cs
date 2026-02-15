@@ -1,10 +1,6 @@
 using System.Threading;
 using Framewerk.Managers;
-using Framewerk.UI.ViewStack;
-using Plugins.Framewerk;
 using strange.extensions.command.impl;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace Framewerk.Examples.TabsViewStackExample
 {
@@ -21,79 +17,18 @@ namespace Framewerk.Examples.TabsViewStackExample
     /// 2. Views are instantiated TOGETHER via InstantiateViewsAsync(ViewGroup)
     /// 3. Shared state is automatic - no manual signal creation/passing needed
     /// 4. Each mediator handles its OWN concern (separation of concerns)
+    /// 
+    /// Pattern: Command spawns container → Container mediator spawns ViewGroup
+    /// Everything goes through UiManager - no manual GameObject creation.
     /// </summary>
     public class TabsViewStackExampleStartCommand : Command
     {
         [Inject] public IUiManager UiManager { get; set; }
-        [Inject] public ViewConfig ViewConfig { get; set; }
-        [Inject] public TabsViewStackDataProvider DataProvider { get; set; }
 
         public override void Execute()
         {
-            var tabsData = DataProvider.GetTabsViewData();
-
-            // Create layout container for both views
-            var layoutParent = CreateLayoutContainer();
-            var tabsParent = CreateTabsArea(layoutParent);
-            var contentParent = CreateContentArea(layoutParent);
-
-            // ViewGroup Pattern: Instantiate BOTH views together as a group.
-            // The framework automatically:
-            // 1. Scans both mediators for [ViewGroupShared] properties
-            // 2. Creates shared instances (SelectionChangedSignal) 
-            // 3. Injects the SAME instance into both mediators
-            // No manual signal creation needed!
-            var viewGroup = new ViewGroup()
-                .Add<TabContainerView>(tabsParent)
-                .Add<ViewStackView>(contentParent);
-
-            // tabsData is passed as a binding - both mediators receive it
-            // Fire and forget - the async operation will complete on its own
-            _ = UiManager.InstantiateViewsAsync(viewGroup, CancellationToken.None, tabsData);
-        }
-
-        private RectTransform CreateLayoutContainer()
-        {
-            var go = new GameObject("TabsViewStackLayout");
-            var rect = go.AddComponent<RectTransform>();
-            rect.SetParent(ViewConfig.UiDefault, false);
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.sizeDelta = Vector2.zero;
-
-            var layout = go.AddComponent<VerticalLayoutGroup>();
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            layout.spacing = 0;
-
-            return rect;
-        }
-
-        private Transform CreateTabsArea(RectTransform parent)
-        {
-            var go = new GameObject("TabsArea");
-            var rect = go.AddComponent<RectTransform>();
-            rect.SetParent(parent, false);
-
-            var layoutElement = go.AddComponent<LayoutElement>();
-            layoutElement.preferredHeight = 60;
-            layoutElement.flexibleHeight = 0;
-
-            return rect;
-        }
-
-        private Transform CreateContentArea(RectTransform parent)
-        {
-            var go = new GameObject("ContentArea");
-            var rect = go.AddComponent<RectTransform>();
-            rect.SetParent(parent, false);
-
-            var layoutElement = go.AddComponent<LayoutElement>();
-            layoutElement.flexibleHeight = 1;
-
-            return rect;
+            // Just instantiate the container - its mediator handles the rest
+            _ = UiManager.InstantiateViewAsync<TabsViewStackContainerView>(ct: CancellationToken.None);
         }
     }
 }
