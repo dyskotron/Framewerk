@@ -21,18 +21,15 @@ namespace Framewerk.Examples.TabsViewStackExample
 
             // Framewerk core
             injectionBinder.Bind<ViewConfig>().ToValue(_viewConfig);
-            
+
             // Framewerk managers
             injectionBinder.Bind<IAssetManager>().To<AssetManager>().ToSingleton();
             injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
 
-            // SIGNALS
-            injectionBinder.Bind<TabDataSignal>().ToSingleton();
-
             // MEDIATION
             mediationBinder.Bind<TabContainerView>().To<TabContainerMediator>();
             mediationBinder.Bind<TabItemView>().To<TabItemMediator>();
-            mediationBinder.Bind<ViewStackView>().To<ViewStackMediator>();
+            mediationBinder.Bind<ViewStackView>().To<TabsViewStackMediator>();
 
             // COMMANDS
             commandBinder.Bind<ContextStartSignal>().To<TabsViewStackExampleStartCommand>();

@@ -45,6 +45,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78a29df1c19943a5a6e1b3e2d5de5661
+    m_Address: TabsViewStackExample/UI/ViewStack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b47c0e53d18cf4ce0849b4ef5ad5a3b9
     m_Address: ScreenFsmExample/UI/LeaderboardsContent
     m_ReadOnly: 0

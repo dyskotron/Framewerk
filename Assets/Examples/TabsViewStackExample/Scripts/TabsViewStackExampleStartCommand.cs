@@ -1,21 +1,35 @@
 using System.Collections.Generic;
+using System.Threading;
 using Framewerk.Managers;
 using Framewerk.UI.ViewStack;
+using Plugins.Framewerk;
 using strange.extensions.command.impl;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Framewerk.Examples.TabsViewStackExample
 {
+    /// <summary>
+    /// Start command demonstrating the proper ViewGroup pattern.
+    /// 
+    /// The ViewGroup pattern instantiates MULTIPLE views together, sharing state via
+    /// [ViewGroupShared] injection. The framework automatically creates and shares
+    /// a SelectionChangedSignal instance between all mediators in the group that
+    /// have [Inject, ViewGroupShared] on the same type.
+    /// 
+    /// Key principles:
+    /// 1. Views are SEPARATE - each prefab contains ONE view type
+    /// 2. Views are instantiated TOGETHER via InstantiateViewsAsync(ViewGroup)
+    /// 3. Shared state is automatic - no manual signal creation/passing needed
+    /// 4. Each mediator handles its OWN concern (separation of concerns)
+    /// </summary>
     public class TabsViewStackExampleStartCommand : Command
     {
         [Inject] public IUiManager UiManager { get; set; }
-        [Inject] public TabDataSignal TabDataSignal { get; set; }
+        [Inject] public ViewConfig ViewConfig { get; set; }
 
-        public override async void Execute()
+        public override void Execute()
         {
-            // Create sample tab data
             var tabs = new List<TabData>
             {
                 new TabData { Title = "Home", ContentIndex = 0 },
@@ -23,94 +37,96 @@ namespace Framewerk.Examples.TabsViewStackExample
                 new TabData { Title = "Settings", ContentIndex = 2 }
             };
 
-            // Instantiate the tab container (prefab has layout pre-configured)
-            var tabContainer = await UiManager.InstantiateViewAsync<TabContainerView>();
-            
-            // Create content panels for the ViewStack
-            CreateContentPanels(tabContainer.ContentStack, tabs);
-            
-            // Dispatch tab data to populate the UI
-            TabDataSignal.Dispatch(tabs);
-        }
-        
-        private void CreateContentPanels(ViewStackView viewStack, List<TabData> tabs)
-        {
-            if (viewStack == null || viewStack.Content == null)
+            var contentPanels = new List<ContentPanelData>
             {
-                Debug.LogError("[TabsViewStackExample] ViewStack or Content is null - check prefab configuration");
-                return;
-            }
-            
-            var colors = new[]
-            {
-                new Color(0.2f, 0.4f, 0.6f, 1f),  // Home - Blue
-                new Color(0.4f, 0.6f, 0.3f, 1f),  // Profile - Green  
-                new Color(0.6f, 0.4f, 0.2f, 1f)   // Settings - Orange
+                new ContentPanelData
+                {
+                    Title = "Home",
+                    BackgroundColor = new Color(0.2f, 0.4f, 0.6f, 1f),
+                    Description = "Welcome to the Home screen!\n\nThis is where you'd see your main content, dashboard, or feed."
+                },
+                new ContentPanelData
+                {
+                    Title = "Profile",
+                    BackgroundColor = new Color(0.4f, 0.6f, 0.3f, 1f),
+                    Description = "This is the Profile screen.\n\nUser information, avatar, and account details would go here."
+                },
+                new ContentPanelData
+                {
+                    Title = "Settings",
+                    BackgroundColor = new Color(0.6f, 0.4f, 0.2f, 1f),
+                    Description = "Settings screen.\n\nConfigure your preferences, notifications, and app behavior here."
+                }
             };
-            
-            var descriptions = new[]
+
+            var tabsData = new TabsData
             {
-                "Welcome to the Home screen!\n\nThis is where you'd see your main content, dashboard, or feed.",
-                "This is the Profile screen.\n\nUser information, avatar, and account details would go here.",
-                "Settings screen.\n\nConfigure your preferences, notifications, and app behavior here."
+                Tabs = tabs,
+                ContentPanels = contentPanels
             };
-            
-            for (int i = 0; i < tabs.Count; i++)
-            {
-                CreateContentPanel(viewStack.Content, tabs[i].Title, colors[i], descriptions[i]);
-            }
-            
-            Debug.Log($"[TabsViewStackExample] Created {tabs.Count} content panels");
+
+            // Create layout container for both views
+            var layoutParent = CreateLayoutContainer();
+            var tabsParent = CreateTabsArea(layoutParent);
+            var contentParent = CreateContentArea(layoutParent);
+
+            // ViewGroup Pattern: Instantiate BOTH views together as a group.
+            // The framework automatically:
+            // 1. Scans both mediators for [ViewGroupShared] properties
+            // 2. Creates shared instances (SelectionChangedSignal) 
+            // 3. Injects the SAME instance into both mediators
+            // No manual signal creation needed!
+            var viewGroup = new ViewGroup()
+                .Add<TabContainerView>(tabsParent)
+                .Add<ViewStackView>(contentParent);
+
+            // tabsData is passed as a binding - both mediators receive it
+            // Fire and forget - the async operation will complete on its own
+            _ = UiManager.InstantiateViewsAsync(viewGroup, CancellationToken.None, tabsData);
         }
-        
-        private void CreateContentPanel(RectTransform parent, string title, Color bgColor, string description)
+
+        private RectTransform CreateLayoutContainer()
         {
-            // Panel container
-            var panelGo = new GameObject($"{title}Panel");
-            var panelRect = panelGo.AddComponent<RectTransform>();
-            panelRect.SetParent(parent, false);
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.one;
-            panelRect.sizeDelta = Vector2.zero;
-            
-            // Background
-            var bgImage = panelGo.AddComponent<Image>();
-            bgImage.color = bgColor;
-            
-            // Vertical layout for content
-            var layout = panelGo.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(40, 40, 40, 40);
-            layout.spacing = 20;
-            layout.childAlignment = TextAnchor.UpperCenter;
+            var go = new GameObject("TabsViewStackLayout");
+            var rect = go.AddComponent<RectTransform>();
+            rect.SetParent(ViewConfig.UiDefault, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.sizeDelta = Vector2.zero;
+
+            var layout = go.AddComponent<VerticalLayoutGroup>();
             layout.childControlWidth = true;
-            layout.childControlHeight = false;
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
-            
-            // Title text
-            var titleGo = new GameObject("Title");
-            var titleRect = titleGo.AddComponent<RectTransform>();
-            titleRect.SetParent(panelRect, false);
-            titleRect.sizeDelta = new Vector2(0, 60);
-            
-            var titleText = titleGo.AddComponent<TextMeshProUGUI>();
-            titleText.text = title;
-            titleText.fontSize = 48;
-            titleText.fontStyle = FontStyles.Bold;
-            titleText.alignment = TextAlignmentOptions.Center;
-            titleText.color = Color.white;
-            
-            // Description text
-            var descGo = new GameObject("Description");
-            var descRect = descGo.AddComponent<RectTransform>();
-            descRect.SetParent(panelRect, false);
-            descRect.sizeDelta = new Vector2(0, 120);
-            
-            var descText = descGo.AddComponent<TextMeshProUGUI>();
-            descText.text = description;
-            descText.fontSize = 24;
-            descText.alignment = TextAlignmentOptions.Center;
-            descText.color = new Color(1f, 1f, 1f, 0.8f);
+            layout.spacing = 0;
+
+            return rect;
+        }
+
+        private Transform CreateTabsArea(RectTransform parent)
+        {
+            var go = new GameObject("TabsArea");
+            var rect = go.AddComponent<RectTransform>();
+            rect.SetParent(parent, false);
+
+            var layoutElement = go.AddComponent<LayoutElement>();
+            layoutElement.preferredHeight = 60;
+            layoutElement.flexibleHeight = 0;
+
+            return rect;
+        }
+
+        private Transform CreateContentArea(RectTransform parent)
+        {
+            var go = new GameObject("ContentArea");
+            var rect = go.AddComponent<RectTransform>();
+            rect.SetParent(parent, false);
+
+            var layoutElement = go.AddComponent<LayoutElement>();
+            layoutElement.flexibleHeight = 1;
+
+            return rect;
         }
     }
 }

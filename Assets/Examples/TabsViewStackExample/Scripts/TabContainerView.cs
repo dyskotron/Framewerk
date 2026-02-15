@@ -1,16 +1,13 @@
 using Framewerk.UI.List;
-using Framewerk.UI.ViewStack;
-using UnityEngine;
 
 namespace Framewerk.Examples.TabsViewStackExample
 {
+    /// <summary>
+    /// View for tab container - just a list of tabs.
+    /// Does NOT contain ViewStack reference - the ViewGroup pattern keeps them separate.
+    /// </summary>
     public class TabContainerView : ListView
     {
-        [Header("Tab Container")]
-        public ViewStackView ContentStack;
-        
-        [Header("Content Area")]
-        [Tooltip("Parent transform where the ViewStack will be created if ContentStack is not assigned")]
-        public RectTransform ContentArea;
+        // No ContentStack or ContentArea - ViewStack is a separate view in the ViewGroup
     }
 }

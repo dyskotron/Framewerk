@@ -1,5 +1,6 @@
 using Plugins.Framewerk;
 using Framewerk.Managers;
+using Framewerk.Signals;
 using Framewerk.StrangeCore;
 using strange.extensions.context.impl;
 
@@ -26,6 +27,9 @@ namespace Framewerk.Examples.ListExample
             injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
 
             // SIGNALS
+            // SelectionChangedSignal is required by ListBaseMediator (marked [ViewGroupShared])
+            // When not using ViewGroup, it must be bound explicitly
+            injectionBinder.Bind<SelectionChangedSignal>().ToSingleton();
             injectionBinder.Bind<ContactListDataSignal>().ToSingleton();
 
             // MEDIATION
