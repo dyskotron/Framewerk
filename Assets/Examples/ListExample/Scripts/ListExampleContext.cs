@@ -26,11 +26,13 @@ namespace Framewerk.Examples.ListExample
             injectionBinder.Bind<IAssetManager>().To<AssetManager>().ToSingleton();
             injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
 
+            // MODELS
+            injectionBinder.Bind<ContactDataProvider>().ToSingleton();
+
             // SIGNALS
             // SelectionChangedSignal is required by ListBaseMediator (marked [ViewGroupShared])
             // When not using ViewGroup, it must be bound explicitly
             injectionBinder.Bind<SelectionChangedSignal>().ToSingleton();
-            injectionBinder.Bind<ContactListDataSignal>().ToSingleton();
 
             // MEDIATION
             mediationBinder.Bind<ContactListView>().To<ContactListMediator>();
