@@ -16,6 +16,15 @@ namespace Framewerk.Popups
         public Action clickHandler;
         public IPromise clickPromise;
         public bool closesPopup = true;
+
+        /// <summary>
+        /// Standard close button with "Close" text that closes the popup.
+        /// </summary>
+        public static PopupButtonSetting CloseButton => new PopupButtonSetting
+        {
+            optionText = "Close",
+            closesPopup = true
+        };
     }
 
     public interface IPopupManager
