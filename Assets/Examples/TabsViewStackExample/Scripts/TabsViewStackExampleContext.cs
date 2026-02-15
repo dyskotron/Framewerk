@@ -34,6 +34,7 @@ namespace Framewerk.Examples.TabsViewStackExample
             mediationBinder.Bind<TabContainerView>().To<TabContainerMediator>();
             mediationBinder.Bind<TabItemView>().To<TabItemMediator>();
             mediationBinder.Bind<ViewStackView>().To<TabsViewStackMediator>();
+            mediationBinder.Bind<ContentPanelView>().To<ContentPanelMediator>();
 
             // COMMANDS
             commandBinder.Bind<ContextStartSignal>().To<TabsViewStackExampleStartCommand>();
