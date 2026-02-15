@@ -22,6 +22,9 @@ namespace Framewerk.Examples.TabsViewStackExample
             // Framewerk core
             injectionBinder.Bind<ViewConfig>().ToValue(_viewConfig);
 
+            // Data providers
+            injectionBinder.Bind<TabsViewStackDataProvider>().ToSingleton();
+
             // Framewerk managers
             injectionBinder.Bind<IAssetManager>().To<AssetManager>().ToSingleton();
             injectionBinder.Bind<IUiManager>().To<UiManager>().ToSingleton();
