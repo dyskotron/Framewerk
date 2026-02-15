@@ -257,6 +257,19 @@ UI.Popups            — RectTransform, Canvas, CanvasScaler, GraphicRaycaster
 - **Don't add parameters that match defaults.** If a method has `instantiateInWorldSpace = false` as default, don't explicitly pass `false`. It's noise.
 - Keep changes minimal — only add what's necessary for the fix.
 
+## Commits, Deprecation & Changelogs
+
+**The line is: "Was it ever in the repo?"** — not "Does anyone use this?"
+
+- ✅ **Document changes between commits** — repo history is real history.
+- ❌ **Don't narrate local experiments** — only reference approaches that were actually committed.
+
+- **Commits:** Document what changed between committed states. Don't reference approaches that were never committed.
+- **Deprecation:** Only if the old way was actually committed and shipped. Local scratched attempts don't get deprecated.
+- **Changelogs:** "Replaced X with Y" only makes sense if X was ever in the repo.
+
+New feature from scratch? There's no "old way" — write it like the first implementation it is.
+
 ## Plan Mode
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.

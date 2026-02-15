@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Framewerk.Managers;
+using Framewerk.Signals;
+using Framewerk.Signals;
 using strange.extensions.mediation.api;
-using strange.extensions.signal.impl;
 using UnityEngine;
 
 namespace Framewerk.UI.List
@@ -15,16 +16,15 @@ namespace Framewerk.UI.List
     public class ListBaseMediator<TView, TData> : ExtendedMediator<TView>, IListMediator<TData> where TView : ListView where TData : class, IListItemDataProvider
     {
         [Inject] public IUiManager UiManager { get; set; }
-        // View is inherited from ExtendedMediator<TView> - don't redeclare!
         
-        public Signal<int?> SelectionChangedSignal { get; } = new Signal<int?>();
+        [Inject, ViewGroupShared] public SelectionChangedSignal SelectionChangedSignal { get; set; }
         public List<int> SelectedItemIndexes { get; private set; }
         public bool Multiselect { get; set; }
         public bool Unselectable { get; set; }
 
         protected int CreatedMediatorsCount = 0;
-        protected List<IListItemMediator<TData>> ItemMediators = new List<IListItemMediator<TData>>();
-        protected List<TData> DataProviders = new List<TData>();
+        protected readonly List<IListItemMediator<TData>> ItemMediators = new();
+        protected List<TData> DataProviders = new();
         
         public override void OnRegister()
         {
@@ -38,18 +38,18 @@ namespace Framewerk.UI.List
         public virtual void RegisterMediator(IMediator mediator)
         {
             var itemIndex = ItemMediators.Count;
-            var ItemMediator = (IListItemMediator<TData>) mediator;
+            var itemMediator = (IListItemMediator<TData>) mediator;
             
-            ItemMediators.Add(ItemMediator);  
+            ItemMediators.Add(itemMediator);  
             
             //if we have data set them to mediator
             if(DataProviders.Count >= ItemMediators.Count)
-                SetItemData(ItemMediator, DataProviders[itemIndex], itemIndex);
+                SetItemData(itemMediator, DataProviders[itemIndex], itemIndex);
             //if we dont, hide item
             else
-                ItemMediator.SetActive(false);
+                itemMediator.SetActive(false);
             
-            ItemMediator.ListItemClickedSignal.AddListener(ListItemClickedHandler);
+            itemMediator.ListItemClickedSignal.AddListener(ListItemClickedHandler);
         }
         
         public virtual void SetData(List<TData> dataProviders)
