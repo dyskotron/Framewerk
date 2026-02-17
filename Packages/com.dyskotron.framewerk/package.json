@@ -5,9 +5,9 @@
   "description": "Meta-package that includes all Framewerk packages: core, ui, screenfsm, and editor.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.ui": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk.ui#feature/framewerk2.0",
-    "com.dyskotron.framewerk.screenfsm": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk.screenfsm#feature/framewerk2.0",
-    "com.dyskotron.framewerk.editor": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk.editor#feature/framewerk2.0"
+    "com.dyskotron.framewerk.ui": "2.0.0-preview.2",
+    "com.dyskotron.framewerk.screenfsm": "2.0.0-preview.2",
+    "com.dyskotron.framewerk.editor": "2.0.0-preview.2"
   },
   "author": {
     "name": "Dyskotron",
