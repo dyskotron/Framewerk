@@ -5,7 +5,7 @@
   "description": "Screen-based finite state machine for app state and view management.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.ui": "2.0.0-preview.2"
+    "com.dyskotron.framewerk.ui": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk.ui#feature/framewerk2.0"
   },
   "author": {
     "name": "Dyskotron",

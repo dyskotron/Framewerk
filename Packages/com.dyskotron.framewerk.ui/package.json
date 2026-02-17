@@ -5,7 +5,7 @@
   "description": "Unity UI framework with Views, Mediators, Popups, Lists, AssetManager, and ViewConfig.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.core": "2.0.0-preview.2",
+    "com.dyskotron.framewerk.core": "https://github.com/dyskotron/Framewerk.git?path=Packages/com.dyskotron.framewerk.core#feature/framewerk2.0",
     "com.unity.addressables": "1.21.0",
     "com.unity.textmeshpro": "3.0.0"
   },
