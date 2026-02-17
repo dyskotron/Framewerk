@@ -1,11 +1,11 @@
 {
   "name": "com.dyskotron.framewerk.ui",
-  "version": "2.0.0",
+  "version": "2.0.0-preview.2",
   "displayName": "Framewerk UI",
   "description": "Unity UI framework with Views, Mediators, Popups, Lists, AssetManager, and ViewConfig.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.core": "2.0.0",
+    "com.dyskotron.framewerk.core": "2.0.0-preview.2",
     "com.unity.addressables": "1.21.0",
     "com.unity.textmeshpro": "3.0.0"
   },

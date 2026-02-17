@@ -1,11 +1,11 @@
 {
   "name": "com.dyskotron.framewerk.screenfsm",
-  "version": "2.0.0",
+  "version": "2.0.0-preview.2",
   "displayName": "Framewerk Screen FSM",
   "description": "Screen-based finite state machine for app state and view management.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.ui": "2.0.0"
+    "com.dyskotron.framewerk.ui": "2.0.0-preview.2"
   },
   "author": {
     "name": "Dyskotron",

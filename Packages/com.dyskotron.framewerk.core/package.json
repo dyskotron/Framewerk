@@ -1,6 +1,6 @@
 {
   "name": "com.dyskotron.framewerk.core",
-  "version": "2.0.0",
+  "version": "2.0.0-preview.2",
   "displayName": "Framewerk Core",
   "description": "Pure .NET IoC, Signals, Commands, Promises - headless server-compatible. Built on StrangeIoC.",
   "unity": "2021.3",

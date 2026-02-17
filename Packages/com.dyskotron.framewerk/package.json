@@ -1,13 +1,13 @@
 {
   "name": "com.dyskotron.framewerk",
-  "version": "2.0.0",
+  "version": "2.0.0-preview.2",
   "displayName": "Framewerk",
   "description": "Meta-package that includes all Framewerk packages: core, ui, screenfsm, and editor.",
   "unity": "2021.3",
   "dependencies": {
-    "com.dyskotron.framewerk.ui": "2.0.0",
-    "com.dyskotron.framewerk.screenfsm": "2.0.0",
-    "com.dyskotron.framewerk.editor": "2.0.0"
+    "com.dyskotron.framewerk.ui": "2.0.0-preview.2",
+    "com.dyskotron.framewerk.screenfsm": "2.0.0-preview.2",
+    "com.dyskotron.framewerk.editor": "2.0.0-preview.2"
   },
   "author": {
     "name": "Dyskotron",
