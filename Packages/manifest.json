@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.gamelovers.mcp-unity": "https://github.com/CoderGamester/mcp-unity.git",
     "com.dyskotron.framewerk": "file:com.dyskotron.framewerk",
     "com.dyskotron.framewerk.core": "file:com.dyskotron.framewerk.core",
     "com.dyskotron.framewerk.ui": "file:com.dyskotron.framewerk.ui",

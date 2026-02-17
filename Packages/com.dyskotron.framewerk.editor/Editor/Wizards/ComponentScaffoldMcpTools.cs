@@ -1,32 +1,40 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using MCPForUnity.Editor.Helpers;
-using MCPForUnity.Editor.Tools;
+using System.Reflection;
+using McpUnity.Tools;
+using McpUnity.Unity;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
 namespace Framewerk.Editor.Wizards
 {
-    [McpForUnityTool("framewerk_scaffold")]
     /// <summary>
     /// MCP tool for creating Framewerk component prefabs (Popup, List) and marking them as addressable.
+    /// Extends McpToolBase for compatibility with com.gamelovers.mcp-unity plugin.
     /// </summary>
-    public static class ComponentScaffoldMcpTools
+    public class FramewerkScaffoldTool : McpToolBase
     {
         private const string SupportedActions = "create_popup, create_list, create_tabs, create_view, create_viewstack, mark_addressable, create_scene";
 
-        public static object HandleCommand(JObject @params)
+        public FramewerkScaffoldTool()
         {
-            if (@params == null)
+            Name = "framewerk_scaffold";
+            Description = "Creates Framewerk UI component prefabs (Popup, List, Tabs, View, ViewStack) and marks them as addressable. Supports actions: " + SupportedActions;
+        }
+
+        public override JObject Execute(JObject parameters)
+        {
+            if (parameters == null)
             {
-                return new ErrorResponse("Parameters cannot be null.");
+                return CreateError("Parameters cannot be null.");
             }
 
-            string action = @params["action"]?.ToString()?.ToLowerInvariant();
+            string action = parameters["action"]?.ToString()?.ToLowerInvariant();
             if (string.IsNullOrEmpty(action))
             {
-                return new ErrorResponse($"Action parameter is required. Valid actions are: {SupportedActions}.");
+                return CreateError($"Action parameter is required. Valid actions are: {SupportedActions}.");
             }
 
             try
@@ -34,54 +42,81 @@ namespace Framewerk.Editor.Wizards
                 switch (action)
                 {
                     case "create_popup":
-                        return CreatePopup(@params);
+                        return CreatePopup(parameters);
                     case "create_list":
-                        return CreateList(@params);
+                        return CreateList(parameters);
                     case "create_tabs":
-                        return CreateTabs(@params);
+                        return CreateTabs(parameters);
                     case "create_view":
-                        return CreateView(@params);
+                        return CreateView(parameters);
                     case "create_viewstack":
-                        return CreateViewStack(@params);
+                        return CreateViewStack(parameters);
                     case "mark_addressable":
-                        return MarkAddressable(@params);
+                        return MarkAddressable(parameters);
                     case "create_scene":
-                        return CreateScene(@params);
+                        return CreateScene(parameters);
                     default:
-                        return new ErrorResponse($"Unknown action: '{action}'. Valid actions are: {SupportedActions}.");
+                        return CreateError($"Unknown action: '{action}'. Valid actions are: {SupportedActions}.");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ComponentScaffoldMcpTools] Action '{action}' failed: {e}");
-                return new ErrorResponse($"Internal error: {e.Message}");
+                Debug.LogError($"[FramewerkScaffoldTool] Action '{action}' failed: {e}");
+                return CreateError($"Internal error: {e.Message}");
             }
         }
 
-        private static object CreatePopup(JObject @params)
+        private static JObject CreateError(string message)
+        {
+            return McpUnitySocketHandler.CreateErrorResponse(message, "validation_error");
+        }
+
+        private static JObject CreateSuccess(string message, object data = null)
+        {
+            var result = new JObject
+            {
+                ["success"] = true,
+                ["type"] = "text",
+                ["message"] = message
+            };
+
+            if (data != null)
+            {
+                // Merge additional data into result
+                var dataObj = JObject.FromObject(data);
+                foreach (var prop in dataObj.Properties())
+                {
+                    result[prop.Name] = prop.Value;
+                }
+            }
+
+            return result;
+        }
+
+        private static JObject CreatePopup(JObject @params)
         {
             string name = @params["name"]?.ToString();
             if (string.IsNullOrEmpty(name))
             {
-                return new ErrorResponse("'name' parameter is required for create_popup.");
+                return CreateError("'name' parameter is required for create_popup.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_popup.");
+                return CreateError("'namespace' parameter is required for create_popup.");
             }
 
             string viewTypeName = @params["viewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(viewTypeName))
             {
-                return new ErrorResponse("'viewTypeName' parameter is required for create_popup.");
+                return CreateError("'viewTypeName' parameter is required for create_popup.");
             }
 
             string prefabFolder = @params["prefabFolder"]?.ToString();
             if (string.IsNullOrEmpty(prefabFolder))
             {
-                return new ErrorResponse("'prefabFolder' parameter is required for create_popup.");
+                return CreateError("'prefabFolder' parameter is required for create_popup.");
             }
 
             bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
@@ -95,30 +130,27 @@ namespace Framewerk.Editor.Wizards
             // Check if prefab already exists
             if (!overwrite && File.Exists(prefabPath))
             {
-                return new ErrorResponse(
-                    $"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.",
-                    new { prefabPath }
-                );
+                return CreateError($"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.");
             }
 
             // Find the view type to ensure it exists
             Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
             if (viewType == null)
             {
-                return new ErrorResponse($"Could not find type: {viewTypeName}");
+                return CreateError($"Could not find type: {viewTypeName}");
             }
 
             // Get template path
             string templatePath = GetTemplatePath(ComponentType.Popup);
             if (string.IsNullOrEmpty(templatePath))
             {
-                return new ErrorResponse("Popup template not found.");
+                return CreateError("Popup template not found.");
             }
 
             // Copy template to target path
             if (!AssetDatabase.CopyAsset(templatePath, prefabPath))
             {
-                return new ErrorResponse($"Failed to copy template from {templatePath} to {prefabPath}");
+                return CreateError($"Failed to copy template from {templatePath} to {prefabPath}");
             }
 
             // Swap the base View component with the custom View
@@ -128,42 +160,42 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to swap component: {e.Message}");
+                return CreateError($"Failed to swap component: {e.Message}");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"Popup prefab created successfully at '{prefabPath}'.",
-                new { prefabPath, success = true }
+                new { prefabPath }
             );
         }
 
-        private static object CreateView(JObject @params)
+        private static JObject CreateView(JObject @params)
         {
             string name = @params["name"]?.ToString();
             if (string.IsNullOrEmpty(name))
             {
-                return new ErrorResponse("'name' parameter is required for create_view.");
+                return CreateError("'name' parameter is required for create_view.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_view.");
+                return CreateError("'namespace' parameter is required for create_view.");
             }
 
             string viewTypeName = @params["viewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(viewTypeName))
             {
-                return new ErrorResponse("'viewTypeName' parameter is required for create_view.");
+                return CreateError("'viewTypeName' parameter is required for create_view.");
             }
 
             string prefabFolder = @params["prefabFolder"]?.ToString();
             if (string.IsNullOrEmpty(prefabFolder))
             {
-                return new ErrorResponse("'prefabFolder' parameter is required for create_view.");
+                return CreateError("'prefabFolder' parameter is required for create_view.");
             }
 
             bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
@@ -177,30 +209,27 @@ namespace Framewerk.Editor.Wizards
             // Check if prefab already exists
             if (!overwrite && File.Exists(prefabPath))
             {
-                return new ErrorResponse(
-                    $"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.",
-                    new { prefabPath }
-                );
+                return CreateError($"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.");
             }
 
             // Find the view type to ensure it exists
             Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
             if (viewType == null)
             {
-                return new ErrorResponse($"Could not find type: {viewTypeName}");
+                return CreateError($"Could not find type: {viewTypeName}");
             }
 
             // Get template path
             string templatePath = GetTemplatePath(ComponentType.View);
             if (string.IsNullOrEmpty(templatePath))
             {
-                return new ErrorResponse("View template not found.");
+                return CreateError("View template not found.");
             }
 
             // Copy template to target path
             if (!AssetDatabase.CopyAsset(templatePath, prefabPath))
             {
-                return new ErrorResponse($"Failed to copy template from {templatePath} to {prefabPath}");
+                return CreateError($"Failed to copy template from {templatePath} to {prefabPath}");
             }
 
             // Swap the base View component with the custom View
@@ -210,42 +239,42 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to swap component: {e.Message}");
+                return CreateError($"Failed to swap component: {e.Message}");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"View prefab created successfully at '{prefabPath}'.",
-                new { prefabPath, success = true }
+                new { prefabPath }
             );
         }
 
-        private static object CreateViewStack(JObject @params)
+        private static JObject CreateViewStack(JObject @params)
         {
             string name = @params["name"]?.ToString();
             if (string.IsNullOrEmpty(name))
             {
-                return new ErrorResponse("'name' parameter is required for create_viewstack.");
+                return CreateError("'name' parameter is required for create_viewstack.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_viewstack.");
+                return CreateError("'namespace' parameter is required for create_viewstack.");
             }
 
             string viewTypeName = @params["viewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(viewTypeName))
             {
-                return new ErrorResponse("'viewTypeName' parameter is required for create_viewstack.");
+                return CreateError("'viewTypeName' parameter is required for create_viewstack.");
             }
 
             string prefabFolder = @params["prefabFolder"]?.ToString();
             if (string.IsNullOrEmpty(prefabFolder))
             {
-                return new ErrorResponse("'prefabFolder' parameter is required for create_viewstack.");
+                return CreateError("'prefabFolder' parameter is required for create_viewstack.");
             }
 
             bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
@@ -259,30 +288,27 @@ namespace Framewerk.Editor.Wizards
             // Check if prefab already exists
             if (!overwrite && File.Exists(prefabPath))
             {
-                return new ErrorResponse(
-                    $"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.",
-                    new { prefabPath }
-                );
+                return CreateError($"Prefab already exists at '{prefabPath}'. Set overwrite=true to replace it.");
             }
 
             // Find the view type to ensure it exists
             Type viewType = ComponentScaffoldCompleter.FindType(viewTypeName);
             if (viewType == null)
             {
-                return new ErrorResponse($"Could not find type: {viewTypeName}");
+                return CreateError($"Could not find type: {viewTypeName}");
             }
 
             // Get template path
             string templatePath = GetTemplatePath(ComponentType.ViewStack);
             if (string.IsNullOrEmpty(templatePath))
             {
-                return new ErrorResponse("ViewStack template not found.");
+                return CreateError("ViewStack template not found.");
             }
 
             // Copy template to target path
             if (!AssetDatabase.CopyAsset(templatePath, prefabPath))
             {
-                return new ErrorResponse($"Failed to copy template from {templatePath} to {prefabPath}");
+                return CreateError($"Failed to copy template from {templatePath} to {prefabPath}");
             }
 
             // Swap the base ViewStackView component with the custom View
@@ -292,48 +318,48 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to swap component: {e.Message}");
+                return CreateError($"Failed to swap component: {e.Message}");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"ViewStack prefab created successfully at '{prefabPath}'.",
-                new { prefabPath, success = true }
+                new { prefabPath }
             );
         }
 
-        private static object CreateList(JObject @params)
+        private static JObject CreateList(JObject @params)
         {
             string name = @params["name"]?.ToString();
             if (string.IsNullOrEmpty(name))
             {
-                return new ErrorResponse("'name' parameter is required for create_list.");
+                return CreateError("'name' parameter is required for create_list.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_list.");
+                return CreateError("'namespace' parameter is required for create_list.");
             }
 
             string viewTypeName = @params["viewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(viewTypeName))
             {
-                return new ErrorResponse("'viewTypeName' parameter is required for create_list.");
+                return CreateError("'viewTypeName' parameter is required for create_list.");
             }
 
             string itemViewTypeName = @params["itemViewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(itemViewTypeName))
             {
-                return new ErrorResponse("'itemViewTypeName' parameter is required for create_list.");
+                return CreateError("'itemViewTypeName' parameter is required for create_list.");
             }
 
             string prefabFolder = @params["prefabFolder"]?.ToString();
             if (string.IsNullOrEmpty(prefabFolder))
             {
-                return new ErrorResponse("'prefabFolder' parameter is required for create_list.");
+                return CreateError("'prefabFolder' parameter is required for create_list.");
             }
 
             bool overwrite = @params["overwrite"]?.ToObject<bool>() ?? false;
@@ -350,17 +376,11 @@ namespace Framewerk.Editor.Wizards
             {
                 if (File.Exists(listPrefabPath))
                 {
-                    return new ErrorResponse(
-                        $"List prefab already exists at '{listPrefabPath}'. Set overwrite=true to replace it.",
-                        new { prefabPath = listPrefabPath }
-                    );
+                    return CreateError($"List prefab already exists at '{listPrefabPath}'. Set overwrite=true to replace it.");
                 }
                 if (File.Exists(itemPrefabPath))
                 {
-                    return new ErrorResponse(
-                        $"Item prefab already exists at '{itemPrefabPath}'. Set overwrite=true to replace it.",
-                        new { prefabPath = itemPrefabPath }
-                    );
+                    return CreateError($"Item prefab already exists at '{itemPrefabPath}'. Set overwrite=true to replace it.");
                 }
             }
 
@@ -368,13 +388,13 @@ namespace Framewerk.Editor.Wizards
             Type listViewType = ComponentScaffoldCompleter.FindType(viewTypeName);
             if (listViewType == null)
             {
-                return new ErrorResponse($"Could not find type: {viewTypeName}");
+                return CreateError($"Could not find type: {viewTypeName}");
             }
 
             Type itemViewType = ComponentScaffoldCompleter.FindType(itemViewTypeName);
             if (itemViewType == null)
             {
-                return new ErrorResponse($"Could not find type: {itemViewTypeName}");
+                return CreateError($"Could not find type: {itemViewTypeName}");
             }
 
             // Get template paths
@@ -383,18 +403,18 @@ namespace Framewerk.Editor.Wizards
 
             if (string.IsNullOrEmpty(listTemplatePath) || string.IsNullOrEmpty(itemTemplatePath))
             {
-                return new ErrorResponse("List or ListItem template not found.");
+                return CreateError("List or ListItem template not found.");
             }
 
             // Copy templates
             if (!AssetDatabase.CopyAsset(listTemplatePath, listPrefabPath))
             {
-                return new ErrorResponse($"Failed to copy list template from {listTemplatePath} to {listPrefabPath}");
+                return CreateError($"Failed to copy list template from {listTemplatePath} to {listPrefabPath}");
             }
 
             if (!AssetDatabase.CopyAsset(itemTemplatePath, itemPrefabPath))
             {
-                return new ErrorResponse($"Failed to copy item template from {itemTemplatePath} to {itemPrefabPath}");
+                return CreateError($"Failed to copy item template from {itemTemplatePath} to {itemPrefabPath}");
             }
 
             // Swap components
@@ -405,7 +425,7 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to swap components: {e.Message}");
+                return CreateError($"Failed to swap components: {e.Message}");
             }
 
             // Link the List's ItemPrefab field to the ListItem prefab
@@ -415,52 +435,48 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to link item prefab: {e.Message}");
+                return CreateError($"Failed to link item prefab: {e.Message}");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"List prefabs created successfully at '{listPrefabPath}' and '{itemPrefabPath}'.",
-                new {
-                    listPrefabPath,
-                    itemPrefabPath,
-                    success = true
-                }
+                new { listPrefabPath, itemPrefabPath }
             );
         }
 
-        private static object CreateTabs(JObject @params)
+        private static JObject CreateTabs(JObject @params)
         {
             string name = @params["name"]?.ToString();
             if (string.IsNullOrEmpty(name))
             {
-                return new ErrorResponse("'name' parameter is required for create_tabs.");
+                return CreateError("'name' parameter is required for create_tabs.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_tabs.");
+                return CreateError("'namespace' parameter is required for create_tabs.");
             }
 
             string viewTypeName = @params["viewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(viewTypeName))
             {
-                return new ErrorResponse("'viewTypeName' parameter is required for create_tabs.");
+                return CreateError("'viewTypeName' parameter is required for create_tabs.");
             }
 
             string itemViewTypeName = @params["itemViewTypeName"]?.ToString();
             if (string.IsNullOrEmpty(itemViewTypeName))
             {
-                return new ErrorResponse("'itemViewTypeName' parameter is required for create_tabs.");
+                return CreateError("'itemViewTypeName' parameter is required for create_tabs.");
             }
 
             string prefabFolder = @params["prefabFolder"]?.ToString();
             if (string.IsNullOrEmpty(prefabFolder))
             {
-                return new ErrorResponse("'prefabFolder' parameter is required for create_tabs.");
+                return CreateError("'prefabFolder' parameter is required for create_tabs.");
             }
 
             // orientation: "horizontal" (default) or "vertical"
@@ -483,17 +499,11 @@ namespace Framewerk.Editor.Wizards
             {
                 if (File.Exists(tabsPrefabPath))
                 {
-                    return new ErrorResponse(
-                        $"Tabs prefab already exists at '{tabsPrefabPath}'. Set overwrite=true to replace it.",
-                        new { prefabPath = tabsPrefabPath }
-                    );
+                    return CreateError($"Tabs prefab already exists at '{tabsPrefabPath}'. Set overwrite=true to replace it.");
                 }
                 if (File.Exists(itemPrefabPath))
                 {
-                    return new ErrorResponse(
-                        $"Tab item prefab already exists at '{itemPrefabPath}'. Set overwrite=true to replace it.",
-                        new { prefabPath = itemPrefabPath }
-                    );
+                    return CreateError($"Tab item prefab already exists at '{itemPrefabPath}'. Set overwrite=true to replace it.");
                 }
             }
 
@@ -501,13 +511,13 @@ namespace Framewerk.Editor.Wizards
             Type tabsViewType = ComponentScaffoldCompleter.FindType(viewTypeName);
             if (tabsViewType == null)
             {
-                return new ErrorResponse($"Could not find type: {viewTypeName}");
+                return CreateError($"Could not find type: {viewTypeName}");
             }
 
             Type itemViewType = ComponentScaffoldCompleter.FindType(itemViewTypeName);
             if (itemViewType == null)
             {
-                return new ErrorResponse($"Could not find type: {itemViewTypeName}");
+                return CreateError($"Could not find type: {itemViewTypeName}");
             }
 
             // Get template paths based on orientation
@@ -516,18 +526,18 @@ namespace Framewerk.Editor.Wizards
 
             if (string.IsNullOrEmpty(tabsTemplatePath) || string.IsNullOrEmpty(itemTemplatePath))
             {
-                return new ErrorResponse($"Tabs or TabItem template not found for {orientation} orientation.");
+                return CreateError($"Tabs or TabItem template not found for {orientation} orientation.");
             }
 
             // Copy templates
             if (!AssetDatabase.CopyAsset(tabsTemplatePath, tabsPrefabPath))
             {
-                return new ErrorResponse($"Failed to copy tabs template from {tabsTemplatePath} to {tabsPrefabPath}");
+                return CreateError($"Failed to copy tabs template from {tabsTemplatePath} to {tabsPrefabPath}");
             }
 
             if (!AssetDatabase.CopyAsset(itemTemplatePath, itemPrefabPath))
             {
-                return new ErrorResponse($"Failed to copy tab item template from {itemTemplatePath} to {itemPrefabPath}");
+                return CreateError($"Failed to copy tab item template from {itemTemplatePath} to {itemPrefabPath}");
             }
 
             // Swap components
@@ -538,7 +548,7 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to swap components: {e.Message}");
+                return CreateError($"Failed to swap components: {e.Message}");
             }
 
             // Link the Tabs' ItemPrefab field to the TabItem prefab
@@ -548,35 +558,30 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to link tab item prefab: {e.Message}");
+                return CreateError($"Failed to link tab item prefab: {e.Message}");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"Tabs prefabs created successfully at '{tabsPrefabPath}' and '{itemPrefabPath}' ({orientation} orientation).",
-                new {
-                    tabsPrefabPath,
-                    itemPrefabPath,
-                    orientation,
-                    success = true
-                }
+                new { tabsPrefabPath, itemPrefabPath, orientation }
             );
         }
 
-        private static object MarkAddressable(JObject @params)
+        private static JObject MarkAddressable(JObject @params)
         {
             string prefabPath = @params["prefabPath"]?.ToString();
             if (string.IsNullOrEmpty(prefabPath))
             {
-                return new ErrorResponse("'prefabPath' parameter is required for mark_addressable.");
+                return CreateError("'prefabPath' parameter is required for mark_addressable.");
             }
 
             // Check if prefab exists
             if (!File.Exists(prefabPath))
             {
-                return new ErrorResponse($"Prefab not found at '{prefabPath}'.");
+                return CreateError($"Prefab not found at '{prefabPath}'.");
             }
 
             // Get or generate address
@@ -595,12 +600,12 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                return new ErrorResponse($"Failed to mark as addressable: {e.Message}");
+                return CreateError($"Failed to mark as addressable: {e.Message}");
             }
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"Prefab marked as addressable with address '{address}'.",
-                new { address, prefabPath, success = true }
+                new { address, prefabPath }
             );
         }
 
@@ -817,30 +822,30 @@ namespace Framewerk.Editor.Wizards
             }
         }
 
-        private static object CreateScene(JObject @params)
+        private static JObject CreateScene(JObject @params)
         {
             string sceneName = @params["sceneName"]?.ToString();
             if (string.IsNullOrEmpty(sceneName))
             {
-                return new ErrorResponse("'sceneName' parameter is required for create_scene.");
+                return CreateError("'sceneName' parameter is required for create_scene.");
             }
 
             string namespaceName = @params["namespace"]?.ToString();
             if (string.IsNullOrEmpty(namespaceName))
             {
-                return new ErrorResponse("'namespace' parameter is required for create_scene.");
+                return CreateError("'namespace' parameter is required for create_scene.");
             }
 
             string sceneFolder = @params["sceneFolder"]?.ToString();
             if (string.IsNullOrEmpty(sceneFolder))
             {
-                return new ErrorResponse("'sceneFolder' parameter is required for create_scene.");
+                return CreateError("'sceneFolder' parameter is required for create_scene.");
             }
 
             string scriptFolder = @params["scriptFolder"]?.ToString();
             if (string.IsNullOrEmpty(scriptFolder))
             {
-                return new ErrorResponse("'scriptFolder' parameter is required for create_scene.");
+                return CreateError("'scriptFolder' parameter is required for create_scene.");
             }
 
             // Ensure folders exist
@@ -856,12 +861,12 @@ namespace Framewerk.Editor.Wizards
             // Check for existing files
             if (File.Exists(scenePath))
             {
-                return new ErrorResponse($"Scene already exists at '{scenePath}'.");
+                return CreateError($"Scene already exists at '{scenePath}'.");
             }
 
             if (File.Exists(bootstrapPath) || File.Exists(contextPath) || File.Exists(startCommandPath))
             {
-                return new ErrorResponse($"One or more script files already exist for {sceneName}.");
+                return CreateError($"One or more script files already exist for {sceneName}.");
             }
 
             // Load templates
@@ -890,7 +895,7 @@ namespace Framewerk.Editor.Wizards
             string sceneTemplatePath = "Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/SceneTemplate.unity";
             if (!File.Exists(sceneTemplatePath))
             {
-                return new ErrorResponse("SceneTemplate.unity not found in Templates folder.");
+                return CreateError("SceneTemplate.unity not found in Templates folder.");
             }
 
             File.Copy(sceneTemplatePath, scenePath);
@@ -917,16 +922,71 @@ namespace Framewerk.Editor.Wizards
 
             Debug.Log($"Generated scene and scripts for {sceneName}. Waiting for recompile to complete scene setup...");
 
-            return new SuccessResponse(
+            return CreateSuccess(
                 $"Scene '{sceneName}' created successfully. Scripts generated, waiting for compile...",
-                new {
-                    scenePath,
-                    bootstrapPath,
-                    contextPath,
-                    startCommandPath,
-                    success = true
-                }
+                new { scenePath, bootstrapPath, contextPath, startCommandPath }
             );
+        }
+    }
+
+    /// <summary>
+    /// Registers the Framewerk scaffold tool with the MCP Unity server.
+    /// Uses reflection to inject the tool since the plugin doesn't expose a public registration API.
+    /// </summary>
+    [InitializeOnLoad]
+    public static class FramewerkMcpToolRegistrar
+    {
+        static FramewerkMcpToolRegistrar()
+        {
+            // Delay registration until after the MCP server has initialized
+            EditorApplication.delayCall += RegisterTool;
+        }
+
+        private static void RegisterTool()
+        {
+            // Skip in batch mode (same as MCP server)
+            if (Application.isBatchMode)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get the MCP server instance
+                var serverInstance = McpUnityServer.Instance;
+                if (serverInstance == null)
+                {
+                    Debug.LogWarning("[Framewerk] MCP Unity server not available, skipping tool registration");
+                    return;
+                }
+
+                // Use reflection to access the private _tools dictionary
+                var toolsField = typeof(McpUnityServer).GetField("_tools", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (toolsField == null)
+                {
+                    Debug.LogError("[Framewerk] Could not find _tools field in McpUnityServer");
+                    return;
+                }
+
+                var tools = toolsField.GetValue(serverInstance) as Dictionary<string, McpToolBase>;
+                if (tools == null)
+                {
+                    Debug.LogError("[Framewerk] _tools dictionary is null");
+                    return;
+                }
+
+                // Register our tool
+                var framewerkTool = new FramewerkScaffoldTool();
+                if (!tools.ContainsKey(framewerkTool.Name))
+                {
+                    tools.Add(framewerkTool.Name, framewerkTool);
+                    Debug.Log($"[Framewerk] Registered MCP tool: {framewerkTool.Name}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Framewerk] Failed to register MCP tool: {e.Message}");
+            }
         }
     }
 }

@@ -153,10 +153,23 @@ Assets/Scripts/FramewerkDemo/   # Demo app (Bootstrap, Context, States, Screens)
 
 ## MCP Tools (Unity ↔ AI)
 
-This project has **MCP For Unity** (`com.coplaydev.unity-mcp`) which lets you call Unity Editor functions via MCP. The server runs on `http://localhost:8080/mcp`.
+This project uses **MCP Unity** (`com.gamelovers.mcp-unity`) from [CoderGamester/mcp-unity](https://github.com/CoderGamester/mcp-unity).
 
-### Built-in MCP tools
-Standard tools: `manage_asset`, `manage_gameobject`, `manage_scene`, `manage_prefabs`, `create_script`, `apply_text_edits`, `validate_script`, `read_console`, `execute_menu_item`, `find_gameobjects`, `manage_components`, `manage_material`, `manage_editor`, etc.
+### Key Features
+- **Auto-starts when Unity launches** — no manual "Start Server" button needed
+- Uses stdio transport with Node.js server (auto-configured for Claude Code, Cursor, etc.)
+- More tools than previous plugins: materials, batching, transforms, component updates
+
+### Built-in MCP Tools
+- `execute_menu_item` — Execute Unity menu items
+- `select_gameobject` — Select GameObjects in hierarchy
+- `update_gameobject` — Update or create GameObjects (name, tag, layer, active/static)
+- `update_component` — Update component fields or add components
+- `add_package` — Install Unity packages
+- `run_tests` — Run Unity tests
+- `send_console_log` — Log messages to Unity console
+- `get_logs` — Read Unity console logs
+- Plus: asset management, scene operations, prefab handling, material editing
 
 ### Framewerk custom tool: `framewerk_scaffold`
 
