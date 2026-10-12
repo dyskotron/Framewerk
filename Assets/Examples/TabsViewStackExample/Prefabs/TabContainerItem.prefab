@@ -89,6 +89,7 @@ GameObject:
   - component: {fileID: 9070482979260487285}
   - component: {fileID: 2287224340987885783}
   - component: {fileID: 296303107593115120}
+  - component: {fileID: 1646923418324349778}
   m_Layer: 0
   m_Name: TabContainerItem
   m_TagString: Untagged
@@ -219,6 +220,8 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+  m_MaxWidth: -1
+  m_MaxHeight: -1
 --- !u!114 &296303107593115120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,7 +235,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Framewerk.Examples.TabsViewStackExample.TabItemView
   SelectButton: {fileID: 9070482979260487285}
+  PointerElement: {fileID: 1646923418324349778}
   Label: {fileID: 4181821138676574402}
+--- !u!114 &1646923418324349778
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3482702270341156377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05d8e06b29d9420b87d2ffd70bd5fd30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: com.dyskotron.framewerk.ui::Framewerk.UI.Components.PointerElement
 --- !u!1 &4542473923856165413
 GameObject:
   m_ObjectHideFlags: 0

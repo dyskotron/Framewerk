@@ -16,11 +16,21 @@ namespace Framewerk.Examples.ListExample
         protected override void ListItemClicked(int index, ContactData dataProvider)
         {
             base.ListItemClicked(index, dataProvider);
-            
+
             if (dataProvider != null)
             {
                 Debug.Log($"[ListExample] Clicked: {dataProvider.Name}");
             }
+        }
+
+        protected override void ListItemHoverEnter(int index, ContactData dataProvider)
+        {
+            Debug.Log($"[ListExample] Hover enter: {dataProvider.Name}");
+        }
+
+        protected override void ListItemHoverExit(int index, ContactData dataProvider)
+        {
+            Debug.Log($"[ListExample] Hover exit: {dataProvider.Name}");
         }
     }
 }
