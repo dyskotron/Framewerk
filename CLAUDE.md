@@ -65,6 +65,7 @@ Framewerk is a Unity MVCS (Model-View-Controller-Service) framework built on **S
 ## Build & Test
 
 - **Unity version:** see `ProjectSettings/ProjectVersion.txt`
+- **Fresh checkout:** `Assets/TextMesh Pro/` (TMP Essential Resources) is gitignored on purpose. Import it once or every TMP label renders empty: click Import in the TMP importer window, or headlessly `TMPro.EditorUtilities.TMP_PackageResourceImporter.ImportResources(true, false, false)` via eval. The import only progresses while the Editor window has focus, and it does not finish inside the eval call, so return immediately and poll `Assets/TextMesh Pro/` for files instead of forcing a synchronous refresh (that blocks the main thread until the command times out).
 - **Open scene:** `Assets/Scenes/SampleScene.unity`, press Play
 - **Run tests:** Unity Test Runner (Window > General > Test Runner), or `run_tests` through the Unity CLI — tests are in `Packages/com.dyskotron.framewerk.core/Tests/` covering Strange framework internals
 - **Package location:** `Packages/com.dyskotron.framewerk*/` (local UPM, referenced as `file:` in manifest)
