@@ -24,15 +24,9 @@ namespace Framewerk.UI.List
         Signal<int, TData> ItemClickedSignal { get; }
 
         /// <summary>
-        /// When true, hovering an item selects it (pointer enter). Default false.
+        /// What user input changes selection. Initialized from ListView.SelectionTrigger; code may override at runtime.
         /// </summary>
-        bool HoverSelects { get; set; }
-
-        /// <summary>
-        /// When true (default), clicking an item selects it. When false, clicks only dispatch ItemClickedSignal
-        /// and selection is driven by hover or by SelectItemAt.
-        /// </summary>
-        bool SelectOnClick { get; set; }
+        SelectionTrigger SelectionTrigger { get; set; }
 
         void SetData(List<TData> dataProviders);
 

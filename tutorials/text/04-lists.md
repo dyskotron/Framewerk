@@ -23,6 +23,7 @@ ListView : View
     └── ContentsParent: RectTransform (where items spawn)
     └── ItemPrefab: GameObject (the item template)
     └── EmptyContent: GameObject (shown when list is empty)
+    └── SelectionTrigger: enum (Inspector default for the mediator's SelectionTrigger)
 
 ListItemView : View
     └── SelectButton: Button (triggers click)
@@ -35,8 +36,7 @@ ListMediator<TView, TData> : ListBaseMediator<TView, TData>
     └── RemoveItemAt(int) — dynamic removal
     └── Multiselect: bool — allow multiple selection
     └── Unselectable: bool — allow toggling selection off
-    └── SelectOnClick: bool — click selects (default true)
-    └── HoverSelects: bool — hover selects (default false)
+    └── SelectionTrigger: Click | Hover | None — what input changes selection (default Click)
     └── ItemClickedSignal — dispatched on every item click
 
 ListItemMediator<TView, TData> : ExtendedMediator<TView>
@@ -394,16 +394,17 @@ protected override void ListItemHoverEnter(int index, PlayerListData data) { }
 protected override void ListItemHoverExit(int index, PlayerListData data) { }
 ```
 
-### Hover and Click Without Selection
+### Selection Trigger
 
-By default a click selects the item. Two flags change the policy:
+`SelectionTrigger` decides which user input changes selection. Set the default on the `ListView` in the Inspector (the prefab), or override `SelectionTrigger` on the mediator at runtime.
 
-| Flag | Default | Effect |
-|------|---------|--------|
-| `SelectOnClick` | `true` | When `false`, clicks never change selection. They only fire `ListItemClicked` and `ItemClickedSignal`. |
-| `HoverSelects` | `false` | When `true`, pointer enter selects the hovered item. |
+| Value | Selection changes on | A click... |
+|-------|----------------------|------------|
+| `Click` (default) | click | selects (and unselects when `Unselectable`) |
+| `Hover` | pointer enter | leaves selection alone, only fires `ListItemClicked` and `ItemClickedSignal` |
+| `None` | nothing but `SelectItemAt` / `UnselectItemAt` | leaves selection alone, only fires `ListItemClicked` and `ItemClickedSignal` |
 
-`ItemClickedSignal` is a public signal on the list mediator carrying the clicked index and data. It is dispatched on every click regardless of selection.
+`ItemClickedSignal` is a public signal on the list mediator carrying the clicked index and data. It is dispatched on every click regardless of the trigger. `Hover` needs `ListItemView.PointerElement` on the items.
 
 Game main menu pattern: hover or keyboard moves the highlight, click or Enter confirms.
 
@@ -416,8 +417,7 @@ public class MainMenuMediator : ListMediator<MainMenuView, MenuItemData>
     {
         base.OnRegister();
 
-        HoverSelects = true;    // highlight follows the mouse
-        SelectOnClick = false;  // click confirms, does not select
+        SelectionTrigger = SelectionTrigger.Hover;  // highlight follows the mouse, click only confirms
         SetData(MenuModel.GetMenuItems());
         SelectItemAt(0);
     }
@@ -672,7 +672,7 @@ public class FriendListMediator : ListMediator<FriendListView, FriendListData>
 | **Data Binding** | Implement IListItemDataProvider; override SetData() in item mediator |
 | **Wizard** | Generates all 5 files + 2 prefabs; auto-registers mediation binding |
 | **Selection** | SelectItemAt(), UnselectAll(); Multiselect/Unselectable flags |
-| **Hover & Click** | SetHovered() on item; SelectOnClick/HoverSelects flags; ItemClickedSignal on list |
+| **Hover & Click** | SetHovered() on item; SelectionTrigger (Click/Hover/None); ItemClickedSignal on list |
 | **Pooling** | Automatic — items hidden, not destroyed; SetActive() controls visibility |
 | **EmptyContent** | Assign in ListView; auto-shown when list is empty |
 

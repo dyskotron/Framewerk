@@ -22,8 +22,7 @@ namespace Framewerk.UI.List
         public List<int> SelectedItemIndexes { get; private set; }
         public bool Multiselect { get; set; }
         public bool Unselectable { get; set; }
-        public bool HoverSelects { get; set; }
-        public bool SelectOnClick { get; set; } = true;
+        public SelectionTrigger SelectionTrigger { get; set; }
 
         protected int CreatedMediatorsCount = 0;
         protected readonly List<IListItemMediator<TData>> ItemMediators = new();
@@ -32,7 +31,8 @@ namespace Framewerk.UI.List
         public override void OnRegister()
         {
             SelectedItemIndexes = new List<int>();
-            
+            SelectionTrigger = View.SelectionTrigger;
+
             base.OnRegister();
         }
 
@@ -277,7 +277,7 @@ namespace Framewerk.UI.List
 
         private void ListItemClickedHandler(int itemIndex, TData dataProvider)
         {
-            if (SelectOnClick)
+            if (SelectionTrigger == SelectionTrigger.Click)
             {
                 //select/unselected new item
                 var selected = SelectedItemIndexes.Contains(itemIndex);
@@ -301,7 +301,7 @@ namespace Framewerk.UI.List
         {
             if (hovered)
             {
-                if (HoverSelects && !SelectedItemIndexes.Contains(itemIndex))
+                if (SelectionTrigger == SelectionTrigger.Hover && !SelectedItemIndexes.Contains(itemIndex))
                 {
                     SelectItemAt(itemIndex);
                     ListItemSelected(itemIndex, dataProvider);
