@@ -5,7 +5,6 @@
         "com.dyskotron.framewerk.core",
         "com.dyskotron.framewerk.ui",
         "Unity.Addressables.Editor",
-        "McpUnity.Editor",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [

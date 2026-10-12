@@ -2,28 +2,30 @@
 
 **For AI coding assistants (Claude Code, Cursor, Copilot, etc.)**
 
-This document explains how to properly work with Framewerk. **DO NOT** try to create Unity prefabs, scenes, or wire UI components manually. Framewerk provides MCP tools that handle all of this automatically.
+This document explains how to properly work with Framewerk. **DO NOT** try to create Unity prefabs, scenes, or wire UI components manually. Framewerk provides scaffold tooling that handles all of this automatically.
 
 ---
 
 ## ⚠️ Critical Rules
 
-1. **NEVER create Unity prefabs manually** — use the `framewerk_scaffold` MCP tool
+1. **NEVER create Unity prefabs manually** — use `FramewerkScaffold` through the Unity CLI
 2. **NEVER create Unity scenes manually** — use the `create_scene` action
 3. **NEVER try to wire Unity serialized fields via code** — the wizard handles this
-4. **ALWAYS use the framework's MCP tools** for creating UI components
+4. **ALWAYS use the framework's scaffold tooling** for creating UI components
 
 Unity automation is hard. The framework has wizards specifically designed for this. Use them.
 
 ---
 
-## MCP Tool: `framewerk_scaffold`
+## Scaffold Tool: `FramewerkScaffold`
 
-All Framewerk scaffolding is done through this single MCP tool. Call it via:
+All Framewerk scaffolding is done through one static entry point, `Framewerk.Editor.Wizards.FramewerkScaffold.Execute(json)`, which runs inside the Editor. Call it through the Unity CLI's `eval` command (Pipeline package):
 
 ```bash
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {...}}'
+unity command eval --project-path <repo> --result-only --timeout 60000 'return Framewerk.Editor.Wizards.FramewerkScaffold.Execute("{\"action\":\"create_popup\",\"name\":\"MyPopup\",\"namespace\":\"MyNamespace\",\"viewTypeName\":\"MyNamespace.MyPopupView\",\"prefabFolder\":\"Assets/MyExample/Prefabs\"}");'
 ```
+
+For anything longer, write the C# to a scratch file and run `unity command eval_file -- --file <path> --timeout 60000`. The result is a JSON string with `success`, `message` and action-specific paths. See `CLAUDE.md` for the full Editor workflow rules.
 
 ### Available Actions
 
@@ -59,11 +61,11 @@ This creates:
 - `MyExampleStartCommand.cs` — Startup logic
 - `MyExample.unity` — The scene file
 
-**Wait for Unity to compile** after this step.
+**Recompile and wait** after this step (`unity command recompile`, then poll `recompile_status`).
 
 ### Step 2: Create View/Mediator Scripts
 
-Write the View and Mediator C# scripts manually. The wizard needs these types to exist before creating prefabs.
+Write the View and Mediator C# scripts manually. The wizard needs these types to exist before creating prefabs, so recompile again once they are written.
 
 **View example:**
 ```csharp
@@ -98,7 +100,9 @@ namespace MyNamespace
 }
 ```
 
-### Step 3: Create Prefabs via MCP
+### Step 3: Create Prefabs via FramewerkScaffold
+
+Each JSON block below is the parameter object passed to `FramewerkScaffold.Execute`.
 
 **For a Popup:**
 ```json
@@ -264,10 +268,10 @@ Examples:
 
 ## Troubleshooting
 
-### MCP not responding
-- Check if Unity is running
-- Open MCP window: `Window > MCP for Unity > Toggle MCP Window`
-- Verify port 8080 is accessible
+### Editor not reachable
+- `unity status --project-path <repo>` must report `ready`
+- Unity is busy (domain reload, import) for a few seconds after changes: retry with a longer `--timeout`
+- If the Editor started with compile errors it is in Safe Mode and the Pipeline package is off: fix the code, `unity close --force`, `unity open`
 
 ### Prefab creation fails
 - Ensure View/Mediator scripts exist and compile
@@ -287,12 +291,13 @@ Examples:
 ❌ Don't try to set Unity serialized fields via file manipulation  
 ❌ Don't create scene files manually  
 ❌ Don't create helper scripts/wizards — they already exist  
-❌ Don't bypass the MCP tools  
+❌ Don't bypass the scaffold tooling  
+❌ Don't install third-party Unity MCP plugins — the Unity CLI and Pipeline package are the only Editor bridge  
 
 ---
 
 ## Reference
 
-- **MCP Tool Source:** `Packages/com.dyskotron.framewerk.editor/Editor/Wizards/ComponentScaffoldMcpTools.cs`
+- **Scaffold Tool Source:** `Packages/com.dyskotron.framewerk.editor/Editor/Wizards/FramewerkScaffold.cs`
 - **Interactive Wizards:** `Framewerk > Create Scene` and `Framewerk > Create UI Component` menus
 - **Templates:** `Packages/com.dyskotron.framewerk.editor/Editor/Wizards/Templates/`

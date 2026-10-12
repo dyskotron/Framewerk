@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.gamelovers.mcp-unity": "https://github.com/CoderGamester/mcp-unity.git",
     "com.dyskotron.framewerk": "file:com.dyskotron.framewerk",
     "com.dyskotron.framewerk.core": "file:com.dyskotron.framewerk.core",
     "com.dyskotron.framewerk.ui": "file:com.dyskotron.framewerk.ui",
@@ -8,6 +7,8 @@
     "com.dyskotron.framewerk.editor": "file:com.dyskotron.framewerk.editor",
     "com.unity.addressables": "1.21.21",
     "com.unity.ide.rider": "3.0.39",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.pipeline": "0.8.0-exp.1",
     "com.unity.test-framework": "1.6.0",
     "com.unity.ugui": "2.0.0",
     "com.unity.modules.assetbundle": "1.0.0",

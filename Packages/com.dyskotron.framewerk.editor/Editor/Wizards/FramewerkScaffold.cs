@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using McpUnity.Tools;
-using McpUnity.Unity;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -11,20 +7,38 @@ using UnityEngine;
 namespace Framewerk.Editor.Wizards
 {
     /// <summary>
-    /// MCP tool for creating Framewerk component prefabs (Popup, List) and marking them as addressable.
-    /// Extends McpToolBase for compatibility with com.gamelovers.mcp-unity plugin.
+    /// Headless scaffolding entry point for AI agents and scripts. Creates Framewerk component prefabs
+    /// (Popup, List, Tabs, View, ViewStack), scenes, and marks prefabs as addressable.
+    ///
+    /// Call from the Unity CLI (Pipeline package) with a JSON parameter object:
+    ///   unity command eval --project-path . --result-only
+    ///     'return Framewerk.Editor.Wizards.FramewerkScaffold.Execute("{\"action\":\"create_list\", ...}");'
+    ///
+    /// Returns a JSON string: { "success": bool, "message": string, ...data } or { "success": false, "error": ..., "message": ... }.
     /// </summary>
-    public class FramewerkScaffoldTool : McpToolBase
+    public static class FramewerkScaffold
     {
-        private const string SupportedActions = "create_popup, create_list, create_tabs, create_view, create_viewstack, mark_addressable, create_scene";
+        public const string SupportedActions = "create_popup, create_list, create_tabs, create_view, create_viewstack, mark_addressable, create_scene";
 
-        public FramewerkScaffoldTool()
+        /// <summary>
+        /// Executes a scaffold action described by a JSON object string. See <see cref="SupportedActions"/>.
+        /// </summary>
+        public static string Execute(string parametersJson)
         {
-            Name = "framewerk_scaffold";
-            Description = "Creates Framewerk UI component prefabs (Popup, List, Tabs, View, ViewStack) and marks them as addressable. Supports actions: " + SupportedActions;
+            JObject parameters;
+            try
+            {
+                parameters = string.IsNullOrWhiteSpace(parametersJson) ? null : JObject.Parse(parametersJson);
+            }
+            catch (Exception e)
+            {
+                return CreateError($"Invalid JSON parameters: {e.Message}").ToString();
+            }
+
+            return Execute(parameters).ToString();
         }
 
-        public override JObject Execute(JObject parameters)
+        public static JObject Execute(JObject parameters)
         {
             if (parameters == null)
             {
@@ -61,14 +75,20 @@ namespace Framewerk.Editor.Wizards
             }
             catch (Exception e)
             {
-                Debug.LogError($"[FramewerkScaffoldTool] Action '{action}' failed: {e}");
+                Debug.LogError($"[FramewerkScaffold] Action '{action}' failed: {e}");
                 return CreateError($"Internal error: {e.Message}");
             }
         }
 
         private static JObject CreateError(string message)
         {
-            return McpUnitySocketHandler.CreateErrorResponse(message, "validation_error");
+            return new JObject
+            {
+                ["success"] = false,
+                ["type"] = "text",
+                ["error"] = "validation_error",
+                ["message"] = message
+            };
         }
 
         private static JObject CreateSuccess(string message, object data = null)
@@ -926,67 +946,6 @@ namespace Framewerk.Editor.Wizards
                 $"Scene '{sceneName}' created successfully. Scripts generated, waiting for compile...",
                 new { scenePath, bootstrapPath, contextPath, startCommandPath }
             );
-        }
-    }
-
-    /// <summary>
-    /// Registers the Framewerk scaffold tool with the MCP Unity server.
-    /// Uses reflection to inject the tool since the plugin doesn't expose a public registration API.
-    /// </summary>
-    [InitializeOnLoad]
-    public static class FramewerkMcpToolRegistrar
-    {
-        static FramewerkMcpToolRegistrar()
-        {
-            // Delay registration until after the MCP server has initialized
-            EditorApplication.delayCall += RegisterTool;
-        }
-
-        private static void RegisterTool()
-        {
-            // Skip in batch mode (same as MCP server)
-            if (Application.isBatchMode)
-            {
-                return;
-            }
-
-            try
-            {
-                // Get the MCP server instance
-                var serverInstance = McpUnityServer.Instance;
-                if (serverInstance == null)
-                {
-                    Debug.LogWarning("[Framewerk] MCP Unity server not available, skipping tool registration");
-                    return;
-                }
-
-                // Use reflection to access the private _tools dictionary
-                var toolsField = typeof(McpUnityServer).GetField("_tools", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (toolsField == null)
-                {
-                    Debug.LogError("[Framewerk] Could not find _tools field in McpUnityServer");
-                    return;
-                }
-
-                var tools = toolsField.GetValue(serverInstance) as Dictionary<string, McpToolBase>;
-                if (tools == null)
-                {
-                    Debug.LogError("[Framewerk] _tools dictionary is null");
-                    return;
-                }
-
-                // Register our tool
-                var framewerkTool = new FramewerkScaffoldTool();
-                if (!tools.ContainsKey(framewerkTool.Name))
-                {
-                    tools.Add(framewerkTool.Name, framewerkTool);
-                    Debug.Log($"[Framewerk] Registered MCP tool: {framewerkTool.Name}");
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Framewerk] Failed to register MCP tool: {e.Message}");
-            }
         }
     }
 }

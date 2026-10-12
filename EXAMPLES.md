@@ -88,42 +88,48 @@ Shows: Full navigation flow with state machine
 
 ---
 
-## MCP Commands for Remaining Setup
+## Scaffold Commands for Remaining Setup
+
+Each step passes a JSON parameter object to `Framewerk.Editor.Wizards.FramewerkScaffold.Execute` through the Unity CLI. Define a helper once per shell:
+
+```bash
+export PATH="/c/Users/$USER/AppData/Local/Unity/bin:$PATH"
+scaffold() { unity command eval --project-path "$(pwd)" --result-only --timeout 60000 "return Framewerk.Editor.Wizards.FramewerkScaffold.Execute(@\"$(printf '%s' "$1" | sed 's/"/""/g')\");"; }
+```
 
 ### ListExample
 ```bash
-# 1. Create scene
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_scene", "name": "ListExample", "namespace": "Framewerk.Examples.ListExample", "output_path": "Assets/Examples/ListExample"}}'
+# 1. Create scene (recompile afterwards)
+scaffold '{"action":"create_scene","sceneName":"ListExample","namespace":"Framewerk.Examples.ListExample","sceneFolder":"Assets/Examples/ListExample/Scenes","scriptFolder":"Assets/Examples/ListExample/Scripts"}'
 
-# 2. Create list prefabs  
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_list", "name": "ListPanel", "item_name": "ContactItem", "namespace": "Framewerk.Examples.ListExample", "output_path": "Assets/Examples/ListExample/Prefabs"}}'
+# 2. Create list prefabs (View scripts must exist and compile first)
+scaffold '{"action":"create_list","name":"ContactList","namespace":"Framewerk.Examples.ListExample","viewTypeName":"Framewerk.Examples.ListExample.ContactListView","itemViewTypeName":"Framewerk.Examples.ListExample.ContactListItemView","prefabFolder":"Assets/Examples/ListExample/Prefabs"}'
 
 # 3. Mark addressable
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "mark_addressable", "prefab_path": "Assets/Examples/ListExample/Prefabs/ListPanel.prefab", "address": "ListExample/ListPanel"}}'
+scaffold '{"action":"mark_addressable","prefabPath":"Assets/Examples/ListExample/Prefabs/ContactList.prefab","address":"ListExample/UI/ContactList"}'
 ```
 
 ### TabsViewStackExample
 ```bash
 # 1. Create scene
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_scene", "name": "TabsViewStackExample", "namespace": "Framewerk.Examples.TabsViewStackExample", "output_path": "Assets/Examples/TabsViewStackExample"}}'
+scaffold '{"action":"create_scene","sceneName":"TabsViewStackExample","namespace":"Framewerk.Examples.TabsViewStackExample","sceneFolder":"Assets/Examples/TabsViewStackExample/Scenes","scriptFolder":"Assets/Examples/TabsViewStackExample/Scripts"}'
 
-# 2. Create tabs list prefabs
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_list", "name": "TabsPanel", "item_name": "TabItem", "namespace": "Framewerk.Examples.TabsViewStackExample", "output_path": "Assets/Examples/TabsViewStackExample/Prefabs"}}'
+# 2. Create tabs prefabs
+scaffold '{"action":"create_tabs","name":"TabContainer","namespace":"Framewerk.Examples.TabsViewStackExample","viewTypeName":"Framewerk.Examples.TabsViewStackExample.TabContainerView","itemViewTypeName":"Framewerk.Examples.TabsViewStackExample.TabItemView","prefabFolder":"Assets/Examples/TabsViewStackExample/Prefabs","orientation":"horizontal"}'
 
 # 3. Mark addressable
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "mark_addressable", "prefab_path": "Assets/Examples/TabsViewStackExample/Prefabs/TabsPanel.prefab", "address": "TabsViewStackExample/TabsPanel"}}'
+scaffold '{"action":"mark_addressable","prefabPath":"Assets/Examples/TabsViewStackExample/Prefabs/TabContainer.prefab","address":"TabsViewStackExample/UI/TabContainer"}'
 ```
 
 ### ScreenFsmExample
 ```bash
 # 1. Create scene
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_scene", "name": "ScreenFsmExample", "namespace": "Framewerk.Examples.ScreenFsmExample", "output_path": "Assets/Examples/ScreenFsmExample"}}'
+scaffold '{"action":"create_scene","sceneName":"ScreenFsmExample","namespace":"Framewerk.Examples.ScreenFsmExample","sceneFolder":"Assets/Examples/ScreenFsmExample/Scenes","scriptFolder":"Assets/Examples/ScreenFsmExample/Scripts"}'
 
 # 2. Create MainMenu list
-python3 ~/clawd/scripts/unity_mcp.py call execute_custom_tool '{"tool_name": "framewerk_scaffold", "parameters": {"action": "create_list", "name": "MainMenu", "item_name": "MenuItem", "namespace": "Framewerk.Examples.ScreenFsmExample", "output_path": "Assets/Examples/ScreenFsmExample/Prefabs"}}'
+scaffold '{"action":"create_list","name":"MainMenu","namespace":"Framewerk.Examples.ScreenFsmExample","viewTypeName":"Framewerk.Examples.ScreenFsmExample.MainMenuView","itemViewTypeName":"Framewerk.Examples.ScreenFsmExample.MainMenuItemView","prefabFolder":"Assets/Examples/ScreenFsmExample/Prefabs"}'
 
-# 3. Create view prefabs for each screen
-# (Settings, Game, Leaderboards, About - use create_view action)
+# 3. Create view prefabs for each screen (Settings, Game, Leaderboards, About) with create_view
 
 # 4. Mark all addressable
 ```
