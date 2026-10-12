@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Framewerk.Signals;
 using strange.extensions.mediation.api;
+using strange.extensions.signal.impl;
 
 namespace Framewerk.UI.List
 {
@@ -15,7 +16,24 @@ namespace Framewerk.UI.List
         /// Signal dispatched when selection changes. Parameter is the selected index (null if nothing selected).
         /// </summary>
         SelectionChangedSignal SelectionChangedSignal { get; }
-        
+
+        /// <summary>
+        /// Signal dispatched when an item is clicked, regardless of whether the click changed selection.
+        /// Parameters are the clicked index and its data.
+        /// </summary>
+        Signal<int, TData> ItemClickedSignal { get; }
+
+        /// <summary>
+        /// When true, hovering an item selects it (pointer enter). Default false.
+        /// </summary>
+        bool HoverSelects { get; set; }
+
+        /// <summary>
+        /// When true (default), clicking an item selects it. When false, clicks only dispatch ItemClickedSignal
+        /// and selection is driven by hover or by SelectItemAt.
+        /// </summary>
+        bool SelectOnClick { get; set; }
+
         void SetData(List<TData> dataProviders);
 
         /// <summary>

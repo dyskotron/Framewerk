@@ -16,6 +16,7 @@ namespace Framewerk.UI
         private Dictionary<GameObject, List<UnityAction>> ButtonHandlers = new Dictionary<GameObject, List<UnityAction>>();
         private Dictionary<GameObject, List<UnityAction<bool>>> ToggleHandlers = new Dictionary<GameObject, List<UnityAction<bool>>>();
         private Dictionary<GameObject, List<UnityAction<bool, Vector2>>> PointerHandlers = new Dictionary<GameObject, List<UnityAction<bool, Vector2>>>();
+        private Dictionary<GameObject, List<UnityAction<bool>>> HoverHandlers = new Dictionary<GameObject, List<UnityAction<bool>>>();
         private Dictionary<GameObject, List<UnityAction<float>>> SliderHandlers = new Dictionary<GameObject, List<UnityAction<float>>>();
         private Dictionary<GameObject, List<UnityAction<string>>> InputHandlers = new Dictionary<GameObject, List<UnityAction<string>>>();
         private Dictionary<GameObject, List<Action<DragData>>> DragHandlers = new Dictionary<GameObject, List<Action<DragData>>>();
@@ -35,6 +36,7 @@ namespace Framewerk.UI
             RemoveSliderListeners();
             RemoveInputListeners();
             RemovePointerListeners();
+            RemoveHoverListeners();
             RemoveDragListeners();
         }
 
@@ -91,6 +93,17 @@ namespace Framewerk.UI
                     m.OnPointerChanged.RemoveListener(handler);
             }
             PointerHandlers.Clear();
+        }
+
+        protected void RemoveHoverListeners()
+        {
+            foreach (var pair in HoverHandlers)
+            {
+                var m = pair.Key.GetComponent<PointerElement>();
+                foreach (var handler in pair.Value)
+                    m.OnHoverChanged.RemoveListener(handler);
+            }
+            HoverHandlers.Clear();
         }
 
         protected void RemoveDragListeners()
@@ -169,6 +182,19 @@ namespace Framewerk.UI
             {
                 handlers = new List<UnityAction<bool, Vector2>>();
                 PointerHandlers[pointerElement.gameObject] = handlers;
+            }
+            handlers.Add(internalAction);
+        }
+
+        protected void AddHoverListener(PointerElement pointerElement, Action<bool> func)
+        {
+            UnityAction<bool> internalAction = (hovered) => { func(hovered); };
+            pointerElement.OnHoverChanged.AddListener(internalAction);
+
+            if (!HoverHandlers.TryGetValue(pointerElement.gameObject, out var handlers))
+            {
+                handlers = new List<UnityAction<bool>>();
+                HoverHandlers[pointerElement.gameObject] = handlers;
             }
             handlers.Add(internalAction);
         }

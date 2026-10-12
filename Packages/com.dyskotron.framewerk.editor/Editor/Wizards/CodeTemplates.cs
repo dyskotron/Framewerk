@@ -174,6 +174,11 @@ namespace {ns}
         {{
             base.OnRegister();
         }}
+
+        public override void SetHovered(bool hovered)
+        {{
+            base.SetHovered(hovered);
+        }}
     }}
 }}
 ";

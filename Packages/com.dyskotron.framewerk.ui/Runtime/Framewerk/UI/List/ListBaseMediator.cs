@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using Framewerk.Managers;
 using Framewerk.Signals;
-using Framewerk.Signals;
 using strange.extensions.mediation.api;
+using strange.extensions.signal.impl;
 using UnityEngine;
 
 namespace Framewerk.UI.List
@@ -18,9 +18,12 @@ namespace Framewerk.UI.List
         [Inject] public IUiManager UiManager { get; set; }
         
         [Inject, ViewGroupShared] public SelectionChangedSignal SelectionChangedSignal { get; set; }
+        public Signal<int, TData> ItemClickedSignal { get; } = new Signal<int, TData>();
         public List<int> SelectedItemIndexes { get; private set; }
         public bool Multiselect { get; set; }
         public bool Unselectable { get; set; }
+        public bool HoverSelects { get; set; }
+        public bool SelectOnClick { get; set; } = true;
 
         protected int CreatedMediatorsCount = 0;
         protected readonly List<IListItemMediator<TData>> ItemMediators = new();
@@ -50,6 +53,7 @@ namespace Framewerk.UI.List
                 itemMediator.SetActive(false);
             
             itemMediator.ListItemClickedSignal.AddListener(ListItemClickedHandler);
+            itemMediator.ListItemHoverSignal.AddListener(ListItemHoverHandler);
         }
         
         public virtual void SetData(List<TData> dataProviders)
@@ -69,8 +73,9 @@ namespace Framewerk.UI.List
             {
                 itemMediator.Destroy();
             }
-            
+
             ItemMediators.Clear();
+            ItemClickedSignal.RemoveAllListeners();
             GameObject.Destroy(View.gameObject);
         }
         
@@ -246,32 +251,68 @@ namespace Framewerk.UI.List
         
         protected virtual void ListItemUnselected(int index, TData dataProvider)
         {
-            
+
+        }
+
+        /// <summary>
+        /// Called when the pointer enters an item. Requires ListItemView.PointerElement on the item.
+        /// </summary>
+        protected virtual void ListItemHoverEnter(int index, TData dataProvider)
+        {
+
+        }
+
+        /// <summary>
+        /// Called when the pointer exits an item. Requires ListItemView.PointerElement on the item.
+        /// </summary>
+        protected virtual void ListItemHoverExit(int index, TData dataProvider)
+        {
+
         }
 
         protected virtual void SelectionUpdated(int index)
         {
             SelectionChangedSignal.Dispatch(GetSelectedIndex());
         }
-        
+
         private void ListItemClickedHandler(int itemIndex, TData dataProvider)
-        {   
-            //select/unselected new item
-            var selected = SelectedItemIndexes.Contains(itemIndex);
-            if (!selected)
+        {
+            if (SelectOnClick)
             {
-                SelectItemAt(itemIndex);
-                SelectionUpdated(itemIndex);
-                ListItemSelected(itemIndex, dataProvider);
+                //select/unselected new item
+                var selected = SelectedItemIndexes.Contains(itemIndex);
+                if (!selected)
+                {
+                    SelectItemAt(itemIndex);
+                    ListItemSelected(itemIndex, dataProvider);
+                }
+                else if (Unselectable)
+                {
+                    UnselectItemAt(itemIndex);
+                    ListItemUnselected(itemIndex, dataProvider);
+                }
             }
-            else if (Unselectable)
-            {
-                UnselectItemAt(itemIndex);
-                SelectionUpdated(itemIndex);
-                ListItemUnselected(itemIndex, dataProvider);
-            }
-            
+
             ListItemClicked(itemIndex, dataProvider);
+            ItemClickedSignal.Dispatch(itemIndex, dataProvider);
+        }
+
+        private void ListItemHoverHandler(int itemIndex, TData dataProvider, bool hovered)
+        {
+            if (hovered)
+            {
+                if (HoverSelects && !SelectedItemIndexes.Contains(itemIndex))
+                {
+                    SelectItemAt(itemIndex);
+                    ListItemSelected(itemIndex, dataProvider);
+                }
+
+                ListItemHoverEnter(itemIndex, dataProvider);
+            }
+            else
+            {
+                ListItemHoverExit(itemIndex, dataProvider);
+            }
         }
     }
 }

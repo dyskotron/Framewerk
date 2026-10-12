@@ -25,7 +25,8 @@ ListView : View
     └── EmptyContent: GameObject (shown when list is empty)
 
 ListItemView : View
-    └── SelectButton: Button (triggers selection)
+    └── SelectButton: Button (triggers click)
+    └── PointerElement: PointerElement (optional, reports hover enter/exit)
 
 ListMediator<TView, TData> : ListBaseMediator<TView, TData>
     └── SetData(List<TData>) — populates the list
@@ -34,11 +35,16 @@ ListMediator<TView, TData> : ListBaseMediator<TView, TData>
     └── RemoveItemAt(int) — dynamic removal
     └── Multiselect: bool — allow multiple selection
     └── Unselectable: bool — allow toggling selection off
+    └── SelectOnClick: bool — click selects (default true)
+    └── HoverSelects: bool — hover selects (default false)
+    └── ItemClickedSignal — dispatched on every item click
 
 ListItemMediator<TView, TData> : ExtendedMediator<TView>
     └── SetData(TData, int) — receives data from parent list
     └── SetSelected(bool) — visual selection state
+    └── SetHovered(bool) — visual hover state
     └── ListItemClickedSignal — dispatched when clicked
+    └── ListItemHoverSignal — dispatched on pointer enter/exit
 ```
 
 ### Data Flow
@@ -367,6 +373,79 @@ public class PlayerListItemMediator : ListItemMediator<PlayerListItemView, Playe
 }
 ```
 
+### Hover
+
+Items report pointer enter/exit when `ListItemView.PointerElement` is assigned. The wizard template prefab ships with a `PointerElement` on the item root and the field wired. Hover is a separate state from selection.
+
+**On the item** — override `SetHovered`, the twin of `SetSelected`:
+
+```csharp
+public override void SetHovered(bool hovered)
+{
+    base.SetHovered(hovered);
+    View.highlight.enabled = hovered;
+}
+```
+
+**On the list** — hooks fire for every item:
+
+```csharp
+protected override void ListItemHoverEnter(int index, PlayerListData data) { }
+protected override void ListItemHoverExit(int index, PlayerListData data) { }
+```
+
+### Hover and Click Without Selection
+
+By default a click selects the item. Two flags change the policy:
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `SelectOnClick` | `true` | When `false`, clicks never change selection. They only fire `ListItemClicked` and `ItemClickedSignal`. |
+| `HoverSelects` | `false` | When `true`, pointer enter selects the hovered item. |
+
+`ItemClickedSignal` is a public signal on the list mediator carrying the clicked index and data. It is dispatched on every click regardless of selection.
+
+Game main menu pattern: hover or keyboard moves the highlight, click or Enter confirms.
+
+```csharp
+public class MainMenuMediator : ListMediator<MainMenuView, MenuItemData>
+{
+    [Inject] public NavigateToScreenSignal NavigateToScreenSignal { get; set; }
+
+    public override void OnRegister()
+    {
+        base.OnRegister();
+
+        HoverSelects = true;    // highlight follows the mouse
+        SelectOnClick = false;  // click confirms, does not select
+        SetData(MenuModel.GetMenuItems());
+        SelectItemAt(0);
+    }
+
+    protected override void ListItemClicked(int index, MenuItemData data)
+    {
+        Confirm();
+    }
+
+    // Call from your keyboard handling
+    public void MoveSelection(int delta)
+    {
+        var current = GetSelectedIndex() ?? 0;
+        var next = Mathf.Clamp(current + delta, 0, DataProviders.Count - 1);
+        SelectItemAt(next);
+    }
+
+    public void Confirm()
+    {
+        var selected = GetSelectedItem();
+        if (selected != null)
+            NavigateToScreenSignal.Dispatch(selected.TargetScreen);
+    }
+}
+```
+
+The item highlights through `SetSelected`, so the same visuals serve mouse and keyboard.
+
 ---
 
 ## 4.5 Dynamic Lists
@@ -593,6 +672,7 @@ public class FriendListMediator : ListMediator<FriendListView, FriendListData>
 | **Data Binding** | Implement IListItemDataProvider; override SetData() in item mediator |
 | **Wizard** | Generates all 5 files + 2 prefabs; auto-registers mediation binding |
 | **Selection** | SelectItemAt(), UnselectAll(); Multiselect/Unselectable flags |
+| **Hover & Click** | SetHovered() on item; SelectOnClick/HoverSelects flags; ItemClickedSignal on list |
 | **Pooling** | Automatic — items hidden, not destroyed; SetActive() controls visibility |
 | **EmptyContent** | Assign in ListView; auto-shown when list is empty |
 
