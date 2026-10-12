@@ -27,7 +27,11 @@ namespace Framewerk.Editor
         private static bool IsEnabled => EditorPrefs.GetBool(FramewerkSettingsWindow.UI_PREFAB_PARENTING_FIXER_ENABLED_KEY, true);
         
         // All known RectTransform instance IDs under Canvases
+#if UNITY_6000_3_OR_NEWER
         private static readonly HashSet<EntityId> _knownRectTransforms = new HashSet<EntityId>();
+#else
+        private static readonly HashSet<int> _knownRectTransforms = new HashSet<int>();
+#endif
         
         // Objects we're watching for position changes
         private class WatchEntry
@@ -73,7 +77,11 @@ namespace Framewerk.Editor
                 {
                     if (rt == null) continue;
                     
+#if UNITY_6000_3_OR_NEWER
                     var instanceId = rt.GetEntityId();
+#else
+                    var instanceId = rt.GetInstanceID();
+#endif
                     
                     if (!_knownRectTransforms.Contains(instanceId))
                     {
