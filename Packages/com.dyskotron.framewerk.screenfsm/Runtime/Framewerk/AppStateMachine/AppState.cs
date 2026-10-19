@@ -25,7 +25,7 @@ namespace Framewerk.AppStateMachine
             Screen.Destroy();
         }
 
-        public void PerformEnter()
+        public virtual void PerformEnter()
         {
             RegisterHandlers();
             Enter();

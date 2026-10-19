@@ -1,0 +1,25 @@
+{
+    "name": "com.dyskotron.framewerk.screenfsm.tests",
+    "rootNamespace": "",
+    "references": [
+        "com.dyskotron.framewerk.core",
+        "com.dyskotron.framewerk.ui",
+        "com.dyskotron.framewerk.screenfsm"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
