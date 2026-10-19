@@ -30,8 +30,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 298f52dd5ee34ad29302f7bbd4d47854
+    m_Address: TabsViewStackExample/UI/TabsViewStackContainer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 483f06048808a4a708f2748d69028faf
     m_Address: ScreenFsmExample/UI/AboutContent
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78a29df1c19943a5a6e1b3e2d5de5661
+    m_Address: TabsViewStackExample/UI/ViewStack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -42,21 +52,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 939f65c24b18347daa933c92bb45d4d7
     m_Address: TabsViewStackExample/UI/TabContainer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 298f52dd5ee34ad29302f7bbd4d47854
-    m_Address: TabsViewStackExample/UI/TabsViewStackContainer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 78a29df1c19943a5a6e1b3e2d5de5661
-    m_Address: TabsViewStackExample/UI/ViewStack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c3d4e5f67890a1b2c3d4e5f67892abcd
-    m_Address: TabsViewStackExample/UI/ContentPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -72,6 +67,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1725383cb6c346a4999be0a34770321
     m_Address: ScreenFsmExample/UI/SettingsContent
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3d4e5f67890a1b2c3d4e5f67892abcd
+    m_Address: TabsViewStackExample/UI/ContentPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb716ffb77dfa874eaef9f409a10c9b7
+    m_Address: ScreenFsmExample/UI/GameSubstate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

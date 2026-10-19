@@ -47,12 +47,14 @@ namespace Framewerk.Examples.ScreenFsmExample
             // When not using ViewGroup, it must be bound explicitly
             injectionBinder.Bind<SelectionChangedSignal>().ToSingleton();
             injectionBinder.Bind<NavigateToScreenSignal>().ToSingleton();
+            injectionBinder.Bind<SwitchGameSubstateSignal>().ToSingleton();
 
             // MEDIATION
             mediationBinder.Bind<MainMenuView>().To<MainMenuMediator>();
             mediationBinder.Bind<MainMenuItemView>().To<MainMenuItemMediator>();
             mediationBinder.Bind<AboutContentView>().To<AboutContentMediator>();
             mediationBinder.Bind<GameContentView>().To<GameContentMediator>();
+            mediationBinder.Bind<GameSubstateView>().To<GameSubstateMediator>();
             mediationBinder.Bind<SettingsContentView>().To<SettingsContentMediator>();
             mediationBinder.Bind<LeaderboardsContentView>().To<LeaderboardsContentMediator>();
 
