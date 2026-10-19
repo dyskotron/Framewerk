@@ -5,9 +5,9 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.dyskotron.framewerk.ui": "2.0.0-preview.4",
-        "com.dyskotron.framewerk.screenfsm": "2.0.0-preview.4",
-        "com.dyskotron.framewerk.editor": "2.0.0-preview.4"
+        "com.dyskotron.framewerk.ui": "2.0.0-preview.5",
+        "com.dyskotron.framewerk.screenfsm": "2.0.0-preview.5",
+        "com.dyskotron.framewerk.editor": "2.0.0-preview.5"
       }
     },
     "com.dyskotron.framewerk.core": {
@@ -21,7 +21,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.dyskotron.framewerk.ui": "2.0.0-preview.4"
+        "com.dyskotron.framewerk.ui": "2.0.0-preview.5"
       }
     },
     "com.dyskotron.framewerk.screenfsm": {
@@ -29,7 +29,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.dyskotron.framewerk.ui": "2.0.0-preview.4"
+        "com.dyskotron.framewerk.ui": "2.0.0-preview.5"
       }
     },
     "com.dyskotron.framewerk.ui": {
@@ -37,7 +37,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.dyskotron.framewerk.core": "2.0.0-preview.4",
+        "com.dyskotron.framewerk.core": "2.0.0-preview.5",
         "com.unity.addressables": "1.21.0",
         "com.unity.textmeshpro": "3.0.0"
       }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-preview.5] - 2026-10-19
+
+### Fixed
+- Screen FSM: a `SubState` no longer gets a screen of its own. `FsmState` injects its substates through its own binder, which binds the screen type to the parent's screen and resolves everything else from the context's binder, so a substate's injected `Screen` is the parent's. Before, the context injected a screen into every substate and the parent then replaced it, so with a per-injection screen binding each substate switch created an unused screen instance.
+
+### Added
+- Screen FSM: `Fsm.StatesBinder`, the protected virtual binder an fsm injects its states with (the context's binder; `FsmState` overrides it with its substates' own context, created in its `[PostConstruct]`).
+
 ## [2.0.0-preview.4] - 2026-10-19
 
 ### Added
