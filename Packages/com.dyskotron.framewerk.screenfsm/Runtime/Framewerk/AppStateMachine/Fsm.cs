@@ -13,6 +13,12 @@ namespace Framewerk.AppStateMachine
     {
         [Inject] public IInjectionBinder InjectionBinder { get; set; }
 
+        /// <summary>
+        /// The binder the fsm injects its states with: the context's binder, unless the fsm gives its states a context
+        /// of their own.
+        /// </summary>
+        protected virtual IInjectionBinder StatesBinder => InjectionBinder;
+
         private Queue<IAppState> _nextStates;
         private IAppState _currentState;
         private TransitionType _currentTransition;
@@ -49,7 +55,7 @@ namespace Framewerk.AppStateMachine
         /// <param name="newState">New state to be opened</param>
         public virtual void SwitchState(IAppState newState)
         {
-            InjectionBinder.injector.Inject(newState, false);
+            StatesBinder.injector.Inject(newState, false);
 
             if (_currentTransition == TransitionType.None)
             {

@@ -133,6 +133,39 @@ namespace Framewerk.AppStateMachine.Tests
         }
 
         [Test]
+        public void SwitchState_ScreenBoundPerInjection_SubstatesCreateNoScreen()
+        {
+            _injectionBinder.Unbind<TestFsmScreen>();
+            _injectionBinder.Bind<TestFsmScreen>().To<TestFsmScreen>().ToInject(false);
+            TestFsmScreen.Created = 0;
+
+            var parent = Parent(Sub("A"));
+            _appFsm.SwitchState(parent);
+            Assert.AreEqual(1, TestFsmScreen.Created);
+
+            var b = Sub("B");
+            parent.SwitchState(b);
+            parent.SwitchState(Sub("C"));
+
+            Assert.AreEqual(1, TestFsmScreen.Created);
+            Assert.AreSame(parent.Screen, b.Screen);
+        }
+
+        [Test]
+        public void AppState_ScreenBoundPerInjection_GetsAScreenOfItsOwn()
+        {
+            _injectionBinder.Unbind<TestFsmScreen>();
+            _injectionBinder.Bind<TestFsmScreen>().To<TestFsmScreen>().ToInject(false);
+            TestFsmScreen.Created = 0;
+
+            var state = new TestNonSubState();
+            _appFsm.SwitchState(state);
+
+            Assert.AreEqual(1, TestFsmScreen.Created);
+            Assert.IsNotNull(state.Screen);
+        }
+
+        [Test]
         public void SwitchState_DuringSubstateTransition_IsQueued()
         {
             var parent = Parent();

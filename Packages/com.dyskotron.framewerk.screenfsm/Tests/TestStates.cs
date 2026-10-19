@@ -18,8 +18,18 @@ namespace Framewerk.AppStateMachine.Tests
 
     public class TestFsmScreen : FsmStateScreen
     {
-        public CallLog Log;
+        /// <summary>
+        /// Instances created since the last reset, for bindings that create a screen per injection.
+        /// </summary>
+        public static int Created;
+
+        public CallLog Log = new CallLog();
         public int DestroyCount;
+
+        public TestFsmScreen()
+        {
+            Created++;
+        }
 
         protected override void Enter()
         {

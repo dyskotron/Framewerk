@@ -343,6 +343,7 @@ New feature from scratch? There's no "old way" — write it like the first imple
 - All mediators should extend `ExtendedMediator<TView>` for auto-cleanup
 - App states extend `AppState<TScreen>` where TScreen is the view type
 - Contexts define all bindings; avoid service locator patterns
+- An `[Inject]` member is set only by the injector, never by hand. To give a consumer a different instance, inject it through a binder that binds that instance (see `CODE_STYLE.md`, *Injected Members*)
 - Framework code goes in the UPM packages; project-specific code in `Assets/`
 
 ## Lifecycle: Destroy() vs OnRemove()

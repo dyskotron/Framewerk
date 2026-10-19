@@ -70,8 +70,12 @@ order. 1.x's composed `AppState<T>` had no observable effect and is not ported.
 `PerformEnter` = `RegisterHandlers`, `Enter`, `SubstateIn`, `EnterFinished`; `PerformExit` = `Exit`, `SubstateOut`,
 `ExitFinished`. 2.0 forces two things: `AppState.PerformEnter` becomes `virtual` (no behaviour change), and
 `SubState.Destroy` leaves the screen alone, because 2.0's screen `Destroy` releases the parent's views (1.x's was
-empty, so a substate destroying the shared screen did nothing). The screen arrives as 1.x's `SetScreen` did: the
-parent sets the substate's `Screen` before it enters, overriding what injection put there.
+empty, so a substate destroying the shared screen did nothing). The screen arrives by injection, as for any
+`AppState`, but the parent decides what is injected: it injects its substates through its own binder
+(`FsmState.StatesBinder`, created in its `[PostConstruct]`), a `CrossContextInjectionBinder` that binds `TScreen` to the parent's screen and resolves
+everything else from the context's binder. (preview.4 let the context inject a screen into the substate and then
+overwrote it with the parent's, so a per-injection screen binding created an unused screen per switch; fixed in
+2.0.0-preview.5.)
 
 **D3 · The machine. → As 1.x: `Fsm`, without signals.** `AppFsm`'s queue and transition logic moves into a base
 `Fsm : IAppFsm` (1.x's `Fsm`); `AppFsm : Fsm` adds only the two app-wide signals, dispatched exactly where it

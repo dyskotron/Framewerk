@@ -74,7 +74,9 @@ public class GameState : FsmState<GameScreen>
   follows the machine's rules: one at a time, exit then enter, switches during a transition queued.
 - There is no rule for the first substate: the parent switches one in where it fits (`EnterFinished`, as above, has
   the screen entered and the parent reporting entered with its substate in).
-- Every substate is handed the parent's screen before it enters. A state that isn't a `SubState<TScreen>` gets a
+- The parent injects its substates through its own binder, in which `TScreen` is bound to the parent's screen; everything
+  else resolves from the context. So a substate's injected `Screen` is the parent's, and no screen is created for it, however
+  the screen is bound. A state that isn't a `SubState<TScreen>` gets a
   warning.
 - A substate never destroys the screen: the parent does.
 - Substates dispatch no `AppStateEnterSignal` / `AppStateExitSignal`; only the parent does, as an app state.

@@ -1,3 +1,5 @@
+using strange.extensions.injector.api;
+using strange.extensions.injector.impl;
 using strange.extensions.signal.impl;
 using UnityEngine;
 
@@ -17,15 +19,31 @@ namespace Framewerk.AppStateMachine
         public Signal EnterFinishedSignal { get; } = new Signal();
         public Signal ExitFinishedSignal { get; } = new Signal();
 
+        private IInjectionBinder _substateBinder;
+
+        /// <summary>
+        /// Creates the substates' own context: a binder that resolves <typeparamref name="TScreen"/> to this state's
+        /// screen and everything else from the context's binder.
+        /// </summary>
+        [PostConstruct]
+        protected void CreateSubstateContext()
+        {
+            var substateBinder = new CrossContextInjectionBinder { CrossContextBinder = InjectionBinder };
+            substateBinder.Bind<TScreen>().ToValue(Screen).ToInject(false);
+            _substateBinder = substateBinder;
+        }
+
         #region FSM overrides
+
+        /// <summary>
+        /// Substates are injected through their own context (<see cref="CreateSubstateContext"/>).
+        /// </summary>
+        protected override IInjectionBinder StatesBinder => _substateBinder;
 
         protected override void StartState(IAppState state)
         {
             if (!(state is SubState<TScreen>))
                 Debug.LogWarning($"{this} : Substate not valid. Given state has to be {typeof(SubState<TScreen>)}");
-
-            if (state is AppState<TScreen> appState)
-                appState.Screen = Screen;
 
             base.StartState(state);
         }

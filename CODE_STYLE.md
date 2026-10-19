@@ -37,6 +37,36 @@ var existingInstance = new AppSettings(customConfig);
 injectionBinder.Bind<ISettings>().ToValue(existingInstance);
 ```
 
+### Injected Members
+
+**An `[Inject]` member is set by the injector, and only by the injector.** Nothing assigns it by hand: not from
+outside, not from the class itself, not before or after injection, not as a fallback when it is null. One member, one
+way in.
+
+When a consumer needs a different instance than the context would give it, change what the injector resolves, not the
+member: inject the consumer through a binder that binds that instance and falls back to the context's binder for
+everything else (Strange's `CrossContextInjectionBinder` with `CrossContextBinder` set to the context's binder). The
+consumer then lives in its own small context. `FsmState` does this for its substates: they are injected through its
+binder, where the screen type is bound to the parent's screen.
+
+```csharp
+// ✅ The binder decides which instance is injected
+var substateBinder = new CrossContextInjectionBinder { CrossContextBinder = InjectionBinder };
+substateBinder.Bind<TScreen>().ToValue(Screen).ToInject(false);
+substateBinder.injector.Inject(substate, false);
+
+// ❌ Overwriting an injected member from outside
+substate.Screen = Screen;
+
+// ❌ Resolving the dependency by hand when it isn't set yet (a second way in, and a service locator)
+[PostConstruct]
+protected void ResolveScreen()
+{
+    if (Screen == null)
+        Screen = InjectionBinder.GetInstance<TScreen>();
+}
+```
+
 ### Signal Bindings
 
 **Signals are auto-bound as singletons by SignalCommandBinder:**
