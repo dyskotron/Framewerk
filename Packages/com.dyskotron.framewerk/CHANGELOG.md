@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.0-preview.4] - 2026-10-19
+
+### Added
+- Screen FSM: substates, ported from Framewerk 1.x. `FsmState<TScreen>` is an app state that is also a state machine; its `SubState<TScreen>`s share its screen and are switched with its `SwitchState`. `FsmStateScreen` gets `SubstateIn` / `SubstateOut` when a substate enters / exits. When the parent leaves, its running substate exits on the parent's `Destroy`, then the screen is destroyed. Substates dispatch no app-wide signals.
+- Screen FSM: `Fsm`, the state machine without app-wide signals that `AppFsm` and `FsmState` are built on.
+- Screen FSM: EditMode tests (`com.dyskotron.framewerk.screenfsm.tests`) for `AppFsm` and substates.
+- Screen FSM: package README covering app states and substates.
+- ScreenFsmExample: `GameState` with Playing / Paused substates.
+
+### Changed
+- `AppFsm` extends `Fsm` and only adds `AppStateEnterSignal` / `AppStateExitSignal`; its behaviour is unchanged.
+- `AppState.PerformEnter` is virtual.
+
 ## [2.0.0-preview.3] - 2026-10-12
 
 ### Added
